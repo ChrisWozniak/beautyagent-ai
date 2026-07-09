@@ -86,8 +86,8 @@ Two states only, per PRD scope. Used on every result card regardless of brand �
 
 | Status | Badge label | Sublabel copy |
 |---|---|---|
-| Passed | PASSED | On-voice, on-tone. No restricted phrases detected. |
-| Failed | FAILED | Flagged for review — see explanation below. |
+| Passed | Compliant | On-voice, on-tone. No restricted phrases detected. |
+| Failed | Needs a tweak | Flagged for review — see explanation below. |
 
 **Generic failure reason template** (mirrors the contract's `explanation` field — plain-language, no legal jargon):
 > "[flagged phrase]" — [one-line reason, e.g. "claims to treat a medical condition, which cosmetics can't legally do"]. Here's a safer rewrite:
@@ -102,7 +102,7 @@ Adapted directly from `beautyagent_api_contract.md` Section 5 (canonical example
 
 ### PASSED example (Tower 28, Email)
 
-**Status:** PASSED
+**Status:** Compliant
 **Brand:** Tower 28 · **Product:** SOS Daily Rescue Facial Spray
 **Channel:** Email
 **Generated copy:**
@@ -112,7 +112,7 @@ Adapted directly from `beautyagent_api_contract.md` Section 5 (canonical example
 
 ### FAILED example (Tower 28, Instagram)
 
-**Status:** FAILED
+**Status:** Needs a tweak
 **Brand:** Tower 28 · **Product:** SOS Daily Rescue Facial Spray
 **Channel:** Instagram
 **Raw draft:**
@@ -129,8 +129,8 @@ Per the contract: "This is the example to use when building and testing the desk
 
 | Channel | generation_status | compliance_status | Card treatment |
 |---|---|---|---|
-| TikTok | completed | PASSED | Green/standard PASSED card |
-| Instagram | completed | FAILED | Red/standard FAILED card with explanation + rewrite |
+| TikTok | completed | PASSED | Sage/moss 'Compliant' card |
+| Instagram | completed | FAILED | Terracotta 'Needs a tweak' card with explanation + rewrite |
 | Email | error (`TIMEOUT`) | null | Neutral/gray error card — "This one's taking longer than expected. [Retry this channel]" |
 
 This is the layout to build and screenshot-test before Day 3 — it's the only example that exercises all three card states at once.
@@ -143,3 +143,4 @@ This is the layout to build and screenshot-test before Day 3 — it's the only e
 - `generation_status` and `compliance_status` are two separate axes, not one status field. Check `generation_status` first when rendering any card — a `"completed"` card shows the compliance badge; an `"error"` card shows the neutral error treatment instead and never has a compliance badge at all.
 - Card order should be fixed (TikTok → Instagram → Email) regardless of selection order, per the contract's frontend notes — helps build muscle memory for returning users.
 - The failure reason template pulls its "why" text from each brand's compliance rules (Half Magic and Tower 28 configs already have those written as if/then statements) — this should be close to a lookup against the agent's actual `explanation` output, not separately authored copy.
+- `compliance_status` still returns `"PASSED"` / `"FAILED"` from the API exactly as the locked contract specifies — nothing changes at the data layer. Badge labels are a rendering concern only: the frontend maps `PASSED` → "Compliant" and `FAILED` → "Needs a tweak". Never display the raw API string to the user.
