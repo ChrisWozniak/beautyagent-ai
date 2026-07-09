@@ -30,8 +30,28 @@ SKIP_RULE_IDS = {
     "color_additive_labeling",
 }
 
-# Explicit replacement map for rules that have no safe_framing field.
-EXPLICIT_REPLACEMENTS: dict[str, str] = {
+# Unified phrase → replacement dictionary covering all 22 runtime phrases.
+# safe_framing fields in the source file are instructional guidance, not literal
+# substitutes — every replacement must be explicitly mapped here instead.
+# KeyError on an unmapped phrase is intentional: fail loudly, never silently skip.
+PHRASE_REPLACEMENTS: dict[str, str] = {
+    # disease_claims (9)
+    "cures acne": "helps care for acne-prone skin",
+    "heals eczema": "gentle on eczema-prone skin",
+    "eczema-free": "calmer-looking",
+    "eliminates redness": "helps calm the look of redness",
+    "repairs skin permanently": "helps support skin's natural resilience",
+    "repairs your barrier overnight": "helps support your skin barrier",
+    "cure": "help with",
+    "treat eczema": "safe for eczema-prone skin",
+    "treat rosacea": "safe for rosacea-prone skin",
+    # antimicrobial_ingredient_claims (5)
+    "sanitizer": "purifier",
+    "disinfectant": "purifier",
+    "disinfects": "purifies",
+    "kills bacteria": "calms skin",
+    "kills germs": "refreshes skin",
+    # medical_efficacy_claims (7)
     "medically proven": "formulated to help",
     "clinically proven": "formulated to help",
     "toxin-free": "thoughtfully formulated",
@@ -39,6 +59,7 @@ EXPLICIT_REPLACEMENTS: dict[str, str] = {
     "anti-aging miracle": "helps skin look and feel healthier",
     "reverses aging": "helps support a smoother-looking complexion",
     "collagen boosting": "helps support smoother-looking skin",
+    # dermatologist_testing_claims (1)
     "dermatologist recommended": "gentle on skin",
 }
 
@@ -58,14 +79,9 @@ def build() -> None:
             continue
 
         description = rule["description"]
-        safe_framing = rule.get("safe_framing")
 
         for phrase in banned_phrases:
-            if safe_framing:
-                replacement = safe_framing
-            else:
-                replacement = EXPLICIT_REPLACEMENTS[phrase]
-
+            replacement = PHRASE_REPLACEMENTS[phrase]  # KeyError = missing mapping, fix it
             runtime_rules.append({
                 "phrase": phrase,
                 "replacement": replacement,

@@ -2,47 +2,47 @@
   "rules": [
     {
       "phrase": "cures acne",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "helps care for acne-prone skin",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "heals eczema",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "gentle on eczema-prone skin",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "eczema-free",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "calmer-looking",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "eliminates redness",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "helps calm the look of redness",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "repairs skin permanently",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "helps support skin's natural resilience",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "repairs your barrier overnight",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "helps support your skin barrier",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "cure",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "help with",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "treat eczema",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "safe for eczema-prone skin",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
       "phrase": "treat rosacea",
-      "replacement": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "replacement": "safe for rosacea-prone skin",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
@@ -82,27 +82,27 @@
     },
     {
       "phrase": "sanitizer",
-      "replacement": "Use cosmetic-appropriate framing instead: soothes, purifies, calms, refreshes, hits refresh on stressed skin.",
+      "replacement": "purifier",
       "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
     },
     {
       "phrase": "disinfectant",
-      "replacement": "Use cosmetic-appropriate framing instead: soothes, purifies, calms, refreshes, hits refresh on stressed skin.",
+      "replacement": "purifier",
       "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
     },
     {
       "phrase": "disinfects",
-      "replacement": "Use cosmetic-appropriate framing instead: soothes, purifies, calms, refreshes, hits refresh on stressed skin.",
+      "replacement": "purifies",
       "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
     },
     {
       "phrase": "kills bacteria",
-      "replacement": "Use cosmetic-appropriate framing instead: soothes, purifies, calms, refreshes, hits refresh on stressed skin.",
+      "replacement": "calms skin",
       "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
     },
     {
       "phrase": "kills germs",
-      "replacement": "Use cosmetic-appropriate framing instead: soothes, purifies, calms, refreshes, hits refresh on stressed skin.",
+      "replacement": "refreshes skin",
       "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
     },
     {
