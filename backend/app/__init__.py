@@ -1,0 +1,2 @@
+"""BeautyAgent AI backend package."""
+
