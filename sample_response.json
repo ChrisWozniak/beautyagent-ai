@@ -1,0 +1,47 @@
+{
+    "results": [
+        {
+            "channel": "tiktok",
+            "generation_status": "completed",
+            "raw_draft": "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
+            "compliance_status": "PASSED",
+            "flagged_phrases": [],
+            "explanation": "",
+            "detection_source": null,
+            "final_safe_output": "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
+            "retry_exhausted": false,
+            "error": null
+        },
+        {
+            "channel": "instagram",
+            "generation_status": "completed",
+            "raw_draft": "Wake up to eczema-free skin every single day ✨ SOS Daily Rescue Facial Spray repairs your barrier while you sleep.",
+            "compliance_status": "FAILED",
+            "flagged_phrases": [
+                "eczema-free",
+                "repairs your barrier while you sleep"
+            ],
+            "explanation": "\"Eczema-free\" claims to treat a diagnosable condition — a drug claim. \"Repairs your barrier while you sleep\" is a structure-function claim cosmetics can't legally make.",
+            "detection_source": "both",
+            "final_safe_output": "Wake up to calmer, happier skin ✨ SOS Daily Rescue Facial Spray helps support your skin barrier, morning and night.",
+            "retry_exhausted": false,
+            "error": null
+        },
+        {
+            "channel": "email",
+            "generation_status": "error",
+            "raw_draft": null,
+            "compliance_status": null,
+            "flagged_phrases": null,
+            "explanation": null,
+            "detection_source": null,
+            "final_safe_output": null,
+            "retry_exhausted": null,
+            "error": {
+                "code": "TIMEOUT",
+                "message": "Generation timed out after retries."
+            }
+        }
+    ],
+    "error": null
+}
