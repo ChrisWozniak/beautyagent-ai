@@ -196,7 +196,13 @@ def _classify_channel_exception(exc: Exception) -> tuple[str, str]:
 
 async def process_channel_safely(request: GenerateRequest, channel: Channel) -> ChannelResult:
     try:
-        return await asyncio.to_thread(process_channel_loop, request, channel)
+        settings = get_settings()
+        return await asyncio.wait_for(
+            asyncio.to_thread(process_channel_loop, request, channel),
+            timeout=settings.channel_timeout_seconds,
+        )
+    except asyncio.TimeoutError:
+        return channel_error_result(channel, "TIMEOUT", "Generation timed out after retries.")
     except Exception as exc:
         code, message = _classify_channel_exception(exc)
         return channel_error_result(channel, code, message)

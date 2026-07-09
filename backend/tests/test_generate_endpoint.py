@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -248,6 +249,31 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.generation_status, "error")
         self.assertEqual(result.error.code, "TIMEOUT")
         self.assertIsNone(result.final_safe_output)
+
+    def test_process_channel_safely_enforces_channel_timeout(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Centella",
+            brief="Draft one compliant caption.",
+            channels=["email"],
+        )
+
+        def slow_channel_loop(_: GenerateRequest, __: str) -> None:
+            time.sleep(0.05)
+
+        with (
+            patch.dict("os.environ", {"CHANNEL_TIMEOUT_SECONDS": "0.001"}),
+            patch(
+                "backend.app.agent.beauty_agent.process_channel_loop",
+                side_effect=slow_channel_loop,
+            ),
+        ):
+            result = asyncio.run(process_channel_safely(request, "email"))
+
+        self.assertEqual(result.generation_status, "error")
+        self.assertEqual(result.error.code, "TIMEOUT")
+        self.assertIsNone(result.raw_draft)
 
     def test_strands_adapter_exposes_compliance_tool(self) -> None:
         adapter = build_strands_adapter()

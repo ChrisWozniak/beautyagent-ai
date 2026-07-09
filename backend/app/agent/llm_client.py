@@ -53,7 +53,8 @@ def generate_draft_with_llm(
             messages=build_draft_prompt(request, channel, brand_config, safe_claim),
             api_key=settings.openrouter_api_key,
             temperature=0.7,
-            max_tokens=300,
+            max_tokens=settings.llm_max_tokens,
+            timeout=settings.llm_timeout_seconds,
         )
     except Exception as exc:
         raise LLMDraftError("LiteLLM/OpenRouter drafting failed.") from exc

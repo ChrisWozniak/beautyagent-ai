@@ -12,6 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 from backend.app.agent.beauty_agent import load_brand_configs
 from backend.app.agent.llm_client import LLMDraftError, generate_draft_with_llm

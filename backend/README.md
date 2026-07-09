@@ -30,9 +30,13 @@ To enable LiteLLM/OpenRouter drafting:
 USE_LLM_DRAFTING=true
 OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=poolside/laguna-m.1:free
+LLM_TIMEOUT_SECONDS=15
+LLM_MAX_TOKENS=1000
+CHANNEL_TIMEOUT_SECONDS=20
 ```
 
 If LLM drafting is disabled, unavailable, or misconfigured, the backend falls back to deterministic mock drafting and still returns the same `/generate` response shape.
+`LLM_TIMEOUT_SECONDS` limits the direct provider call. `LLM_MAX_TOKENS` caps the draft response size. `CHANNEL_TIMEOUT_SECONDS` limits the full per-channel backend pipeline and returns that channel with `generation_status: "error"` and `error.code: "TIMEOUT"` if exceeded.
 
 Backend-only OpenRouter smoke test:
 
