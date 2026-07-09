@@ -13,7 +13,7 @@ Primary backend areas:
 - `backend/app/agent/`
 - `backend/app/tools/`
 - `backend/app/data/`
-- `docs/API_CONTRACT.md`
+- `BEAUTYAGENT_API_CONTRACT.md`
 - `shared/sample_request.json`
 - `shared/sample_response.json`
 
@@ -25,7 +25,7 @@ The API contract is the source of truth for request and response shape.
 
 Expected location:
 
-- `docs/API_CONTRACT.md`
+- `BEAUTYAGENT_API_CONTRACT.md`
 
 Current compatibility files may also exist at the repository root while the repo is being organized:
 
@@ -171,4 +171,3 @@ Prefer small, traceable changes.
 - Keep frontend and backend concerns separate.
 - Do not rewrite Jillian's frontend guidance unless asked.
 - Mention unclear contract issues instead of guessing.
-
