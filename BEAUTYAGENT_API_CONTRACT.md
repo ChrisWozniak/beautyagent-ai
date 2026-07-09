@@ -72,7 +72,7 @@ Pre-Build contract lock --- Tower 28 & Half Magic, channels: TikTok / Instagram 
 
 {
 
-"brandId": "tower28",
+"brandId": "tower_28",
 
 "productName": "SOS Daily Rescue Facial Spray",
 
@@ -141,7 +141,7 @@ generation_status is the first thing to check on any result object --- it determ
 
 | Field | Req/Resp | Required | Notes |
 | --- | --- | --- | --- |
-| brandId | Request | yes | "tower28" |
+| brandId | Request | yes | "tower_28" |
 | productName | Request | yes | Free text |
 | coreActives | Request | no | Free text, comma list |
 | brief | Request | yes | Free text; UX nudges ~4--5 sentences; backend cap 800--1000 characters (decided) |
@@ -194,7 +194,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
 {
 
-"brandId": "tower28",
+"brandId": "tower_28",
 
 "productName": "SOS Daily Rescue Facial Spray",
 
@@ -218,17 +218,17 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "generation_status": "completed",
 
-  "raw_draft": "Say goodbye to eczema and redness for good\! Our SOS Daily Rescue Facial Spray heals your skin barrier overnight, so you wake up calm, protected, and finally free of flare-ups. 🌿 \#SkinSOS",
+  "raw_draft": "Say goodbye to eczema and redness for good! Our SOS Daily Rescue Facial Spray heals your skin barrier overnight, so you wake up calm, protected, and finally free of flare-ups. 🌿 #SkinSOS",
 
   "compliance_status": "FAILED",
 
   "flagged_phrases": ["eczema", "heals your skin barrier overnight"],
 
-  "explanation": "\\"Eczema\\" names a diagnosable skin condition --- claiming to treat it crosses into a drug claim. \\"Heals your skin barrier overnight\\" is a structure-function claim, which cosmetics can't legally make.",
+  "explanation": "\"Eczema\" names a diagnosable skin condition --- claiming to treat it crosses into a drug claim. \"Heals your skin barrier overnight\" is a structure-function claim, which cosmetics can't legally make.",
 
   "detection_source": "both",
 
-  "final_safe_output": "Redness-prone skin, meet your new calm-down button. SOS Daily Rescue Facial Spray helps soothe visible redness and support skin comfort, morning to night. 🌿 \#SkinSOS",
+  "final_safe_output": "Redness-prone skin, meet your new calm-down button. SOS Daily Rescue Facial Spray helps soothe visible redness and support skin comfort, morning to night. 🌿 #SkinSOS",
 
   "retry_exhausted": false
 
@@ -246,7 +246,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
 {
 
-"brandId": "tower28",
+"brandId": "tower_28",
 
 "productName": "SOS Daily Rescue Facial Spray",
 
@@ -298,7 +298,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
 {
 
-"brandId": "halfmagic",
+"brandId": "half_magic",
 
 "productName": "Magic Drip Glitter Lipgloss",
 
@@ -322,7 +322,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "generation_status": "completed",
 
-  "raw_draft": "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss \= maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
+  "raw_draft": "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
 
   "compliance_status": "PASSED",
 
@@ -332,7 +332,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "detection_source": null,
 
-  "final_safe_output": "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss \= maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
+  "final_safe_output": "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
 
   "retry_exhausted": false
 
@@ -350,7 +350,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
 {
 
-"brandId": "halfmagic",
+"brandId": "half_magic",
 
 "productName": "Magic Drip Glitter Lipgloss",
 
@@ -380,7 +380,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "flagged_phrases": ["clinically proven"],
 
-  "explanation": "\\"Clinically proven\\" is a literal claim of substantiating trial data --- this formula (Vitamin E, Jojoba Oil, no clinical studies) has no clinical backing for a lip-fullness claim. It's an exact banned phrase, not a paraphrase.",
+  "explanation": "\"Clinically proven\" is a literal claim of substantiating trial data --- this formula (Vitamin E, Jojoba Oil, no clinical studies) has no clinical backing for a lip-fullness claim. It's an exact banned phrase, not a paraphrase.",
 
   "detection_source": "deterministic",
 
@@ -404,7 +404,7 @@ Demonstrates all three generation_status/compliance_status combinations in one r
 
 {
 
-"brandId": "tower28",
+"brandId": "tower_28",
 
 "productName": "SOS Daily Rescue Facial Spray",
 
@@ -458,7 +458,7 @@ Demonstrates all three generation_status/compliance_status combinations in one r
 
   "flagged_phrases": ["eczema-free", "repairs your barrier while you sleep"],
 
-  "explanation": "\\"Eczema-free\\" claims to treat a diagnosable condition --- a drug claim. \\"Repairs your barrier while you sleep\\" is a structure-function claim cosmetics can't legally make.",
+  "explanation": "\"Eczema-free\" claims to treat a diagnosable condition --- a drug claim. \"Repairs your barrier while you sleep\" is a structure-function claim cosmetics can't legally make.",
 
   "detection_source": "both",
 

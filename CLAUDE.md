@@ -1,9 +1,9 @@
 # CLAUDE.md — BeautyAgent AI (Frontend / Jillian)
 
-Behavioral guidelines for Claude when working on this project. Scope: `frontend/` only. Backend is owned by Christopher, built separately with Codex against the same contract. When in doubt, re-read this file — and re-read `docs/API_CONTRACT.md` — before writing any code.
+Behavioral guidelines for Claude when working on this project. Scope: `frontend/` only. Backend is owned by Christopher, built separately with Codex against the same contract. When in doubt, re-read this file — and re-read `BEAUTYAGENT_API_CONTRACT.md` — before writing any code.
 
 Read these companion files before starting any session:
-- `docs/API_CONTRACT.md` — the `/generate` request/response schema. Source of truth. Never invent fields.
+- `BEAUTYAGENT_API_CONTRACT.md` — the `/generate` request/response schema. Source of truth. Never invent fields.
 - `docs/DECISIONS.md` — 5 locked pre-build decisions with rationale
 - `docs/PRD.md` — full product requirements, user journeys, UI/UX notes (section 7)
 - `DESIGN_SYSTEM.md` — **not finalized yet.** Do not assume tokens exist; ask before introducing any color, spacing, or component-library choice not already agreed on.
@@ -83,7 +83,7 @@ The test: every changed line should trace directly to the user's request.
 
 **Frontend owns `frontend/`, `docs/UI_NOTES.md`, and `shared/sample_response.json` only.** Do not modify `backend/` files. If the frontend needs a backend behavior change, document the need and flag it — don't work around a contract gap by guessing at backend internals.
 
-**`shared/sample_request.json` and `shared/sample_response.json` are shared with the backend.** Any change to these must match `docs/API_CONTRACT.md` exactly — pull directly from the contract's Example 5 (multi-channel partial failure) rather than hand-writing a new mock, since that example already exercises all three `generation_status`/`compliance_status` combinations.
+**`shared/sample_request.json` and `shared/sample_response.json` are shared with the backend.** Any change to these must match `BEAUTYAGENT_API_CONTRACT.md` exactly — pull directly from the contract's Example 5 (multi-channel partial failure) rather than hand-writing a new mock, since that example already exercises all three `generation_status`/`compliance_status` combinations.
 
 ---
 
@@ -112,7 +112,7 @@ The `/generate` contract is the highest-risk shared surface in this project. Fro
 
 ### Rules
 
-- `docs/API_CONTRACT.md` is the single source of truth for request/response shape. `docs/DECISIONS.md` records why it looks the way it does.
+- `BEAUTYAGENT_API_CONTRACT.md` is the single source of truth for request/response shape. `docs/DECISIONS.md` records why it looks the way it does.
 - Field names are exact: `brandId` (not `brand`), `coreActives` (string, not array), `results` (not `outputs`), `raw_draft` (not `draft`), `final_safe_output` (not `safe_rewrite`), `generation_status`, `compliance_status`, `detection_source`, `retry_exhausted`.
 - If a UI need suggests the contract should change, stop. Document the need. Do not build against an invented shape — flag it to Jillian/Christopher first.
 - Data adapts to fit the contract. The contract does not adapt to fit the frontend's convenience.
@@ -137,7 +137,7 @@ The `/generate` contract is the highest-risk shared surface in this project. Fro
 
 ## 6. UI/UX Requirements
 
-Per PRD section 7 and `docs/API_CONTRACT.md` section 6 (Frontend Notes).
+Per PRD section 7 and `BEAUTYAGENT_API_CONTRACT.md` section 6 (Frontend Notes).
 
 ### Hard rules
 
@@ -181,7 +181,7 @@ If asked to add anything in the out-of-scope list, flag it as a Backlog item (PR
 
 | File | Purpose |
 |---|---|
-| `docs/API_CONTRACT.md` | Full request/response schema, error codes, example payloads |
+| `BEAUTYAGENT_API_CONTRACT.md` | Full request/response schema, error codes, example payloads |
 | `docs/DECISIONS.md` | 5 locked pre-build decisions with rationale |
 | `docs/PRD.md` | Full product requirements, user journeys, success metrics |
 | `shared/sample_request.json` | Mock request matching the locked contract |

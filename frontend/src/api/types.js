@@ -1,8 +1,6 @@
 /**
  * @typedef {'tower_28' | 'half_magic'} BrandId
- * NOTE: contract examples show "tower28"/"halfmagic" (no underscore).
- * Using snake_case per confirmed final naming in task scope — flag to Christopher
- * to ensure backend accepts the same strings before Day 3 integration.
+ * Contract uses "tower_28" and "half_magic" (snake_case, locked).
  *
  * @typedef {'tiktok' | 'instagram' | 'email'} Channel
  *

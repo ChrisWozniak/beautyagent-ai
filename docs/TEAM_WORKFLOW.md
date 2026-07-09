@@ -27,7 +27,7 @@ Christopher mainly works in:
 - `backend/app/tools/`
 - `backend/app/agent/`
 - `backend/app/data/`
-- `docs/API_CONTRACT.md`
+- `BEAUTYAGENT_API_CONTRACT.md`
 - `shared/sample_request.json`
 - `shared/sample_response.json`
 
