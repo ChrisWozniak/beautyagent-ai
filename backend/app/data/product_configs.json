@@ -1,4 +1,24 @@
 {
-  "products": []
+  "products": [
+    {
+      "brandId": "tower_28",
+      "name": "SOS Daily Rescue Facial Spray",
+      "default_actives": "Hypochlorous Acid",
+      "safe_claims": [
+        "helps calm the look of stressed skin",
+        "supports sensitive skin routines",
+        "refreshes skin throughout the day"
+      ]
+    },
+    {
+      "brandId": "half_magic",
+      "name": "Chromaddiction Matte Eye Paint",
+      "default_actives": "",
+      "safe_claims": [
+        "delivers bold color payoff",
+        "creates expressive eye looks",
+        "adds playful dimension to makeup"
+      ]
+    }
+  ]
 }
-

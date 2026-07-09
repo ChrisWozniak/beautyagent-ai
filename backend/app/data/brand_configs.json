@@ -1,4 +1,22 @@
 {
-  "brands": {}
+  "brands": {
+    "tower_28": {
+      "display_name": "Tower 28",
+      "voice": "calm, friendly, sensitive-skin aware, and clinically careful",
+      "compliance_notes": [
+        "Avoid disease-treatment language.",
+        "Use support, soothe, calm, and comfort language instead of cure or heal claims.",
+        "Do not imply the product changes skin structure or treats diagnosable conditions."
+      ]
+    },
+    "half_magic": {
+      "display_name": "Half Magic",
+      "voice": "expressive, playful, color-forward, and confident",
+      "compliance_notes": [
+        "Keep claims cosmetic and appearance-focused.",
+        "Avoid medical, therapeutic, or guaranteed performance claims.",
+        "Make color payoff and creative expression the center of the message."
+      ]
+    }
+  }
 }
-

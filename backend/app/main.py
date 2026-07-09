@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from .agent.beauty_agent import generate_mock_response
 from .models.request_models import GenerateRequest
 from .models.response_models import GenerateResponse, TopLevelError
 
@@ -42,13 +43,4 @@ def health() -> dict[str, str]:
 
 @app.post("/generate", response_model=GenerateResponse)
 def generate(request: GenerateRequest) -> GenerateResponse:
-    del request
-
-    return GenerateResponse(
-        results=[],
-        error=TopLevelError(
-            code="INTERNAL_ERROR",
-            message="Generation is not implemented yet.",
-            detail="Backend validation is wired. Draft generation starts in a later step.",
-        ),
-    )
+    return generate_mock_response(request)

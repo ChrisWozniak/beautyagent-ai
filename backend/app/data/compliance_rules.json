@@ -1,4 +1,49 @@
 {
-  "rules": []
+  "rules": [
+    {
+      "phrase": "eczema-free",
+      "replacement": "calmer-looking",
+      "explanation": "\"eczema-free\" implies treatment of a diagnosable skin condition."
+    },
+    {
+      "phrase": "cures eczema",
+      "replacement": "helps comfort sensitive-looking skin",
+      "explanation": "\"cures eczema\" is a disease-treatment claim."
+    },
+    {
+      "phrase": "cures acne",
+      "replacement": "helps skin look clearer",
+      "explanation": "\"cures acne\" is a disease-treatment claim."
+    },
+    {
+      "phrase": "heals acne",
+      "replacement": "helps skin look clearer",
+      "explanation": "\"heals acne\" is a disease-treatment claim."
+    },
+    {
+      "phrase": "repairs your barrier",
+      "replacement": "helps support your skin barrier",
+      "explanation": "\"repairs your barrier\" can imply a structure-function claim."
+    },
+    {
+      "phrase": "rebuilds your skin barrier",
+      "replacement": "helps support your skin barrier",
+      "explanation": "\"rebuilds your skin barrier\" can imply a structure-function claim."
+    },
+    {
+      "phrase": "anti-inflammatory",
+      "replacement": "soothing",
+      "explanation": "\"anti-inflammatory\" can imply drug-like activity."
+    },
+    {
+      "phrase": "clinically proven to treat",
+      "replacement": "made to help improve the look of",
+      "explanation": "\"clinically proven to treat\" implies therapeutic efficacy."
+    },
+    {
+      "phrase": "guaranteed results",
+      "replacement": "visible-looking results",
+      "explanation": "\"guaranteed results\" is an absolute performance claim."
+    }
+  ]
 }
-

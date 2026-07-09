@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-BrandId = Literal["tower28", "halfmagic"]
+BrandId = Literal["tower_28", "half_magic"]
 Channel = Literal["tiktok", "instagram", "email"]
 MAX_BRIEF_LENGTH = 1000
 
