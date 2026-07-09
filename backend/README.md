@@ -20,6 +20,20 @@ FRONTEND_ORIGINS=https://your-frontend.example.com
 
 Use a comma-separated list for multiple origins.
 
+## Drafting Mode
+
+Mock drafting is the default so frontend integration stays stable without an LLM key.
+
+To enable LiteLLM/OpenRouter drafting:
+
+```text
+USE_LLM_DRAFTING=true
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=poolside/laguna-m.1:free
+```
+
+If LLM drafting is disabled, unavailable, or misconfigured, the backend falls back to deterministic mock drafting and still returns the same `/generate` response shape.
+
 ## Tests
 
 ```powershell

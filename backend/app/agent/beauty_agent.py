@@ -7,9 +7,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Protocol
 
+from ..config import get_settings
 from ..models.request_models import Channel, GenerateRequest
 from ..models.response_models import ChannelResult, GenerateResponse
 from ..tools.check_compliance import check_compliance
+from .llm_client import LLMDraftError, generate_draft_with_llm
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
@@ -95,6 +97,20 @@ def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
     )
 
 
+def draft_channel_with_optional_llm(request: GenerateRequest, channel: Channel) -> str:
+    settings = get_settings()
+    if not settings.use_llm_drafting:
+        return draft_channel_copy(request, channel)
+
+    brand = load_brand_configs()[request.brandId]
+    safe_claim = _safe_claim_for_request(request)
+
+    try:
+        return generate_draft_with_llm(request, channel, brand, safe_claim, settings)
+    except LLMDraftError:
+        return draft_channel_copy(request, channel)
+
+
 def _combine_unique(first: list[str], second: list[str]) -> list[str]:
     combined: list[str] = []
     for phrase in first + second:
@@ -112,7 +128,7 @@ def _combine_explanations(first: str | None, second: str | None) -> str:
 def process_channel_loop(
     request: GenerateRequest,
     channel: Channel,
-    draft_generator: DraftGenerator = draft_channel_copy,
+    draft_generator: DraftGenerator = draft_channel_with_optional_llm,
 ) -> ChannelResult:
     """Run draft, deterministic audit, revision, and final backstop for a channel."""
     raw_draft = draft_generator(request, channel)
