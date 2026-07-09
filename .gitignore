@@ -25,3 +25,6 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Figma Make export (local visual reference only)
+Redesign AI Workspace UI/
+
