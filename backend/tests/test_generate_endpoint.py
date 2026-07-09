@@ -1,12 +1,24 @@
+import asyncio
+import json
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from backend.app.agent.beauty_agent import process_channel_loop
+from backend.app.agent.beauty_agent import (
+    channel_error_result,
+    process_channel_loop,
+    process_channel_safely,
+)
 from backend.app.agent.llm_client import LLMDraftError
+from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest
+from backend.app.tools.check_compliance import check_compliance_tool
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class GenerateEndpointTests(unittest.TestCase):
@@ -203,6 +215,55 @@ class GenerateEndpointTests(unittest.TestCase):
 
         self.assertIn("Meet SOS Daily Rescue Facial Spray", result.raw_draft)
         self.assertEqual(result.compliance_status, "PASSED")
+
+    def test_channel_error_result_uses_contract_error_shape(self) -> None:
+        result = channel_error_result("email", "TIMEOUT", "Generation timed out after retries.")
+
+        self.assertEqual(result.channel, "email")
+        self.assertEqual(result.generation_status, "error")
+        self.assertIsNone(result.raw_draft)
+        self.assertIsNone(result.compliance_status)
+        self.assertIsNone(result.flagged_phrases)
+        self.assertIsNone(result.explanation)
+        self.assertIsNone(result.detection_source)
+        self.assertIsNone(result.final_safe_output)
+        self.assertIsNone(result.retry_exhausted)
+        self.assertEqual(result.error.code, "TIMEOUT")
+
+    def test_process_channel_safely_converts_timeout_to_error_result(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Centella",
+            brief="Draft one compliant caption.",
+            channels=["email"],
+        )
+
+        with patch(
+            "backend.app.agent.beauty_agent.process_channel_loop",
+            side_effect=TimeoutError("too slow"),
+        ):
+            result = asyncio.run(process_channel_safely(request, "email"))
+
+        self.assertEqual(result.generation_status, "error")
+        self.assertEqual(result.error.code, "TIMEOUT")
+        self.assertIsNone(result.final_safe_output)
+
+    def test_strands_adapter_exposes_compliance_tool(self) -> None:
+        adapter = build_strands_adapter()
+
+        self.assertTrue(adapter.tools)
+        tool_result = check_compliance_tool("This makes skin eczema-free.")
+        self.assertEqual(tool_result["compliance_status"], "FAILED")
+
+    def test_red_team_cases_file_has_contract_requests(self) -> None:
+        cases_path = ROOT / "backend/evals/red_team_cases.json"
+        cases = json.loads(cases_path.read_text(encoding="utf-8"))["cases"]
+
+        self.assertGreaterEqual(len(cases), 3)
+        for case in cases:
+            GenerateRequest(**case["request"])
+            self.assertIn(case["expected_status"], {"PASSED", "FAILED"})
 
     def test_cors_allows_vite_frontend_origin(self) -> None:
         response = self.client.options(

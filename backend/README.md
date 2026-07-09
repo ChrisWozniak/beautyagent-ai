@@ -34,11 +34,31 @@ OPENROUTER_MODEL=poolside/laguna-m.1:free
 
 If LLM drafting is disabled, unavailable, or misconfigured, the backend falls back to deterministic mock drafting and still returns the same `/generate` response shape.
 
+Backend-only OpenRouter smoke test:
+
+```powershell
+python backend/scripts/smoke_openrouter.py
+```
+
+The smoke test calls LiteLLM/OpenRouter directly and does not involve the frontend.
+
+Backend-only red-team eval runner:
+
+```powershell
+python backend/scripts/run_red_team_eval.py
+```
+
+The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes.
+
 ## Tests
 
 ```powershell
 python -m unittest discover -s backend -p "test_*.py" -v
 ```
+
+## Deployment
+
+See `backend/DEPLOYMENT.md` for Render start command, environment variables, and health check notes.
 
 ## Scope
 

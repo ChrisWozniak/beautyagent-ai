@@ -7,6 +7,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+try:
+    from strands import tool
+except ImportError:
+    def tool(func=None, **_kwargs):
+        if func is None:
+            return lambda wrapped: wrapped
+
+        return func
+
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 RULES_PATH = DATA_DIR / "compliance_rules.json"
@@ -73,3 +82,9 @@ def check_compliance(text: str) -> dict[str, Any]:
         "detection_source": "deterministic",
         "final_safe_output": safe_output,
     }
+
+
+@tool
+def check_compliance_tool(text: str) -> dict[str, Any]:
+    """Strands-compatible tool wrapper around deterministic compliance scanning."""
+    return check_compliance(text)

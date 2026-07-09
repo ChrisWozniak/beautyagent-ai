@@ -73,5 +73,5 @@ def health() -> dict[str, str]:
 
 
 @app.post("/generate", response_model=GenerateResponse)
-def generate(request: GenerateRequest) -> GenerateResponse:
-    return generate_mock_response(request)
+async def generate(request: GenerateRequest) -> GenerateResponse:
+    return await generate_mock_response(request)

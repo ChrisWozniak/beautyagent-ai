@@ -1,7 +1,8 @@
-"""Mock BeautyAgent orchestration for the backend MVP."""
+"""BeautyAgent orchestration for the backend MVP."""
 
 from __future__ import annotations
 
+import asyncio
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -9,7 +10,7 @@ from typing import Any, Protocol
 
 from ..config import get_settings
 from ..models.request_models import Channel, GenerateRequest
-from ..models.response_models import ChannelResult, GenerateResponse
+from ..models.response_models import ChannelError, ChannelResult, GenerateResponse
 from ..tools.check_compliance import check_compliance
 from .llm_client import LLMDraftError, generate_draft_with_llm
 
@@ -168,11 +169,48 @@ def process_channel_loop(
     )
 
 
-def generate_mock_response(request: GenerateRequest) -> GenerateResponse:
-    return GenerateResponse(
-        results=[
-            process_channel_loop(request, channel)
+def channel_error_result(channel: Channel, code: str, message: str) -> ChannelResult:
+    return ChannelResult(
+        channel=channel,
+        generation_status="error",
+        raw_draft=None,
+        compliance_status=None,
+        flagged_phrases=None,
+        explanation=None,
+        detection_source=None,
+        final_safe_output=None,
+        retry_exhausted=None,
+        error=ChannelError(code=code, message=message),
+    )
+
+
+def _classify_channel_exception(exc: Exception) -> tuple[str, str]:
+    if isinstance(exc, TimeoutError):
+        return "TIMEOUT", "Generation timed out after retries."
+
+    if isinstance(exc, LLMDraftError) and "rate" in str(exc).lower():
+        return "RATE_LIMITED", "That channel's LLM call was rate limited."
+
+    return "TOOL_ERROR", "Channel generation failed before completion."
+
+
+async def process_channel_safely(request: GenerateRequest, channel: Channel) -> ChannelResult:
+    try:
+        return await asyncio.to_thread(process_channel_loop, request, channel)
+    except Exception as exc:
+        code, message = _classify_channel_exception(exc)
+        return channel_error_result(channel, code, message)
+
+
+async def generate_mock_response(request: GenerateRequest) -> GenerateResponse:
+    results = await asyncio.gather(
+        *[
+            process_channel_safely(request, channel)
             for channel in request.channels
         ],
+    )
+
+    return GenerateResponse(
+        results=list(results),
         error=None,
     )

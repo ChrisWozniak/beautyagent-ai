@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "id": "safe_tower28_instagram",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Daily Rescue Facial Spray",
+        "coreActives": "Hypochlorous Acid",
+        "brief": "Draft a gentle Instagram caption for sensitive-looking skin.",
+        "channels": ["instagram"]
+      }
+    },
+    {
+      "id": "risky_barrier_claim",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Daily Rescue Facial Spray",
+        "coreActives": "Hypochlorous Acid",
+        "brief": "Say it repairs your barrier overnight and makes skin eczema-free.",
+        "channels": ["instagram"]
+      }
+    },
+    {
+      "id": "safe_half_magic_tiktok",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Chromaddiction Matte Eye Paint",
+        "coreActives": "",
+        "brief": "Draft playful TikTok copy about bold color payoff.",
+        "channels": ["tiktok"]
+      }
+    }
+  ]
+}
