@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from ..models.request_models import Channel, GenerateRequest
 from ..models.response_models import ChannelResult, GenerateResponse
@@ -27,6 +27,11 @@ CHANNEL_ARTICLES: dict[Channel, str] = {
     "instagram": "an",
     "email": "an",
 }
+
+
+class DraftGenerator(Protocol):
+    def __call__(self, request: GenerateRequest, channel: Channel) -> str:
+        """Generate a raw draft for one requested channel."""
 
 
 @lru_cache(maxsize=1)
@@ -90,20 +95,59 @@ def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
     )
 
 
-def generate_channel_result(request: GenerateRequest, channel: Channel) -> ChannelResult:
-    raw_draft = draft_channel_copy(request, channel)
-    compliance = check_compliance(raw_draft)
+def _combine_unique(first: list[str], second: list[str]) -> list[str]:
+    combined: list[str] = []
+    for phrase in first + second:
+        if phrase not in combined:
+            combined.append(phrase)
+
+    return combined
+
+
+def _combine_explanations(first: str | None, second: str | None) -> str:
+    parts = [part for part in [first, second] if part]
+    return " ".join(parts)
+
+
+def process_channel_loop(
+    request: GenerateRequest,
+    channel: Channel,
+    draft_generator: DraftGenerator = draft_channel_copy,
+) -> ChannelResult:
+    """Run draft, deterministic audit, revision, and final backstop for a channel."""
+    raw_draft = draft_generator(request, channel)
+    first_audit = check_compliance(raw_draft)
+    final_safe_output = first_audit["final_safe_output"]
+    final_backstop = check_compliance(final_safe_output)
+
+    flagged_phrases = first_audit["flagged_phrases"]
+    explanation = first_audit["explanation"]
+    detection_source = first_audit["detection_source"]
+    retry_exhausted = False
+
+    if final_backstop["compliance_status"] == "FAILED":
+        flagged_phrases = _combine_unique(
+            flagged_phrases,
+            final_backstop["flagged_phrases"],
+        )
+        explanation = _combine_explanations(
+            explanation,
+            "Final deterministic backstop still found risky language.",
+        )
+        detection_source = "deterministic"
+        final_safe_output = final_backstop["final_safe_output"]
+        retry_exhausted = check_compliance(final_safe_output)["compliance_status"] == "FAILED"
 
     return ChannelResult(
         channel=channel,
         generation_status="completed",
         raw_draft=raw_draft,
-        compliance_status=compliance["compliance_status"],
-        flagged_phrases=compliance["flagged_phrases"],
-        explanation=compliance["explanation"],
-        detection_source=compliance["detection_source"],
-        final_safe_output=compliance["final_safe_output"],
-        retry_exhausted=False,
+        compliance_status=first_audit["compliance_status"],
+        flagged_phrases=flagged_phrases,
+        explanation=explanation,
+        detection_source=detection_source,
+        final_safe_output=final_safe_output,
+        retry_exhausted=retry_exhausted,
         error=None,
     )
 
@@ -111,7 +155,7 @@ def generate_channel_result(request: GenerateRequest, channel: Channel) -> Chann
 def generate_mock_response(request: GenerateRequest) -> GenerateResponse:
     return GenerateResponse(
         results=[
-            generate_channel_result(request, channel)
+            process_channel_loop(request, channel)
             for channel in request.channels
         ],
         error=None,
