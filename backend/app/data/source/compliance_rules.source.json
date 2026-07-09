@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "scope": "Brand-agnostic. One shared dictionary per PRD Section 9 ('One global regulatory dictionary (brand-agnostic — it's law, not voice)'). Do not duplicate these rules inside brand_configs.json.",
+    "source": "Extracted from Half Magic and Tower 28 brand voice docs' Section 4 (Compliance Sensitivities) — the subset that is legal/regulatory, not brand-specific voice preference.",
+    "version": "1.0"
+  },
+  "rules": [
+    {
+      "id": "disease_claims",
+      "category": "drug_claim",
+      "description": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory.",
+      "banned_phrases": ["cures acne", "heals eczema", "eczema-free", "eliminates redness", "repairs skin permanently", "repairs your barrier overnight", "cure", "treat eczema", "treat rosacea"],
+      "safe_framing": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
+      "confidence": "High"
+    },
+    {
+      "id": "medical_efficacy_claims",
+      "category": "unsubstantiated_claim",
+      "description": "No medical/clinical claims without real substantiation for that specific product.",
+      "banned_phrases": ["medically proven", "clinically proven", "toxin-free", "chemical-free", "anti-aging miracle", "reverses aging", "collagen boosting"],
+      "exception": "\"Collagen boosting\" and similar structure-function claims are permitted only if backed by real substantiating data for that specific product — not by default.",
+      "confidence": "High"
+    },
+    {
+      "id": "hypoallergenic_claim",
+      "category": "undefined_legal_term",
+      "description": "\"Hypoallergenic\" has no official FDA definition. Never use as a bare, unsupported claim.",
+      "requirement": "Anchor to third-party substantiation (e.g. HRIPT — Human Repeat Insult Patch Test) whenever the word is used.",
+      "confidence": "High"
+    },
+    {
+      "id": "antimicrobial_ingredient_claims",
+      "category": "drug_classification_risk",
+      "description": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant.",
+      "banned_phrases": ["sanitizer", "disinfectant", "disinfects", "kills bacteria", "kills germs"],
+      "safe_framing": "Use cosmetic-appropriate framing instead: soothes, purifies, calms, refreshes, hits refresh on stressed skin.",
+      "confidence": "High"
+    },
+    {
+      "id": "third_party_certification_claims",
+      "category": "endorsement_claim",
+      "description": "When referencing a third-party seal/certification program (e.g. National Eczema Association Seal of Acceptance), describe compliance with the program's ingredient guidelines only — never imply the organization medically endorses or prescribes the product.",
+      "safe_framing": "\"Follows [org]'s ingredient guidelines\" — never \"[org] recommends/endorses/prescribes this.\"",
+      "confidence": "High"
+    },
+    {
+      "id": "dermatologist_testing_claims",
+      "category": "unsubstantiated_claim",
+      "description": "\"Dermatologist tested,\" \"allergy tested,\" and similar testing claims are only usable when backed by verified third-party clinical trial results.",
+      "distinction": "Different from \"dermatologist recommended,\" which implies a professional endorsement most brands cannot substantiate and should be avoided regardless of testing status.",
+      "banned_phrases": ["dermatologist recommended"],
+      "confidence": "High"
+    },
+    {
+      "id": "eye_area_pigment_glitter_usage",
+      "category": "usage_warning",
+      "description": "Loose glitter, pressed pigments, and graphic liner products used near the eye area may require usage guidance depending on formulation and regional regulation.",
+      "requirement": "Include standard eye-area usage guidance by default for eye-adjacent glitter/pigment/liner products unless product-specific documentation says otherwise.",
+      "confidence": "Moderate"
+    },
+    {
+      "id": "color_additive_labeling",
+      "category": "labeling_requirement",
+      "description": "Bright/vivid pigments may carry U.S.-specific labeling requirements for eye-area use.",
+      "note": "Verify per product/SKU and market — not a blanket rule for every colored product.",
+      "confidence": "Moderate"
+    }
+  ]
+}
