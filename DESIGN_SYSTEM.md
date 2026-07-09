@@ -20,14 +20,15 @@ Reference for implementing the frontend (React + Vite + Tailwind per the PRD). A
   --color-ivory: #FCFBF9;       /* app background */
   --color-sand: #F4F0EA;        /* secondary surface — cards, inputs, unselected chip fill */
   --color-charcoal: #2C2C2C;    /* primary text */
-  --color-charcoal-muted: #6B6B6B; /* secondary/caption text, sublabels, disclaimers */
+  --color-charcoal-muted: #8A8480; /* secondary/caption text, sublabels, disclaimers — warm taupe, not neutral gray */
   --color-sage: #C7D7CE;        /* soft accents, dividers, secondary badge fill */
   --color-sage-transparent: rgba(199, 215, 206, 0.35); /* selected chip fill */
-  --color-terracotta: #C97B4A;  /* "Needs a tweak" badge + callout, muted not saturated */
-  --color-terracotta-bg: #F6E9DE; /* "Needs a tweak" callout background */
+  --color-terracotta: #C4714A;      /* "Needs a tweak" badge fill + border accent, muted not saturated */
+  --color-terracotta-bg: #F6EDDF;  /* "Needs a tweak" callout background */
+  --color-terracotta-text: #9B5530; /* text-on-terracotta-bg — badge label, callout body text; darker for contrast on light fill */
   --color-berry: #7A3B4E;       /* "High risk" badge only — genuine legal exposure, still restrained */
-  --color-berry-bg: #F1E2E6;
-  --color-border: rgba(44, 44, 44, 0.08); /* hairline borders */
+  --color-berry-bg: #F1E2E6;   /* NOTE: the Figma Make export used #8B4A6E for berry, which skews more pink/purple than intended. Do not adopt that value — use #7A3B4E here when the high-risk state is built (Week 2, see ui-changes-pending-week2.md) */
+  --color-border: rgba(44, 44, 44, 0.09); /* hairline borders */
 }
 ```
 
@@ -108,7 +109,7 @@ Generous line-height (1.5–1.6) for body copy and generated captions — this i
 
 ### Compliance Badge
 - **"Compliant":** sage/moss-tinted pill, small filled dot or checkmark, `--color-moss` text
-- **"Needs a tweak":** `--color-terracotta-bg` pill, small pencil/edit icon, `--color-terracotta` text
+- **"Needs a tweak":** `--color-terracotta-bg` pill, small pencil/edit icon, `--color-terracotta-text` text (use `--color-terracotta-text` not `--color-terracotta` — the darker value is required for contrast on the light fill)
 - **"High risk"** (rare — genuine legal exposure only): `--color-berry-bg` pill, `--color-berry` text, still calm/restrained styling — never a hard red alert
 - **Never** use the words "PASSED," "FAILED," or "VIOLATION" in any badge or label
 
@@ -127,11 +128,44 @@ Generous line-height (1.5–1.6) for body copy and generated captions — this i
 - Header row: compliance badge + channel label (left), expand/collapse chevron (right)
 - "Copy" button: secondary/outline style, bottom-right, copy icon + label
 
+### Error Card (per-channel technical failure — `generation_status: "error"`)
+This state is never rendered by the Figma Make export — spec'd here only. It must look clearly distinct from both compliance states: "the system couldn't run" and "the audit caught a problem" are different situations and must not look the same at a glance (per API contract frontend notes and `UI_COPY_DECK.md` §2).
+
+- **Shell:** same card geometry as the other result cards — 18–20px radius, hairline border, barely-there shadow. Only the header treatment and body content differ.
+- **Color:** neutral/gray throughout. No moss, no terracotta, no berry. Never use a compliance badge on this card — the channel never reached a compliance verdict, so no badge should imply it did.
+- **Header row:** `RefreshCw` icon from lucide-react (small, `--color-charcoal-muted`, no fill circle behind it) on the left where the compliance badge would normally sit, followed by the channel label in `--color-charcoal`. No expand/collapse chevron — the card body is always visible since there's nothing to collapse.
+- **Body:** one line of plain-language copy from `UI_COPY_DECK.md` §2, matched to the error code:
+  - `TIMEOUT` → "This one's taking longer than expected."
+  - `RATE_LIMITED` → "This channel hit a rate limit."
+  - `TOOL_ERROR` → "We couldn't complete the compliance check for this one."
+  - Fallback (any other code) → "Something went wrong generating this one. The others are still ready below."
+- **Action:** a single "Retry this channel" button — secondary/outline style, same visual weight as the Copy button, but replaces it entirely. There is no output to copy.
+- **Card order:** holds its fixed position in the TikTok → Instagram → Email sequence regardless of which channel errored. An error on one channel does not reshuffle the other cards.
+
 ### Generating-State Progress List
 - Plain-language steps only — never raw JSON, tool names, or terms like "iteration," "threshold," "POST"
 - Completed step: filled moss checkmark circle
 - Active step: outline circle with a subtle pulsing ring, no percentage bar
 - Steps: "Reading your brief" → "Drafting copy for each channel" → "Checking claims against category guidelines" → "Finalizing your campaign"
+
+---
+
+## Icons
+
+**Library:** `lucide-react` for all UI chrome icons. No decorative icon rows — icons only where they add real clarity.
+
+| Purpose | Icon | Notes |
+|---|---|---|
+| Copy button | `Copy` (lucide) | Swaps to `Check` on copied state |
+| Expand/collapse chevron | `ChevronDown` (lucide) | Rotates 180° when open |
+| "Needs a tweak" badge | `Pencil` (lucide) | size 9, strokeWidth 2.5 |
+| Generating step complete | `Check` (lucide) | In filled moss circle |
+| Instagram channel chip | Instagram brand glyph (SVG) | Recolored to `--color-moss` / `--color-ivory` — do **not** use the official gradient mark or lucide's `Camera` placeholder |
+| TikTok channel chip | TikTok brand glyph (SVG) | Recolored to `--color-moss` / `--color-ivory` — do **not** use the official dual-color mark or lucide's `Music` placeholder |
+| Email channel chip | `Mail` (lucide) | Generic mail icon is appropriate — no single brand to represent |
+| Error card header | `RefreshCw` (lucide) | Small, `--color-charcoal-muted`, no fill circle — sits where the compliance badge would be |
+
+**Instagram and TikTok glyphs:** use the official monochrome SVG marks, recolored to the app's palette (moss fill on active state, charcoal/muted on inactive). The Figma Make export used `Camera` and `Music` from lucide as placeholders — these must be replaced with real brand glyphs before Day 3 demo. Source the SVGs from each platform's official brand kit; do not trace or modify the mark shape.
 
 ---
 
