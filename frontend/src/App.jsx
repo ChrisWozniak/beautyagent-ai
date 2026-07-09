@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Check, Copy, Pencil, ChevronDown, Camera, Music, Mail, RefreshCw } from "lucide-react";
 import clsx from "clsx";
-import Layout from "./components/Layout.jsx";
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 
@@ -169,6 +168,20 @@ function TopNav({ step, onReset }) {
   );
 }
 
+// ─── Payload builder ─────────────────────────────────────────────────────────
+
+function buildPayload(form) {
+  const payload = {
+    brandId: form.brand,
+    productName: form.productName.trim(),
+    brief: form.brief.trim(),
+    channels: form.channels,
+  };
+  const actives = form.adaptiveField.trim();
+  if (actives) payload.coreActives = actives;
+  return payload;
+}
+
 // ─── Screen 1 · Input form ────────────────────────────────────────────────────
 
 function InputScreen({ form, setForm, onGenerate }) {
@@ -271,8 +284,8 @@ function InputScreen({ form, setForm, onGenerate }) {
             onChange={(e) => setForm((p) => ({ ...p, adaptiveField: e.target.value }))}
             placeholder={
               form.productType === "skincare"
-                ? "e.g. Zinc Oxide, Hyaluronic Acid, Niacinamide"
-                : "e.g. Espresso No. 12, warm-neutral undertone"
+                ? "e.g. Niacinamide, Squalane"
+                : "e.g. shade name/number, undertone notes"
             }
             className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#8A8480]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
           />
@@ -294,6 +307,11 @@ function InputScreen({ form, setForm, onGenerate }) {
             }
             className="w-full bg-card border border-border rounded-[18px] px-5 py-4 text-[14px] text-foreground placeholder:text-[#8A8480]/40 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/15 focus:border-[#315B4C]/25 transition-all resize-none leading-[1.75] shadow-[inset_0_1px_3px_rgba(44,44,44,0.04)]"
           />
+          {form.brief.length > 900 && (
+            <p className="mt-2 text-[12px] text-[#C4714A] leading-snug">
+              That's a bit long — mind trimming it? Aim for 4–5 sentences to get the best results.
+            </p>
+          )}
         </div>
 
         {/* Channel chips */}
@@ -309,14 +327,14 @@ function InputScreen({ form, setForm, onGenerate }) {
                   className={clsx(
                     "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[12px] text-left transition-all duration-150",
                     active
-                      ? "bg-[#E2EDE9] border border-[#B8D0C6]"
-                      : "bg-[#EEF5F2] border border-transparent hover:border-[#C7D7CE]/60"
+                      ? "bg-[rgba(199,215,206,0.35)] border border-[#C7D7CE]"
+                      : "bg-[#F4F0EA] border border-[rgba(44,44,44,0.09)] hover:border-[#C7D7CE]"
                   )}
                 >
                   <div
                     className={clsx(
                       "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-150",
-                      active ? "bg-[#315B4C]" : "bg-[#C7D7CE]"
+                      active ? "bg-[#315B4C]" : "border-2 border-[#C7D7CE] bg-transparent"
                     )}
                   >
                     <ch.Icon
@@ -359,12 +377,9 @@ function InputScreen({ form, setForm, onGenerate }) {
             Generate Campaign
           </button>
 
-          <div className="mt-5 px-5 py-4 rounded-[12px] bg-secondary border border-border">
-            <p className="text-[12px] text-[#2C2C2C]/70 leading-[1.65]">
-              <span className="font-semibold text-foreground">About this tool.</span>{" "}
-              Aura reviews copy against FDA/MoCRA cosmetic-claim guidelines to help your team catch common claim issues before launch. This is compliance triage — not legal sign-off or regulatory approval. When in doubt, loop in your legal team.
-            </p>
-          </div>
+          <p className="mt-4 text-[12px] text-[#8A8480] leading-[1.65] text-center">
+            Copy is checked against FDA/MoCRA cosmetic-claim rules. This tool provides compliance triage only — not legal approval or sign-off.
+          </p>
         </div>
 
       </div>
@@ -640,6 +655,8 @@ export default function App() {
   const [copiedId, setCopiedId] = useState(null);
 
   const handleGenerate = useCallback(() => {
+    const payload = buildPayload(form);
+    console.log("[BeautyAgent] /generate payload:", payload);
     setStep("generating");
     setGeneratingStep(0);
     GENERATING_STEPS.forEach((_, i) => {
@@ -650,7 +667,7 @@ export default function App() {
         }
       }, (i + 1) * 1100);
     });
-  }, []);
+  }, [form]);
 
   const handleReset = useCallback(() => {
     setStep("input");
