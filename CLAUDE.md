@@ -6,7 +6,7 @@ Read these companion files before starting any session:
 - `BEAUTYAGENT_API_CONTRACT.md` — the `/generate` request/response schema. Source of truth. Never invent fields.
 - `docs/DECISIONS.md` — 5 locked pre-build decisions with rationale
 - `docs/PRD.md` — full product requirements, user journeys, UI/UX notes (section 7)
-- `DESIGN_SYSTEM.md` — **not finalized yet.** Do not assume tokens exist; ask before introducing any color, spacing, or component-library choice not already agreed on.
+- `DESIGN_SYSTEM.md` — finalized and reconciled against the Figma Make export (2026-07-09). All color tokens, component specs, and icon decisions are locked. See section 10 below before touching it.
 
 ---
 
@@ -186,4 +186,25 @@ If asked to add anything in the out-of-scope list, flag it as a Backlog item (PR
 | `docs/PRD.md` | Full product requirements, user journeys, success metrics |
 | `shared/sample_request.json` | Mock request matching the locked contract |
 | `shared/sample_response.json` | Mock response — should mirror Example 5 (multi-channel partial failure) |
+
+---
+
+## 10. Design System
+
+`DESIGN_SYSTEM.md` is the canonical frontend design reference. A few things worth
+knowing before touching it again:
+
+- Colors were reconciled against the Figma Make export (`Redesign AI Workspace UI/`)
+  on 2026-07-09, but not all export values were kept — `--color-charcoal-muted` is
+  deliberately `#6B6B6B`, not the export's `#8A8480`, because the export's value fails
+  WCAG AA contrast (3.2–3.6:1) everywhere it's used. Don't re-adopt export color
+  values without checking contrast first.
+- The Figma export is Tailwind 4 + TypeScript + pnpm; `frontend/` is Tailwind 3 + JS +
+  npm. Use the export as a visual reference only, never direct-port its code or its
+  `@theme` CSS blocks.
+- Badges display "Compliant"/"Needs a tweak" — never the raw API `compliance_status`
+  values ("PASSED"/"FAILED"). A third "High risk" state is Week 2 scope, see
+  `ui-changes-pending-week2.md`.
+- Channel icons: real Instagram/TikTok brand glyphs, not generic Camera/Music —
+  Email keeps a generic Mail icon.
 

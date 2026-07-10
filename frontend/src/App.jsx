@@ -1,6 +1,24 @@
 import { useState, useCallback } from "react";
-import { Check, Copy, Pencil, ChevronDown, Camera, Music, Mail, RefreshCw } from "lucide-react";
+import { Check, Copy, Pencil, ChevronDown, Mail, RefreshCw } from "lucide-react";
 import clsx from "clsx";
+
+// ─── Brand channel icons (monochrome SVGs, recolored via currentColor) ───────
+
+function InstagramIcon({ size = 14, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+    </svg>
+  );
+}
+
+function TikTokIcon({ size = 14, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+    </svg>
+  );
+}
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 
@@ -10,8 +28,8 @@ const BRANDS = [
 ];
 
 const CHANNELS = [
-  { id: "instagram", label: "Instagram Caption", sub: "With hashtags", Icon: Camera },
-  { id: "tiktok", label: "TikTok Script", sub: "Spoken, 30–60 sec", Icon: Music },
+  { id: "instagram", label: "Instagram Caption", sub: "With hashtags", Icon: InstagramIcon },
+  { id: "tiktok", label: "TikTok Script", sub: "Spoken, 30–60 sec", Icon: TikTokIcon },
   { id: "email", label: "Email", sub: "Subject + body", Icon: Mail },
 ];
 
@@ -22,36 +40,36 @@ const GENERATING_STEPS = [
   "Finalizing your campaign",
 ];
 
-// Mock results — hardcoded for visual reference only.
+// Mock results — Example 5 from the API contract (multi-channel partial failure).
+// Order is fixed: TikTok → Instagram → Email, per contract frontend notes.
 // compliance maps to API's compliance_status: "compliant" = PASSED, "tweak" = FAILED.
 const ALL_RESULTS = [
+  {
+    channelId: "tiktok",
+    channelLabel: "TikTok Script",
+    compliance: "compliant",
+    checkedNote: "Checked against cosmetic claim rules for short-form video",
+    copy: "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
+  },
   {
     channelId: "instagram",
     channelLabel: "Instagram Caption",
     compliance: "tweak",
     checkedNote: "Checked against cosmetic vs. drug claim rules",
-    copy: "Tower 28 SkinTint SPF 30 — clean coverage with SPF 30, no fragrance, no fuss. ✨ Shop via link in bio. #Tower28 #CleanBeauty #SPF30 #SensitiveSkinApproved",
+    copy: "Wake up to calmer, happier skin ✨ SOS Daily Rescue Facial Spray helps support your skin barrier, morning and night.",
     edit: {
       originalDraft:
-        "Tower 28 SkinTint SPF 30 — because great skin heals from the outside in. ✨ Clean, SPF-packed, and fragrance-free. Shop via link in bio. #Tower28 #CleanBeauty #SPF30",
-      note: '"Heals from the outside in" reads as a treatment claim. Under FDA cosmetic guidelines, language implying the product repairs or heals skin crosses into drug-claim territory — an easy fix that keeps all the warmth of the copy.',
+        "Wake up to eczema-free skin every single day ✨ SOS Daily Rescue Facial Spray repairs your barrier while you sleep.",
+      note: '"Eczema-free" claims to treat a diagnosable condition — a drug claim. "Repairs your barrier while you sleep" is a structure-function claim cosmetics can\'t legally make.',
       correctedCopy:
-        "Tower 28 SkinTint SPF 30 — clean coverage with SPF 30, no fragrance, no fuss. ✨ Shop via link in bio. #Tower28 #CleanBeauty #SPF30 #SensitiveSkinApproved",
+        "Wake up to calmer, happier skin ✨ SOS Daily Rescue Facial Spray helps support your skin barrier, morning and night.",
     },
-  },
-  {
-    channelId: "tiktok",
-    channelLabel: "TikTok Script",
-    compliance: "error",
-    errorCode: "TIMEOUT",
   },
   {
     channelId: "email",
     channelLabel: "Email",
-    compliance: "compliant",
-    checkedNote: "Checked against FDA/MoCRA cosmetic claim rules for email marketing",
-    emailSubject: "Your skin, its best self — Tower 28 SkinTint SPF 30",
-    copy: "Meet your new everyday.\n\nTower 28 SkinTint SPF 30 is a clean, fragrance-free tinted moisturizer built for sensitive skin — and everyone else who just wants skin that looks good.\n\nSPF 30 broad spectrum. No parabens. No sulfates. No fragrance.\n\nFind it at Sephora and Target, or shop at tower28beauty.com.\n\nUse code [NAME] for 15% off your first order.\n\n—\nTower 28 Beauty\nSensitive-skin safe. Sephora-clean.",
+    compliance: "error",
+    errorCode: "TIMEOUT",
   },
 ];
 
@@ -71,24 +89,16 @@ function getErrorCopy(code) {
 function ComplianceBadge({ level }) {
   if (level === "compliant") {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[#EBF2EE] text-[#315B4C] border border-[#C7D7CE]">
-        <span className="w-[5px] h-[5px] rounded-full bg-[#315B4C] flex-shrink-0" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[#EBF2EE] text-[var(--color-moss)] border border-[var(--color-sage)]">
+        <span className="w-[5px] h-[5px] rounded-full bg-[var(--color-moss)] flex-shrink-0" />
         Compliant
       </span>
     );
   }
-  if (level === "tweak") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[#F6EDDF] text-[#9B5530] border border-[#E8C9A8]">
-        <Pencil size={9} strokeWidth={2.5} className="flex-shrink-0" />
-        Needs a tweak
-      </span>
-    );
-  }
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[#F2E8ED] text-[#7A3A5A] border border-[#D9B5C8]">
-      <span className="w-[5px] h-[5px] rounded-full bg-[#7A3A5A] flex-shrink-0" />
-      High risk
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[var(--color-terracotta-bg)] text-[var(--color-terracotta-text)] border border-[#E8C9A8]">
+      <Pencil size={9} strokeWidth={2.5} className="flex-shrink-0" />
+      Needs a tweak
     </span>
   );
 }
@@ -125,7 +135,7 @@ function FieldLabel({ children, hint }) {
         {children}
       </p>
       {hint && (
-        <p className="text-[11px] text-[#8A8480]/60 mt-1 font-normal normal-case tracking-normal leading-snug">
+        <p className="text-[11px] text-[#6B6B6B]/60 mt-1 font-normal normal-case tracking-normal leading-snug">
           {hint}
         </p>
       )}
@@ -251,7 +261,7 @@ function InputScreen({ form, setForm, onGenerate }) {
             value={form.productName}
             onChange={(e) => setForm((p) => ({ ...p, productName: e.target.value }))}
             placeholder={activeBrand.id === "tower_28" ? "e.g. SkinTint SPF 30" : "e.g. Celestial Liner"}
-            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#8A8480]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
+            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#6B6B6B]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
           />
         </div>
 
@@ -287,7 +297,7 @@ function InputScreen({ form, setForm, onGenerate }) {
                 ? "e.g. Niacinamide, Squalane"
                 : "e.g. shade name/number, undertone notes"
             }
-            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#8A8480]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
+            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#6B6B6B]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
           />
         </div>
 
@@ -305,7 +315,7 @@ function InputScreen({ form, setForm, onGenerate }) {
                 ? 'e.g. Launching SkinTint for summer. Angle: "your skin but better" — light coverage, clean, fragrance-free, SPF 30. Target: sensitive-skin girlies who are done with heavy bases. Key claims: dermatologist-tested, free of fragrance/parabens/sulfates. Tone: confident, minimalist, not clinical.'
                 : "e.g. Launching Celestial Liner in three new shades for holiday. Angle: otherworldly precision, all-day wear. Key claims: smudge-proof, ophthalmologist-tested. Tone: fantasy-forward, luxe, unapologetically bold."
             }
-            className="w-full bg-card border border-border rounded-[18px] px-5 py-4 text-[14px] text-foreground placeholder:text-[#8A8480]/40 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/15 focus:border-[#315B4C]/25 transition-all resize-none leading-[1.75] shadow-[inset_0_1px_3px_rgba(44,44,44,0.04)]"
+            className="w-full bg-card border border-border rounded-[18px] px-5 py-4 text-[14px] text-foreground placeholder:text-[#6B6B6B]/40 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/15 focus:border-[#315B4C]/25 transition-all resize-none leading-[1.75] shadow-[inset_0_1px_3px_rgba(44,44,44,0.04)]"
           />
           {form.brief.length > 900 && (
             <p className="mt-2 text-[12px] text-[#C4714A] leading-snug">
@@ -377,7 +387,7 @@ function InputScreen({ form, setForm, onGenerate }) {
             Generate Campaign
           </button>
 
-          <p className="mt-4 text-[12px] text-[#8A8480] leading-[1.65] text-center">
+          <p className="mt-4 text-[12px] text-[#6B6B6B] leading-[1.65] text-center">
             Copy is checked against FDA/MoCRA cosmetic-claim rules. This tool provides compliance triage only — not legal approval or sign-off.
           </p>
         </div>
@@ -444,7 +454,7 @@ function GeneratingScreen({ activeStep }) {
                     "text-[15px] leading-snug transition-colors duration-300",
                     done && "text-foreground font-medium",
                     current && "text-foreground font-semibold",
-                    pending && "text-[#8A8480]/50 font-medium"
+                    pending && "text-[#6B6B6B]/50 font-medium"
                   )}
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
@@ -461,7 +471,7 @@ function GeneratingScreen({ activeStep }) {
 
 // ─── Screen 3 · Results ───────────────────────────────────────────────────────
 
-function ResultsScreen({ results, form, copiedId, onCopy, onReset }) {
+function ResultsScreen({ results, form, copiedId, onCopy }) {
   const activeBrand = BRANDS.find((b) => b.id === form.brand);
   const compliantCount = results.filter((r) => r.compliance === "compliant").length;
   const tweakCount = results.filter((r) => r.compliance === "tweak").length;
@@ -475,28 +485,20 @@ function ResultsScreen({ results, form, copiedId, onCopy, onReset }) {
 
   return (
     <div className="max-w-[680px] mx-auto px-6 pt-20 pb-28">
-      <div className="pt-6 mb-10 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: activeBrand.dot }} />
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.12em]">
-              {activeBrand.name}
-            </span>
-          </div>
-          <h1
-            className="text-[1.875rem] font-bold text-foreground tracking-tight leading-tight mb-2"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            {form.productName || "Campaign"}
-          </h1>
-          <p className="text-[13px] text-muted-foreground">{summaryLine}</p>
+      <div className="pt-6 mb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: activeBrand.dot }} />
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.12em]">
+            {activeBrand.name}
+          </span>
         </div>
-        <button
-          onClick={onReset}
-          className="mt-2 flex-shrink-0 text-[12px] font-medium text-muted-foreground hover:text-foreground border border-border px-3.5 py-2 rounded-[8px] transition-colors"
+        <h1
+          className="text-[1.875rem] font-bold text-foreground tracking-tight leading-tight mb-2"
+          style={{ fontFamily: "var(--font-heading)" }}
         >
-          New campaign
-        </button>
+          {form.productName || "Campaign"}
+        </h1>
+        <p className="text-[13px] text-muted-foreground">{summaryLine}</p>
       </div>
 
       <div className="space-y-4">
@@ -516,12 +518,12 @@ function ResultCard({ result, copiedId, onCopy }) {
       <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-[0_1px_5px_rgba(44,44,44,0.05)]">
         <div className="w-full flex items-center px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <RefreshCw size={14} strokeWidth={1.8} className="text-[#8A8480] flex-shrink-0" />
+            <RefreshCw size={14} strokeWidth={1.8} className="text-[#6B6B6B] flex-shrink-0" />
             <span className="text-[13px] font-semibold text-foreground">{result.channelLabel}</span>
           </div>
         </div>
         <div className="px-6 py-5">
-          <p className="text-[14px] text-[#8A8480] leading-[1.75]">
+          <p className="text-[14px] text-[#6B6B6B] leading-[1.75]">
             {getErrorCopy(result.errorCode)}
           </p>
           <div className="mt-5 flex justify-end">
@@ -579,11 +581,11 @@ function ResultCard({ result, copiedId, onCopy }) {
                 </p>
               </div>
 
-              <div className="bg-[#FAF0E4] border border-[#E8C9A8] rounded-[13px] px-4 py-4">
-                <p className="text-[10px] font-bold text-[#9B5530] uppercase tracking-[0.1em] mb-1.5">
+              <div className="bg-[var(--color-terracotta-bg)] rounded-[13px] px-4 py-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.13em] mb-1.5">
                   Here's the issue
                 </p>
-                <p className="text-[13px] text-[#7A4220] leading-[1.7]">{result.edit?.note}</p>
+                <p className="text-[13px] text-[var(--color-terracotta-text)] leading-[1.7]">{result.edit?.note}</p>
               </div>
 
               <div>
@@ -649,7 +651,7 @@ export default function App() {
     productType: "skincare",
     adaptiveField: "",
     brief: "",
-    channels: ["instagram", "tiktok"],
+    channels: ["tiktok", "instagram", "email"],
   });
   const [generatingStep, setGeneratingStep] = useState(0);
   const [copiedId, setCopiedId] = useState(null);
@@ -696,7 +698,6 @@ export default function App() {
             form={form}
             copiedId={copiedId}
             onCopy={handleCopy}
-            onReset={handleReset}
           />
         )}
       </main>

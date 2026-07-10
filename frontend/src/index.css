@@ -7,10 +7,22 @@
 :root {
   --font-heading: 'Manrope', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
+
+  --color-moss: #315B4C;
+  --color-ivory: #FCFBF9;
+  --color-sand: #F4F0EA;
+  --color-charcoal: #2C2C2C;
+  --color-charcoal-muted: #6B6B6B;
+  --color-sage: #C7D7CE;
+  --color-sage-transparent: rgba(199, 215, 206, 0.35);
+  --color-terracotta: #C4714A;
+  --color-terracotta-text: #9B5530;
+  --color-terracotta-bg: #F6EDDF;
+  --color-border: rgba(44, 44, 44, 0.09);
 }
 
 body {
   font-family: var(--font-body);
-  background-color: #FCFBF9;
-  color: #2C2C2C;
+  background-color: var(--color-ivory);
+  color: var(--color-charcoal);
 }
