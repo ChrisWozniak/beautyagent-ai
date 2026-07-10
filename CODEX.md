@@ -75,7 +75,7 @@ For completed channel results:
 - Jillian's UI may display these statuses as "Compliant" and "Needs a tweak"; this is display-layer copy only, not an API contract change.
 - `flagged_phrases` is an array
 - `explanation` is a string
-- `detection_source` is `"deterministic"`, `"llm"`, `"both"`, or `null`
+- `detection_source` is `"deterministic"`, `"llm_audit"`, `"both"`, or `null`
 - `final_safe_output` is a string
 - `retry_exhausted` is a boolean
 - `error` is `null`
@@ -97,6 +97,13 @@ Compliance is hybrid:
 - deterministic re-scan of final output before returning any completed result
 
 The deterministic backstop is required even if the agent already called the compliance tool.
+
+When tuning generated copy, keep output card-friendly for Jillian's UI without changing API fields:
+
+- TikTok drafts should scan as `Hook:`, `Script:`, and `CTA:`.
+- Email drafts should scan as `Subject:` followed by `Body:`.
+- Instagram drafts should read as polished caption copy.
+- Continue auditing both the generated draft and the marketer brief so risky input language is surfaced even when the generated copy is clean.
 
 ## Red-Team Evals
 
@@ -121,9 +128,10 @@ Optional live OpenRouter smoke test:
 
 ```powershell
 python backend/scripts/smoke_openrouter.py
+python backend/scripts/smoke_generate_live.py
 ```
 
-The smoke test should only be considered a live pass when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured. A skipped smoke test is acceptable for local backend-only work but should be called out before demo/deploy.
+The smoke tests should only be considered a live pass when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured. A skipped smoke test is acceptable for local backend-only work but should be called out before demo/deploy.
 
 ## MVP Boundaries
 
