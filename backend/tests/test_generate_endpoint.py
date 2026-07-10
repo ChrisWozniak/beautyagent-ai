@@ -228,6 +228,19 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("calm and clear up skin irritation", result["flagged_phrases"])
         self.assertIn("visibly reduces puffiness and dark circles", result["flagged_phrases"])
 
+    def test_compliance_explanations_are_deduped_by_rule(self) -> None:
+        result = check_compliance_tool(
+            "Say it is eczema-free and repairs your barrier overnight."
+        )
+
+        self.assertEqual(result["compliance_status"], "FAILED")
+        self.assertIn("eczema-free", result["flagged_phrases"])
+        self.assertIn("repairs your barrier overnight", result["flagged_phrases"])
+        self.assertEqual(
+            result["explanation"].count("Cosmetics cannot claim to heal"),
+            1,
+        )
+
     def test_final_output_is_rescanned_before_returning(self) -> None:
         response = self.client.post(
             "/generate",
@@ -300,6 +313,52 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("Final deterministic backstop", result.explanation)
         self.assertEqual(result.final_safe_output, "clean rewrite")
         self.assertFalse(result.retry_exhausted)
+
+    def test_channel_loop_dedupes_repeated_explanations(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Centella",
+            brief="Test brief.",
+            channels=["instagram"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "raw draft"
+
+        audits = [
+            {
+                "compliance_status": "FAILED",
+                "flagged_phrases": ["draft risky phrase"],
+                "explanation": "Shared explanation.",
+                "detection_source": "deterministic",
+                "final_safe_output": "clean rewrite",
+            },
+            {
+                "compliance_status": "FAILED",
+                "flagged_phrases": ["brief risky phrase"],
+                "explanation": "Shared explanation.",
+                "detection_source": "deterministic",
+                "final_safe_output": "Test brief.",
+            },
+            {
+                "compliance_status": "PASSED",
+                "flagged_phrases": [],
+                "explanation": "",
+                "detection_source": None,
+                "final_safe_output": "clean rewrite",
+            },
+        ]
+
+        with patch("backend.app.agent.beauty_agent.check_compliance", side_effect=audits):
+            result = process_channel_loop(request, "instagram", draft_generator)
+
+        self.assertEqual(result.compliance_status, "FAILED")
+        self.assertEqual(
+            result.flagged_phrases,
+            ["draft risky phrase", "brief risky phrase"],
+        )
+        self.assertEqual(result.explanation.count("Shared explanation."), 1)
 
     def test_channel_loop_uses_llm_drafting_when_enabled(self) -> None:
         request = GenerateRequest(

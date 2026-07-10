@@ -68,6 +68,11 @@ def _has_active_match(text: str, phrase: str) -> bool:
     return any(not _is_negated_match(text, match.start()) for match in pattern.finditer(text))
 
 
+def _append_unique(items: list[str], item: str) -> None:
+    if item not in items:
+        items.append(item)
+
+
 def check_compliance(text: str) -> dict[str, Any]:
     """Scan text for deterministic MVP compliance risks."""
     flagged_phrases: list[str] = []
@@ -80,7 +85,7 @@ def check_compliance(text: str) -> dict[str, Any]:
             continue
 
         flagged_phrases.append(phrase)
-        explanations.append(rule["explanation"])
+        _append_unique(explanations, rule["explanation"])
         safe_output = _replace_case_insensitive(
             safe_output,
             phrase,

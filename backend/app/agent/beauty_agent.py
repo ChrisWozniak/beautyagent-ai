@@ -115,7 +115,19 @@ def _combine_unique(first: list[str], second: list[str]) -> list[str]:
 
 
 def _combine_explanations(first: str | None, second: str | None) -> str:
-    parts = [part for part in [first, second] if part]
+    parts: list[str] = []
+    seen_keys: set[str] = set()
+    for part in [first, second]:
+        if not part:
+            continue
+
+        key = part.removeprefix("Marketer brief also included risky language: ")
+        if key in seen_keys:
+            continue
+
+        parts.append(part)
+        seen_keys.add(key)
+
     return " ".join(parts)
 
 

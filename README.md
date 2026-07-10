@@ -35,8 +35,15 @@ See `docs/TEAM_WORKFLOW.md` for the team ownership convention.
 Run these from the repository root before pushing backend changes:
 
 ```powershell
-python -m unittest discover -s backend -p "test_*.py" -v
-python backend/scripts/run_red_team_eval.py
+python -m unittest discover -s backend\tests -v
+python backend/scripts/run_red_team_eval.py --compact
+```
+
+For timeout-friendly eval chunks:
+
+```powershell
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
+python backend/scripts/run_red_team_eval.py --case-id channel_specific_risky_instruction --compact
 ```
 
 Optional live OpenRouter smoke test:
@@ -49,3 +56,10 @@ python backend/scripts/smoke_generate_live.py
 The smoke tests only run live drafting when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` is configured. Otherwise they exit as skipped.
 
 Backend work should preserve the `/generate` contract in `BEAUTYAGENT_API_CONTRACT.md` so Jillian's frontend can continue wiring against stable fields.
+
+Current backend behavior notes:
+
+- `/generate` is one request -> one full response; there is no streaming, polling, websocket, or mid-request progress endpoint.
+- OpenRouter failures fall back to deterministic drafting, and fallback drafts still pass through `check_compliance` plus the final deterministic safety backstop.
+- TikTok `Hook` / `Script` / `CTA` and Email `Subject` / `Body` are formatted inside `raw_draft` and `final_safe_output`; they are not separate API fields.
+- Brief-level compliance violations can return `FAILED` even when the visible generated draft is clean. In that case `flagged_phrases` and `explanation` point back to risky marketer brief language.

@@ -74,7 +74,7 @@ For completed channel results:
 - `compliance_status` is `"PASSED"` or `"FAILED"`
 - Jillian's UI may display these statuses as "Compliant" and "Needs a tweak"; this is display-layer copy only, not an API contract change.
 - `flagged_phrases` is an array
-- `explanation` is a string
+- `explanation` is a string. Keep repeated rule explanations deduped when multiple phrases hit the same rule.
 - `detection_source` is `"deterministic"`, `"llm_audit"`, `"both"`, or `null`
 - `final_safe_output` is a string
 - `retry_exhausted` is a boolean
@@ -98,10 +98,16 @@ Compliance is hybrid:
 
 The deterministic backstop is required even if the agent already called the compliance tool.
 
+If OpenRouter/LiteLLM drafting fails, deterministic fallback copy must still flow through the same compliance loop: draft audit, marketer brief audit, merged audit, and final deterministic backstop. Do not add a fallback path that returns copy without `check_compliance`.
+
+Brief-level compliance violations are intentional. A result can be `FAILED` even when `raw_draft` and `final_safe_output` look clean because the marketer brief itself included risky direction. In that case, preserve `generation_status: "completed"`, `error: null`, and explain the issue with the `Marketer brief also included risky language:` prefix.
+
+When a brief contains channel-specific instructions, audit the channel-relevant portion for that channel rather than failing every channel from a risky instruction scoped to one channel.
+
 When tuning generated copy, keep output card-friendly for Jillian's UI without changing API fields:
 
-- TikTok drafts should scan as `Hook:`, `Script:`, and `CTA:`.
-- Email drafts should scan as `Subject:` followed by `Body:`.
+- TikTok drafts should scan as `Hook:`, `Script:`, and `CTA:` inside the single string fields. These are not separate API fields.
+- Email drafts should scan as `Subject:` followed by `Body:` inside the single string fields. These are not separate API fields.
 - Instagram drafts should read as polished caption copy.
 - Continue auditing both the generated draft and the marketer brief so risky input language is surfaced even when the generated copy is clean.
 
@@ -115,13 +121,20 @@ Backend eval infrastructure lives in:
 
 Jillian / Person A owns the final expanded eval content. Backend work should keep the runner and schema stable, support both `expected_status` and `expected_by_channel`, and avoid treating seed cases as the final demo pass-rate set without content review.
 
+Use chunked or targeted eval runs when live LLM calls are slow:
+
+```powershell
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
+python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --compact
+```
+
 ## Backend Validation
 
 Run these from the repository root after backend changes:
 
 ```powershell
-python -m unittest discover -s backend -p "test_*.py" -v
-python backend/scripts/run_red_team_eval.py
+python -m unittest discover -s backend\tests -v
+python backend/scripts/run_red_team_eval.py --compact
 ```
 
 Optional live OpenRouter smoke test:
@@ -132,6 +145,8 @@ python backend/scripts/smoke_generate_live.py
 ```
 
 The smoke tests should only be considered a live pass when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured. A skipped smoke test is acceptable for local backend-only work but should be called out before demo/deploy.
+
+The backend currently returns one full `/generate` response after all requested channels complete or error. There is no streaming, polling, websocket, or mid-request progress endpoint.
 
 ## MVP Boundaries
 

@@ -36,9 +36,14 @@ CHANNEL_TIMEOUT_SECONDS=20
 ```
 
 If LLM drafting is disabled, unavailable, or misconfigured, the backend falls back to deterministic mock drafting and still returns the same `/generate` response shape.
+Fallback drafts still run through the same compliance loop as LLM drafts: draft audit, marketer brief audit, merged audit, and final deterministic safety backstop.
 `LLM_TIMEOUT_SECONDS` limits the direct provider call. `LLM_MAX_TOKENS` caps the draft response size. `CHANNEL_TIMEOUT_SECONDS` limits the full per-channel backend pipeline and returns that channel with `generation_status: "error"` and `error.code: "TIMEOUT"` if exceeded.
 
-Drafts are formatted for the current result cards: TikTok uses `Hook` / `Script` / `CTA`, Email uses `Subject` / `Body`, and Instagram reads as caption copy. The backend audits both the generated draft and the original marketer brief before returning a completed result.
+Drafts are formatted for the current result cards: TikTok uses `Hook` / `Script` / `CTA`, Email uses `Subject` / `Body`, and Instagram reads as caption copy. These are formatting conventions inside the single `raw_draft` and `final_safe_output` string fields, not separate API fields.
+
+The backend audits both the generated draft and the original marketer brief before returning a completed result. Brief-level violations can return `compliance_status: "FAILED"` even when the visible draft is clean; those explanations start with `Marketer brief also included risky language:`. Repeated explanations from the same compliance rule are deduped so UI cards do not show the same rationale multiple times.
+
+`/generate` currently returns one full response after all requested channels complete or error. There is no streaming, polling, websocket, or mid-request progress endpoint.
 
 Backend-only OpenRouter smoke test:
 
@@ -65,19 +70,26 @@ python backend/scripts/run_red_team_eval.py
 
 The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes. It supports both a single `expected_status` for all requested channels and an `expected_by_channel` map for mixed multi-channel cases.
 
+For timeout-friendly chunks or targeted reruns:
+
+```powershell
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
+python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --compact
+```
+
 Eval case authoring notes live in `backend/evals/README.md`. Jillian / Person A owns the final expanded eval content.
 
 ## Tests
 
 ```powershell
-python -m unittest discover -s backend -p "test_*.py" -v
+python -m unittest discover -s backend\tests -v
 ```
 
 Current backend checks:
 
 ```powershell
-python -m unittest discover -s backend -p "test_*.py" -v
-python backend/scripts/run_red_team_eval.py
+python -m unittest discover -s backend\tests -v
+python backend/scripts/run_red_team_eval.py --compact
 ```
 
 ## Deployment
