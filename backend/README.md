@@ -47,6 +47,14 @@ python backend/scripts/smoke_openrouter.py
 The smoke test calls LiteLLM/OpenRouter directly and does not involve the frontend.
 It exits as skipped unless `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured.
 
+Backend-only live `/generate` smoke test:
+
+```powershell
+python backend/scripts/smoke_generate_live.py
+```
+
+This calls the FastAPI route through `TestClient`, verifies the frontend-facing response shape, and fails if the endpoint silently falls back to deterministic mock drafting.
+
 Backend-only red-team eval runner:
 
 ```powershell

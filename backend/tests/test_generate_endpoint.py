@@ -20,6 +20,7 @@ from backend.app.config import get_settings
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.tools.check_compliance import check_compliance_tool
+from backend.scripts.smoke_generate_live import main as live_generate_smoke_main
 from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
 from backend.scripts.run_red_team_eval import (
     expected_statuses_for_case,
@@ -406,6 +407,18 @@ class GenerateEndpointTests(unittest.TestCase):
             },
         ), redirect_stdout(StringIO()):
             exit_code = openrouter_smoke_main()
+
+        self.assertEqual(exit_code, 2)
+
+    def test_live_generate_smoke_test_skips_when_llm_disabled(self) -> None:
+        with patch.dict(
+            "os.environ",
+            {
+                "USE_LLM_DRAFTING": "false",
+                "OPENROUTER_API_KEY": "test-key",
+            },
+        ), redirect_stdout(StringIO()):
+            exit_code = live_generate_smoke_main()
 
         self.assertEqual(exit_code, 2)
 

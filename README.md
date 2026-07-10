@@ -43,8 +43,9 @@ Optional live OpenRouter smoke test:
 
 ```powershell
 python backend/scripts/smoke_openrouter.py
+python backend/scripts/smoke_generate_live.py
 ```
 
-The smoke test only runs live drafting when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` is configured. Otherwise it exits as skipped.
+The smoke tests only run live drafting when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` is configured. Otherwise they exit as skipped.
 
 Backend work should preserve the `/generate` contract in `BEAUTYAGENT_API_CONTRACT.md` so Jillian's frontend can continue wiring against stable fields.
