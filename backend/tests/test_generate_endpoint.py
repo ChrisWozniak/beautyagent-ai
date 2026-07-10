@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.agent.beauty_agent import (
     channel_error_result,
+    draft_channel_copy,
     process_channel_loop,
     process_channel_safely,
 )
@@ -145,8 +146,9 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result["detection_source"], "deterministic")
         self.assertIn("repairs your barrier overnight", result["flagged_phrases"])
         self.assertIn("eczema-free", result["flagged_phrases"])
-        self.assertIn("helps support your skin barrier", result["final_safe_output"])
-        self.assertIn("calmer-looking", result["final_safe_output"])
+        self.assertIn("Marketer brief also included risky language", result["explanation"])
+        self.assertNotIn("repairs your barrier overnight", result["final_safe_output"].lower())
+        self.assertNotIn("eczema-free", result["final_safe_output"].lower())
         self.assertFalse(result["retry_exhausted"])
 
     def test_expanded_compliance_dictionary_flags_reviewed_phrases(self) -> None:
@@ -206,6 +208,13 @@ class GenerateEndpointTests(unittest.TestCase):
                 "explanation": "First audit found risky language.",
                 "detection_source": "deterministic",
                 "final_safe_output": "first rewrite still risky",
+            },
+            {
+                "compliance_status": "PASSED",
+                "flagged_phrases": [],
+                "explanation": "",
+                "detection_source": None,
+                "final_safe_output": "Test brief.",
             },
             {
                 "compliance_status": "FAILED",
@@ -291,6 +300,27 @@ class GenerateEndpointTests(unittest.TestCase):
 
         self.assertIn("Meet SOS Daily Rescue Facial Spray", result.raw_draft)
         self.assertEqual(result.compliance_status, "PASSED")
+
+    def test_deterministic_fallback_copy_is_card_friendly_by_channel(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft compliant copy for a launch.",
+            channels=["tiktok", "instagram", "email"],
+        )
+
+        tiktok = draft_channel_copy(request, "tiktok")
+        instagram = draft_channel_copy(request, "instagram")
+        email = draft_channel_copy(request, "email")
+
+        self.assertIn("Hook:", tiktok)
+        self.assertIn("Script:", tiktok)
+        self.assertIn("CTA:", tiktok)
+        self.assertIn("Meet SOS Daily Rescue Facial Spray", instagram)
+        self.assertNotIn("Brief direction:", instagram)
+        self.assertTrue(email.startswith("Subject:"))
+        self.assertIn("\n\nBody:", email)
 
     def test_channel_error_result_uses_contract_error_shape(self) -> None:
         result = channel_error_result("email", "TIMEOUT", "Generation timed out after retries.")

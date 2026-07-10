@@ -19,19 +19,6 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 BRAND_CONFIGS_PATH = DATA_DIR / "brand_configs.json"
 PRODUCT_CONFIGS_PATH = DATA_DIR / "product_configs.json"
 
-CHANNEL_LABELS: dict[Channel, str] = {
-    "tiktok": "TikTok",
-    "instagram": "Instagram",
-    "email": "email",
-}
-
-CHANNEL_ARTICLES: dict[Channel, str] = {
-    "tiktok": "a",
-    "instagram": "an",
-    "email": "an",
-}
-
-
 class DraftGenerator(Protocol):
     def __call__(self, request: GenerateRequest, channel: Channel) -> str:
         """Generate a raw draft for one requested channel."""
@@ -73,28 +60,28 @@ def _safe_claim_for_request(request: GenerateRequest) -> str:
 def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
     brand = load_brand_configs()[request.brandId]
     brand_name = brand["display_name"]
-    channel_label = CHANNEL_LABELS[channel]
     safe_claim = _safe_claim_for_request(request)
 
     if channel == "tiktok":
         return (
-            f"{brand_name} {request.productName} is ready for your {channel_label} routine: "
-            f"{safe_claim}, with a voice that is {brand['voice']}. "
-            f"Brief direction: {request.brief}"
+            f"Hook: {request.productName} is your quick beauty reset.\n\n"
+            f"Script: Meet {request.productName} from {brand_name}. It {safe_claim}, "
+            f"while keeping the vibe {brand['voice']}.\n\n"
+            f"CTA: Spritz, blend, or tap it into your routine whenever you want a fresh start."
         )
 
     if channel == "instagram":
         return (
-            f"Meet {request.productName} from {brand_name}. "
-            f"Built for {CHANNEL_ARTICLES[channel]} {channel_label} moment, "
-            f"it {safe_claim}. Brief direction: {request.brief}"
+            f"Meet {request.productName} from {brand_name}: an easy routine staple that "
+            f"{safe_claim}.\n\n"
+            f"Keep it close for the moments when your beauty routine needs a calm, fresh reset."
         )
 
     return (
-        f"Subject: A fresh look from {brand_name}\n\n"
+        f"Subject: A fresh reset from {brand_name}\n\n"
+        "Body: "
         f"{request.productName} brings an easy beauty update to your routine. "
-        f"It {safe_claim}, while keeping the message clear and compliant. "
-        f"Brief direction: {request.brief}"
+        f"It {safe_claim}, while keeping the message clear, polished, and compliant."
     )
 
 
@@ -126,6 +113,28 @@ def _combine_explanations(first: str | None, second: str | None) -> str:
     return " ".join(parts)
 
 
+def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> dict[str, Any]:
+    if brief_audit["compliance_status"] == "PASSED":
+        return draft_audit
+
+    flagged_phrases = _combine_unique(
+        draft_audit["flagged_phrases"],
+        brief_audit["flagged_phrases"],
+    )
+    explanation = _combine_explanations(
+        draft_audit["explanation"],
+        f"Marketer brief also included risky language: {brief_audit['explanation']}",
+    )
+
+    return {
+        "compliance_status": "FAILED",
+        "flagged_phrases": flagged_phrases,
+        "explanation": explanation,
+        "detection_source": "deterministic",
+        "final_safe_output": draft_audit["final_safe_output"],
+    }
+
+
 def process_channel_loop(
     request: GenerateRequest,
     channel: Channel,
@@ -133,7 +142,9 @@ def process_channel_loop(
 ) -> ChannelResult:
     """Run draft, deterministic audit, revision, and final backstop for a channel."""
     raw_draft = draft_generator(request, channel)
-    first_audit = check_compliance(raw_draft)
+    draft_audit = check_compliance(raw_draft)
+    brief_audit = check_compliance(request.brief)
+    first_audit = _merge_audits(draft_audit, brief_audit)
     final_safe_output = first_audit["final_safe_output"]
     final_backstop = check_compliance(final_safe_output)
 
