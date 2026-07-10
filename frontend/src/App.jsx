@@ -476,7 +476,7 @@ function GeneratingScreen({ activeStep }) {
           Creating your campaign
         </h2>
         <p className="text-[13px] text-muted-foreground leading-relaxed">
-          Sit tight — this usually takes about 10 seconds.
+          Sit tight — this usually takes about 20 seconds.
         </p>
       </div>
 
@@ -728,15 +728,26 @@ export default function App() {
     const payload = buildPayload(form);
     console.log("[BeautyAgent] /generate payload:", payload);
     setStep("generating");
-    setGeneratingStep(0);
-    GENERATING_STEPS.forEach((_, i) => {
-      setTimeout(() => {
-        setGeneratingStep(i + 1);
-        if (i === GENERATING_STEPS.length - 1) {
-          setTimeout(() => setStep("results"), 700);
-        }
-      }, (i + 1) * 1100);
-    });
+    setGeneratingStep(1); // Stage 1 active immediately
+
+    // Stages 1→2→3 auto-advance on fixed timers calibrated to the 20s ceiling.
+    // Stage 4 starts at t=18s but only completes when the response arrives.
+    const stageTimers = [
+      setTimeout(() => setGeneratingStep(2), 2000),
+      setTimeout(() => setGeneratingStep(3), 13000),
+      setTimeout(() => setGeneratingStep(4), 18000),
+    ];
+
+    function onResponse() {
+      // Fast case: clears any stage timers that haven't fired yet, skips ahead.
+      stageTimers.forEach(clearTimeout);
+      setGeneratingStep(5); // Marks all stages done.
+      setTimeout(() => setStep("results"), 400);
+    }
+
+    // Mock — replace with: generate(payload).then(onResponse).catch(onResponse)
+    // 21s simulates a near-ceiling response so stage 4 is visible in active state.
+    setTimeout(onResponse, 21000);
   }, [form]);
 
   const handleReset = useCallback(() => {
