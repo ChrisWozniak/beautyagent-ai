@@ -72,6 +72,7 @@ For completed channel results:
 - `generation_status` is `"completed"`
 - `raw_draft` is a string
 - `compliance_status` is `"PASSED"` or `"FAILED"`
+- Jillian's UI may display these statuses as "Compliant" and "Needs a tweak"; this is display-layer copy only, not an API contract change.
 - `flagged_phrases` is an array
 - `explanation` is a string
 - `detection_source` is `"deterministic"`, `"llm"`, `"both"`, or `null`

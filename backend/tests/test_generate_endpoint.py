@@ -15,7 +15,7 @@ from backend.app.agent.beauty_agent import (
 from backend.app.agent.llm_client import LLMDraftError
 from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.main import app
-from backend.app.models.request_models import GenerateRequest
+from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.tools.check_compliance import check_compliance_tool
 
 
@@ -55,6 +55,52 @@ class GenerateEndpointTests(unittest.TestCase):
             self.assertEqual(result["compliance_status"], "PASSED")
             self.assertEqual(result["flagged_phrases"], [])
             self.assertIsNone(result["error"])
+
+    def test_generate_accepts_omitted_core_actives(self) -> None:
+        response = self.client.post(
+            "/generate",
+            json={
+                "brandId": "tower_28",
+                "productName": "SOS Daily Rescue Facial Spray",
+                "brief": "Announce a calming mist for sensitive-looking skin.",
+                "channels": ["instagram"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.json()["error"])
+
+    def test_core_actives_blank_and_null_normalize_to_none(self) -> None:
+        base_request = {
+            "brandId": "tower_28",
+            "productName": "SOS Daily Rescue Facial Spray",
+            "brief": "Announce a calming mist.",
+            "channels": ["instagram"],
+        }
+
+        omitted = GenerateRequest(**base_request)
+        blank = GenerateRequest(**{**base_request, "coreActives": "   "})
+        null = GenerateRequest(**{**base_request, "coreActives": None})
+
+        self.assertIsNone(omitted.coreActives)
+        self.assertIsNone(blank.coreActives)
+        self.assertIsNone(null.coreActives)
+
+    def test_brief_character_cap_is_1000(self) -> None:
+        GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            brief="x" * MAX_BRIEF_LENGTH,
+            channels=["instagram"],
+        )
+
+        with self.assertRaises(ValueError):
+            GenerateRequest(
+                brandId="tower_28",
+                productName="SOS Daily Rescue Facial Spray",
+                brief="x" * (MAX_BRIEF_LENGTH + 1),
+                channels=["instagram"],
+            )
 
     def test_generate_rejects_old_brand_ids(self) -> None:
         response = self.client.post(

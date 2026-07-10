@@ -84,6 +84,8 @@ Pre-Build contract lock --- Tower 28 & Half Magic, channels: TikTok / Instagram 
 
 }
 
+`coreActives` is optional. Frontend may omit the key entirely when blank; omitted, `null`, and `""` are all treated as no core actives provided.
+
 ## 2. Response Schema (per channel result)
 
 {
@@ -143,8 +145,8 @@ generation_status is the first thing to check on any result object --- it determ
 | --- | --- | --- | --- |
 | brandId | Request | yes | "tower_28" |
 | productName | Request | yes | Free text |
-| coreActives | Request | no | Free text, comma list |
-| brief | Request | yes | Free text; UX nudges ~4--5 sentences; backend cap 800--1000 characters (decided) |
+| coreActives | Request | no | Free text, comma list; omitted, null, and blank string are accepted and treated as not provided |
+| brief | Request | yes | Free text; UX nudges ~4--5 sentences; backend cap 1000 characters |
 | channels | Request | yes | Array of "tiktok" |
 | channel | Response | always | Echoes one requested channel |
 | generation_status | Response | always | "completed" |
@@ -511,7 +513,7 @@ Note the top-level error stays null --- the request itself succeeded; only one c
   
 - **Check ****generation_status**** before anything else** when rendering a card. A "completed" card shows the compliance badge (PASSED/FAILED) as designed. An "error" card should look visually distinct --- recommend neutral/gray rather than red, since "the system couldn't run" and "the audit caught a problem" are different situations and shouldn't look the same at a glance.
   
-- **Brief field UX:** soft nudge only ("~4-5 sentences, we'll take care of the rest"), no hard client-side maxlength --- a marketer mid-thought shouldn't get cut off. Backend cap is **800--1000 characters** (decided); if exceeded, surface a graceful "that's a bit long, mind trimming it?" message rather than a hard block.
+- **Brief field UX:** soft nudge only ("~4-5 sentences, we'll take care of the rest"), no hard client-side maxlength --- a marketer mid-thought shouldn't get cut off. Backend cap is **1000 characters**; if exceeded, surface a graceful "that's a bit long, mind trimming it?" message rather than a hard block.
 
 ## 7. Backend Notes
 
