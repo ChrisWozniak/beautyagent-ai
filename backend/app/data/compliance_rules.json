@@ -6,12 +6,32 @@
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "heals acne",
+      "replacement": "helps care for acne-prone skin",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "clears acne",
+      "replacement": "helps care for acne-prone skin",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "heals eczema",
       "replacement": "gentle on eczema-prone skin",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "say goodbye to eczema",
+      "replacement": "support eczema-prone skin",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "eczema-free",
+      "replacement": "calmer-looking",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "free of flare-ups",
       "replacement": "calmer-looking",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
@@ -26,7 +46,17 @@
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "heals your skin barrier overnight",
+      "replacement": "helps support your skin barrier",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "repairs your barrier overnight",
+      "replacement": "helps support your skin barrier",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "repairs your barrier while you sleep",
       "replacement": "helps support your skin barrier",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
@@ -46,6 +76,11 @@
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "gets rid of rosacea",
+      "replacement": "helps calm the look of redness",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "medically proven",
       "replacement": "formulated to help",
       "explanation": "No medical/clinical claims without real substantiation for that specific product."
@@ -53,6 +88,11 @@
     {
       "phrase": "clinically proven",
       "replacement": "formulated to help",
+      "explanation": "No medical/clinical claims without real substantiation for that specific product."
+    },
+    {
+      "phrase": "proven to boost lip fullness",
+      "replacement": "designed for a fuller-looking shine",
       "explanation": "No medical/clinical claims without real substantiation for that specific product."
     },
     {
@@ -106,7 +146,52 @@
       "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
     },
     {
+      "phrase": "antibacterial",
+      "replacement": "refreshing",
+      "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
+    },
+    {
+      "phrase": "antimicrobial",
+      "replacement": "refreshing",
+      "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
+    },
+    {
+      "phrase": "sterilizes",
+      "replacement": "refreshes",
+      "explanation": "Products with antimicrobial/antibacterial actives (e.g. hypochlorous acid) risk EPA/FDA drug classification if marketed as a sanitizer or disinfectant."
+    },
+    {
+      "phrase": "National Eczema Association recommends",
+      "replacement": "follows National Eczema Association ingredient guidelines",
+      "explanation": "When referencing a third-party seal/certification program (e.g. National Eczema Association Seal of Acceptance), describe compliance with the program's ingredient guidelines only — never imply the organization medically endorses or prescribes the product."
+    },
+    {
+      "phrase": "National Eczema Association endorses",
+      "replacement": "follows National Eczema Association ingredient guidelines",
+      "explanation": "When referencing a third-party seal/certification program (e.g. National Eczema Association Seal of Acceptance), describe compliance with the program's ingredient guidelines only — never imply the organization medically endorses or prescribes the product."
+    },
+    {
+      "phrase": "NEA recommends",
+      "replacement": "follows NEA ingredient guidelines",
+      "explanation": "When referencing a third-party seal/certification program (e.g. National Eczema Association Seal of Acceptance), describe compliance with the program's ingredient guidelines only — never imply the organization medically endorses or prescribes the product."
+    },
+    {
+      "phrase": "NEA endorses",
+      "replacement": "follows NEA ingredient guidelines",
+      "explanation": "When referencing a third-party seal/certification program (e.g. National Eczema Association Seal of Acceptance), describe compliance with the program's ingredient guidelines only — never imply the organization medically endorses or prescribes the product."
+    },
+    {
       "phrase": "dermatologist recommended",
+      "replacement": "gentle on skin",
+      "explanation": "\"Dermatologist tested,\" \"allergy tested,\" and similar testing claims are only usable when backed by verified third-party clinical trial results."
+    },
+    {
+      "phrase": "dermatologist endorsed",
+      "replacement": "gentle on skin",
+      "explanation": "\"Dermatologist tested,\" \"allergy tested,\" and similar testing claims are only usable when backed by verified third-party clinical trial results."
+    },
+    {
+      "phrase": "dermatologist prescribed",
       "replacement": "gentle on skin",
       "explanation": "\"Dermatologist tested,\" \"allergy tested,\" and similar testing claims are only usable when backed by verified third-party clinical trial results."
     }

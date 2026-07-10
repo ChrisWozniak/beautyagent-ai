@@ -148,6 +148,26 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("calmer-looking", result["final_safe_output"])
         self.assertFalse(result["retry_exhausted"])
 
+    def test_expanded_compliance_dictionary_flags_reviewed_phrases(self) -> None:
+        result = check_compliance_tool(
+            "This antibacterial mist heals acne, repairs your barrier while you sleep, "
+            "and the NEA endorses it. Dermatologist prescribed and proven to boost lip fullness."
+        )
+
+        self.assertEqual(result["compliance_status"], "FAILED")
+        self.assertIn("antibacterial", result["flagged_phrases"])
+        self.assertIn("heals acne", result["flagged_phrases"])
+        self.assertIn("repairs your barrier while you sleep", result["flagged_phrases"])
+        self.assertIn("NEA endorses", result["flagged_phrases"])
+        self.assertIn("dermatologist prescribed", result["flagged_phrases"])
+        self.assertIn("proven to boost lip fullness", result["flagged_phrases"])
+        self.assertIn("refreshing", result["final_safe_output"])
+        self.assertIn("helps care for acne-prone skin", result["final_safe_output"])
+        self.assertIn("helps support your skin barrier", result["final_safe_output"])
+        self.assertIn("follows NEA ingredient guidelines", result["final_safe_output"])
+        self.assertIn("gentle on skin", result["final_safe_output"])
+        self.assertIn("designed for a fuller-looking shine", result["final_safe_output"])
+
     def test_final_output_is_rescanned_before_returning(self) -> None:
         response = self.client.post(
             "/generate",
