@@ -9,7 +9,7 @@
       "id": "disease_claims",
       "category": "drug_claim",
       "description": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory.",
-      "banned_phrases": ["cures acne", "heals acne", "clears acne", "heals eczema", "say goodbye to eczema", "eczema-free", "free of flare-ups", "eliminates redness", "repairs skin permanently", "heals your skin barrier overnight", "repairs your barrier overnight", "repairs your barrier while you sleep", "cure", "treat eczema", "treat rosacea", "gets rid of rosacea"],
+      "banned_phrases": ["cures acne", "heals acne", "clears acne", "heals eczema", "cured their eczema", "say goodbye to eczema", "eczema-free", "free of flare-ups", "stopped flare-ups for good", "eliminates redness", "gets rid of redness completely", "repairs skin permanently", "heals your skin barrier overnight", "repairs your barrier overnight", "repairs the skin barrier overnight", "repairs your barrier while you sleep", "fixes what's broken in your skin's defenses by morning", "stops flare-ups before they start", "clears up eczema flare-ups", "clear up skin irritation", "calm and clear up skin irritation", "cure", "treat eczema", "treat rosacea", "gets rid of rosacea"],
       "safe_framing": "Frame as \"safe for\" or \"compliant with guidelines for\" the skin condition — never as treating, curing, or eliminating it.",
       "confidence": "High"
     },
@@ -17,7 +17,7 @@
       "id": "medical_efficacy_claims",
       "category": "unsubstantiated_claim",
       "description": "No medical/clinical claims without real substantiation for that specific product.",
-      "banned_phrases": ["medically proven", "clinically proven", "proven to boost lip fullness", "toxin-free", "chemical-free", "anti-aging miracle", "reverses aging", "collagen boosting"],
+      "banned_phrases": ["medically proven", "clinically proven", "proven to boost lip fullness", "toxin-free", "chemical-free", "anti-aging miracle", "reverses aging", "reverses fine lines", "collagen boosting", "boosts your skin's collagen production", "reduces puffiness and dark circles", "visibly reduces puffiness and dark circles"],
       "exception": "\"Collagen boosting\" and similar structure-function claims are permitted only if backed by real substantiating data for that specific product — not by default.",
       "confidence": "High"
     },

@@ -21,6 +21,11 @@
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "cured their eczema",
+      "replacement": "said it felt gentle on eczema-prone skin",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "say goodbye to eczema",
       "replacement": "support eczema-prone skin",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
@@ -36,7 +41,17 @@
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "stopped flare-ups for good",
+      "replacement": "helped their skin look calmer",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "eliminates redness",
+      "replacement": "helps calm the look of redness",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "gets rid of redness completely",
       "replacement": "helps calm the look of redness",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
@@ -56,8 +71,38 @@
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
+      "phrase": "repairs the skin barrier overnight",
+      "replacement": "helps support the skin barrier",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
       "phrase": "repairs your barrier while you sleep",
       "replacement": "helps support your skin barrier",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "fixes what's broken in your skin's defenses by morning",
+      "replacement": "helps support your skin barrier",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "stops flare-ups before they start",
+      "replacement": "helps skin look calm and comfortable",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "clears up eczema flare-ups",
+      "replacement": "helps calm the look of stressed skin",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "clear up skin irritation",
+      "replacement": "helps skin look calm",
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
+    },
+    {
+      "phrase": "calm and clear up skin irritation",
+      "replacement": "helps skin look calm and comfortable",
       "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory."
     },
     {
@@ -116,8 +161,28 @@
       "explanation": "No medical/clinical claims without real substantiation for that specific product."
     },
     {
+      "phrase": "reverses fine lines",
+      "replacement": "helps soften the look of fine lines",
+      "explanation": "No medical/clinical claims without real substantiation for that specific product."
+    },
+    {
       "phrase": "collagen boosting",
       "replacement": "helps support smoother-looking skin",
+      "explanation": "No medical/clinical claims without real substantiation for that specific product."
+    },
+    {
+      "phrase": "boosts your skin's collagen production",
+      "replacement": "helps skin look smoother",
+      "explanation": "No medical/clinical claims without real substantiation for that specific product."
+    },
+    {
+      "phrase": "reduces puffiness and dark circles",
+      "replacement": "helps refresh the look of the eye area",
+      "explanation": "No medical/clinical claims without real substantiation for that specific product."
+    },
+    {
+      "phrase": "visibly reduces puffiness and dark circles",
+      "replacement": "helps refresh the look of the eye area",
       "explanation": "No medical/clinical claims without real substantiation for that specific product."
     },
     {

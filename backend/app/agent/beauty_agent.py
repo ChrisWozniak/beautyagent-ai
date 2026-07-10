@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Protocol
@@ -18,6 +19,11 @@ from .llm_client import LLMDraftError, generate_draft_with_llm
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 BRAND_CONFIGS_PATH = DATA_DIR / "brand_configs.json"
 PRODUCT_CONFIGS_PATH = DATA_DIR / "product_configs.json"
+CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
+    "tiktok": ("tiktok", "tik tok"),
+    "instagram": ("instagram", "ig"),
+    "email": ("email",),
+}
 
 class DraftGenerator(Protocol):
     def __call__(self, request: GenerateRequest, channel: Channel) -> str:
@@ -135,6 +141,38 @@ def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> d
     }
 
 
+def _channel_mentions(text: str) -> set[Channel]:
+    lowered = text.lower()
+    mentions: set[Channel] = set()
+
+    for channel, aliases in CHANNEL_ALIASES.items():
+        for alias in aliases:
+            if re.search(rf"(?<![A-Za-z0-9]){re.escape(alias)}(?![A-Za-z0-9])", lowered):
+                mentions.add(channel)
+                break
+
+    return mentions
+
+
+def _brief_for_channel_audit(brief: str, channel: Channel) -> str:
+    if not _channel_mentions(brief):
+        return brief
+
+    segments = re.split(r"(?<=[.!?])\s+|;\s+|,\s+but\s+|\s+but\s+", brief)
+    scoped_segments: list[str] = []
+
+    for segment in segments:
+        cleaned = segment.strip()
+        if not cleaned:
+            continue
+
+        mentions = _channel_mentions(cleaned)
+        if not mentions or channel in mentions:
+            scoped_segments.append(cleaned)
+
+    return " ".join(scoped_segments) if scoped_segments else brief
+
+
 def process_channel_loop(
     request: GenerateRequest,
     channel: Channel,
@@ -143,7 +181,7 @@ def process_channel_loop(
     """Run draft, deterministic audit, revision, and final backstop for a channel."""
     raw_draft = draft_generator(request, channel)
     draft_audit = check_compliance(raw_draft)
-    brief_audit = check_compliance(request.brief)
+    brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
     first_audit = _merge_audits(draft_audit, brief_audit)
     final_safe_output = first_audit["final_safe_output"]
     final_backstop = check_compliance(final_safe_output)

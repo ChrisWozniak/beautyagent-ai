@@ -151,10 +151,34 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertNotIn("eczema-free", result["final_safe_output"].lower())
         self.assertFalse(result["retry_exhausted"])
 
+    def test_generate_scopes_channel_specific_brief_audit(self) -> None:
+        response = self.client.post(
+            "/generate",
+            json={
+                "brandId": "tower_28",
+                "productName": "SOS Daily Rescue Facial Spray",
+                "coreActives": "Hypochlorous Acid",
+                "brief": (
+                    "Could we push harder on TikTok and say it clears up eczema flare-ups fast, "
+                    "but keep Instagram and email to gentle, soothing language for sensitive skin?"
+                ),
+                "channels": ["tiktok", "instagram", "email"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        results = {result["channel"]: result for result in response.json()["results"]}
+
+        self.assertEqual(results["tiktok"]["compliance_status"], "FAILED")
+        self.assertIn("clears up eczema flare-ups", results["tiktok"]["flagged_phrases"])
+        self.assertEqual(results["instagram"]["compliance_status"], "PASSED")
+        self.assertEqual(results["email"]["compliance_status"], "PASSED")
+
     def test_expanded_compliance_dictionary_flags_reviewed_phrases(self) -> None:
         result = check_compliance_tool(
             "This antibacterial mist heals acne, repairs your barrier while you sleep, "
-            "and the NEA endorses it. Dermatologist prescribed and proven to boost lip fullness."
+            "and the NEA endorses it. Dermatologist prescribed and proven to boost lip fullness. "
+            "Reviewers said it cured their eczema and stopped flare-ups for good."
         )
 
         self.assertEqual(result["compliance_status"], "FAILED")
@@ -164,12 +188,44 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("NEA endorses", result["flagged_phrases"])
         self.assertIn("dermatologist prescribed", result["flagged_phrases"])
         self.assertIn("proven to boost lip fullness", result["flagged_phrases"])
+        self.assertIn("cured their eczema", result["flagged_phrases"])
+        self.assertIn("stopped flare-ups for good", result["flagged_phrases"])
         self.assertIn("refreshing", result["final_safe_output"])
         self.assertIn("helps care for acne-prone skin", result["final_safe_output"])
         self.assertIn("helps support your skin barrier", result["final_safe_output"])
         self.assertIn("follows NEA ingredient guidelines", result["final_safe_output"])
         self.assertIn("gentle on skin", result["final_safe_output"])
         self.assertIn("designed for a fuller-looking shine", result["final_safe_output"])
+
+    def test_compliance_checker_uses_phrase_boundaries_and_negation_context(self) -> None:
+        safe_result = check_compliance_tool(
+            "Headline it for eczema-prone skin, but include no cure language."
+        )
+
+        self.assertEqual(safe_result["compliance_status"], "PASSED")
+        self.assertNotIn("cure", safe_result["flagged_phrases"])
+
+        manicure_result = check_compliance_tool("This manicure shade has glossy payoff.")
+
+        self.assertEqual(manicure_result["compliance_status"], "PASSED")
+        self.assertNotIn("cure", manicure_result["flagged_phrases"])
+
+    def test_compliance_dictionary_flags_red_team_paraphrases(self) -> None:
+        result = check_compliance_tool(
+            "It fixes what's broken in your skin's defenses by morning, "
+            "stops flare-ups before they start, boosts your skin's collagen production, "
+            "reverses fine lines, clears up eczema flare-ups fast, "
+            "helps calm and clear up skin irritation, and visibly reduces puffiness and dark circles."
+        )
+
+        self.assertEqual(result["compliance_status"], "FAILED")
+        self.assertIn("fixes what's broken in your skin's defenses by morning", result["flagged_phrases"])
+        self.assertIn("stops flare-ups before they start", result["flagged_phrases"])
+        self.assertIn("boosts your skin's collagen production", result["flagged_phrases"])
+        self.assertIn("reverses fine lines", result["flagged_phrases"])
+        self.assertIn("clears up eczema flare-ups", result["flagged_phrases"])
+        self.assertIn("calm and clear up skin irritation", result["flagged_phrases"])
+        self.assertIn("visibly reduces puffiness and dark circles", result["flagged_phrases"])
 
     def test_final_output_is_rescanned_before_returning(self) -> None:
         response = self.client.post(
