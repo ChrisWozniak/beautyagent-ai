@@ -643,16 +643,18 @@ function EmailCard({ result, copiedId, onCopy }) {
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
+const INITIAL_FORM = {
+  brand: "tower_28",
+  productName: "",
+  productType: "skincare",
+  adaptiveField: "",
+  brief: "",
+  channels: ["tiktok", "instagram", "email"],
+};
+
 export default function App() {
   const [step, setStep] = useState("input");
-  const [form, setForm] = useState({
-    brand: "tower_28",
-    productName: "",
-    productType: "skincare",
-    adaptiveField: "",
-    brief: "",
-    channels: ["tiktok", "instagram", "email"],
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
   const [generatingStep, setGeneratingStep] = useState(0);
   const [copiedId, setCopiedId] = useState(null);
 
@@ -674,6 +676,7 @@ export default function App() {
   const handleReset = useCallback(() => {
     setStep("input");
     setGeneratingStep(0);
+    setForm(INITIAL_FORM);
   }, []);
 
   const handleCopy = useCallback((text, id) => {
