@@ -2,6 +2,8 @@
 node_modules/
 venv/
 .venv/
+__pycache__/
+*.pyc
 
 # Environment files
 .env
@@ -27,4 +29,3 @@ Thumbs.db
 
 # Figma Make export (local visual reference only)
 Redesign AI Workspace UI/
-
