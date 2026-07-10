@@ -17,7 +17,7 @@ from .beauty_agent import process_channel_loop
 
 @dataclass
 class BeautyAgentStrandsAdapter:
-    """Thin wrapper around the channel loop for future Strands orchestration."""
+    """Thin wrapper exposing the backend loop and Strands tool surface."""
 
     def run_channel(self, request: GenerateRequest, channel: Channel) -> ChannelResult:
         return process_channel_loop(request, channel)
@@ -25,6 +25,21 @@ class BeautyAgentStrandsAdapter:
     @property
     def tools(self) -> list[object]:
         return [check_compliance_tool]
+
+    @property
+    def tool_names(self) -> list[str]:
+        return [
+            getattr(tool, "tool_name", getattr(tool, "__name__", type(tool).__name__))
+            for tool in self.tools
+        ]
+
+    def integration_summary(self) -> dict[str, object]:
+        return {
+            "agent_loop": "process_channel_loop",
+            "contract_source": "/generate response models",
+            "tools": self.tool_names,
+            "deterministic_backstop": True,
+        }
 
 
 def build_strands_adapter() -> BeautyAgentStrandsAdapter:

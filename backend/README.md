@@ -45,6 +45,7 @@ python backend/scripts/smoke_openrouter.py
 ```
 
 The smoke test calls LiteLLM/OpenRouter directly and does not involve the frontend.
+It exits as skipped unless `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured.
 
 Backend-only red-team eval runner:
 
@@ -52,12 +53,21 @@ Backend-only red-team eval runner:
 python backend/scripts/run_red_team_eval.py
 ```
 
-The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes.
+The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes. It supports both a single `expected_status` for all requested channels and an `expected_by_channel` map for mixed multi-channel cases.
+
+Eval case authoring notes live in `backend/evals/README.md`. Jillian / Person A owns the final expanded eval content.
 
 ## Tests
 
 ```powershell
 python -m unittest discover -s backend -p "test_*.py" -v
+```
+
+Current backend checks:
+
+```powershell
+python -m unittest discover -s backend -p "test_*.py" -v
+python backend/scripts/run_red_team_eval.py
 ```
 
 ## Deployment

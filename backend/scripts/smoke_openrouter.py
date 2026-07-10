@@ -23,6 +23,15 @@ from backend.app.models.request_models import GenerateRequest
 
 def main() -> int:
     settings = get_settings()
+    if not settings.use_llm_drafting:
+        print("OpenRouter smoke test skipped: USE_LLM_DRAFTING is false.")
+        print("Set USE_LLM_DRAFTING=true and OPENROUTER_API_KEY to test live drafting.")
+        return 2
+
+    if not settings.openrouter_api_key:
+        print("OpenRouter smoke test skipped: OPENROUTER_API_KEY is not configured.")
+        return 2
+
     request = GenerateRequest(
         brandId="tower_28",
         productName="SOS Daily Rescue Facial Spray",
@@ -45,6 +54,7 @@ def main() -> int:
         return 1
 
     print("OpenRouter smoke test passed.")
+    print(f"Model: {settings.openrouter_model}")
     print(draft)
     return 0
 

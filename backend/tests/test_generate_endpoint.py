@@ -1,4 +1,6 @@
 import asyncio
+from contextlib import redirect_stdout
+from io import StringIO
 import json
 import time
 import unittest
@@ -14,9 +16,15 @@ from backend.app.agent.beauty_agent import (
 )
 from backend.app.agent.llm_client import LLMDraftError
 from backend.app.agent.strands_agent import build_strands_adapter
+from backend.app.config import get_settings
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.tools.check_compliance import check_compliance_tool
+from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
+from backend.scripts.run_red_team_eval import (
+    expected_statuses_for_case,
+    validate_case,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -325,8 +333,61 @@ class GenerateEndpointTests(unittest.TestCase):
         adapter = build_strands_adapter()
 
         self.assertTrue(adapter.tools)
+        self.assertIn("check_compliance_tool", adapter.tool_names)
+        self.assertEqual(
+            adapter.integration_summary(),
+            {
+                "agent_loop": "process_channel_loop",
+                "contract_source": "/generate response models",
+                "tools": ["check_compliance_tool"],
+                "deterministic_backstop": True,
+            },
+        )
         tool_result = check_compliance_tool("This makes skin eczema-free.")
         self.assertEqual(tool_result["compliance_status"], "FAILED")
+
+    def test_timeout_settings_have_documented_defaults(self) -> None:
+        with patch.dict(
+            "os.environ",
+            {
+                "USE_LLM_DRAFTING": "false",
+                "LLM_TIMEOUT_SECONDS": "",
+                "LLM_MAX_TOKENS": "",
+                "CHANNEL_TIMEOUT_SECONDS": "",
+            },
+        ):
+            settings = get_settings()
+
+        self.assertEqual(settings.llm_timeout_seconds, 15.0)
+        self.assertEqual(settings.llm_max_tokens, 1000)
+        self.assertEqual(settings.channel_timeout_seconds, 20.0)
+
+    def test_timeout_settings_fallback_on_invalid_values(self) -> None:
+        with patch.dict(
+            "os.environ",
+            {
+                "LLM_TIMEOUT_SECONDS": "not-a-number",
+                "LLM_MAX_TOKENS": "0",
+                "CHANNEL_TIMEOUT_SECONDS": "-1",
+            },
+        ):
+            settings = get_settings()
+
+        self.assertEqual(settings.llm_timeout_seconds, 15.0)
+        self.assertEqual(settings.llm_max_tokens, 1000)
+        self.assertEqual(settings.channel_timeout_seconds, 20.0)
+
+    def test_openrouter_smoke_test_skips_when_llm_disabled(self) -> None:
+        with patch.dict(
+            "os.environ",
+            {
+                "USE_LLM_DRAFTING": "false",
+                "OPENROUTER_API_KEY": "test-key",
+            },
+        ), redirect_stdout(StringIO()):
+            exit_code = openrouter_smoke_main()
+
+        self.assertEqual(exit_code, 2)
 
     def test_red_team_cases_file_has_contract_requests(self) -> None:
         cases_path = ROOT / "backend/evals/red_team_cases.json"
@@ -335,7 +396,62 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertGreaterEqual(len(cases), 3)
         for case in cases:
             GenerateRequest(**case["request"])
-            self.assertIn(case["expected_status"], {"PASSED", "FAILED"})
+            validate_case(case)
+
+    def test_red_team_eval_supports_simple_expected_status(self) -> None:
+        case = {
+            "id": "safe_all_channels",
+            "expected_status": "PASSED",
+            "request": {
+                "brandId": "tower_28",
+                "productName": "SOS Daily Rescue Facial Spray",
+                "brief": "Draft a gentle caption.",
+                "channels": ["tiktok", "instagram"],
+            },
+        }
+
+        validate_case(case)
+        self.assertEqual(
+            expected_statuses_for_case(case),
+            {"tiktok": "PASSED", "instagram": "PASSED"},
+        )
+
+    def test_red_team_eval_supports_per_channel_expected_status(self) -> None:
+        case = {
+            "id": "mixed_channels",
+            "expected_by_channel": {
+                "tiktok": "PASSED",
+                "instagram": "FAILED",
+            },
+            "request": {
+                "brandId": "tower_28",
+                "productName": "SOS Daily Rescue Facial Spray",
+                "brief": "Draft copy.",
+                "channels": ["tiktok", "instagram"],
+            },
+        }
+
+        validate_case(case)
+        self.assertEqual(
+            expected_statuses_for_case(case),
+            {"tiktok": "PASSED", "instagram": "FAILED"},
+        )
+
+    def test_red_team_eval_rejects_ambiguous_expected_statuses(self) -> None:
+        case = {
+            "id": "ambiguous",
+            "expected_status": "PASSED",
+            "expected_by_channel": {"instagram": "PASSED"},
+            "request": {
+                "brandId": "tower_28",
+                "productName": "SOS Daily Rescue Facial Spray",
+                "brief": "Draft copy.",
+                "channels": ["instagram"],
+            },
+        }
+
+        with self.assertRaises(ValueError):
+            validate_case(case)
 
     def test_cors_allows_vite_frontend_origin(self) -> None:
         response = self.client.options(
@@ -352,6 +468,12 @@ class GenerateEndpointTests(unittest.TestCase):
             response.headers["access-control-allow-origin"],
             "http://localhost:5173",
         )
+
+    def test_health_endpoint_supports_deployment_checks(self) -> None:
+        response = self.client.get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
 
 
 if __name__ == "__main__":

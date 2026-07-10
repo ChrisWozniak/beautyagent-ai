@@ -1,4 +1,10 @@
 {
+  "_meta": {
+    "owner": "Jillian / Person A owns the final expanded eval content.",
+    "format": "Use expected_status when every requested channel should return the same compliance_status. Use expected_by_channel for mixed multi-channel expectations.",
+    "valid_statuses": ["PASSED", "FAILED"],
+    "notes": "Seed cases are scaffold examples grounded in the current deterministic compliance dictionary; review/expand before using pass rate as a demo metric."
+  },
   "cases": [
     {
       "id": "safe_tower28_instagram",
@@ -31,6 +37,21 @@
         "coreActives": "",
         "brief": "Draft playful TikTok copy about bold color payoff.",
         "channels": ["tiktok"]
+      }
+    },
+    {
+      "id": "risky_barrier_claim_all_channels",
+      "expected_by_channel": {
+        "tiktok": "FAILED",
+        "instagram": "FAILED",
+        "email": "FAILED"
+      },
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Daily Rescue Facial Spray",
+        "coreActives": "Hypochlorous Acid",
+        "brief": "Say it repairs your barrier overnight and makes skin eczema-free.",
+        "channels": ["tiktok", "instagram", "email"]
       }
     }
   ]

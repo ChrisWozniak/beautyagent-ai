@@ -98,6 +98,33 @@ Compliance is hybrid:
 
 The deterministic backstop is required even if the agent already called the compliance tool.
 
+## Red-Team Evals
+
+Backend eval infrastructure lives in:
+
+- `backend/evals/red_team_cases.json`
+- `backend/evals/README.md`
+- `backend/scripts/run_red_team_eval.py`
+
+Jillian / Person A owns the final expanded eval content. Backend work should keep the runner and schema stable, support both `expected_status` and `expected_by_channel`, and avoid treating seed cases as the final demo pass-rate set without content review.
+
+## Backend Validation
+
+Run these from the repository root after backend changes:
+
+```powershell
+python -m unittest discover -s backend -p "test_*.py" -v
+python backend/scripts/run_red_team_eval.py
+```
+
+Optional live OpenRouter smoke test:
+
+```powershell
+python backend/scripts/smoke_openrouter.py
+```
+
+The smoke test should only be considered a live pass when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured. A skipped smoke test is acceptable for local backend-only work but should be called out before demo/deploy.
+
 ## MVP Boundaries
 
 Keep the MVP narrow:
