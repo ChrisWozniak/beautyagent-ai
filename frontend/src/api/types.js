@@ -20,7 +20,7 @@
  * @property {BrandId} brandId
  * @property {string} productName
  * @property {string} [coreActives]   - optional, comma-separated
- * @property {string} brief           - backend cap 800–1000 chars; UX nudges ~4–5 sentences
+ * @property {string} brief           - backend hard cap 1000 chars; UX nudges ~4–5 sentences
  * @property {Channel[]} channels     - 1–3 channels; fixed display order: tiktok → instagram → email
  */
 

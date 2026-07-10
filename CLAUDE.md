@@ -7,6 +7,7 @@ Read these companion files before starting any session:
 - `docs/DECISIONS.md` — 5 locked pre-build decisions with rationale
 - `docs/PRD.md` — full product requirements, user journeys, UI/UX notes (section 7)
 - `DESIGN_SYSTEM.md` — finalized and reconciled against the Figma Make export (2026-07-09). All color tokens, component specs, and icon decisions are locked. See section 10 below before touching it.
+- `docs/BRAND_COPY_REFERENCE.md` — real sourced brand/product facts (Tower 28, Half Magic) and grounded test briefs. Use for brand config voice/tone and eval case writing; not itself part of the API contract.
 
 ---
 
@@ -186,6 +187,7 @@ If asked to add anything in the out-of-scope list, flag it as a Backlog item (PR
 | `docs/PRD.md` | Full product requirements, user journeys, success metrics |
 | `shared/sample_request.json` | Mock request matching the locked contract |
 | `shared/sample_response.json` | Mock response — should mirror Example 5 (multi-channel partial failure) |
+| `docs/BRAND_COPY_REFERENCE.md` | Real sourced brand/product facts + grounded test briefs for Tower 28 & Half Magic |
 
 ---
 

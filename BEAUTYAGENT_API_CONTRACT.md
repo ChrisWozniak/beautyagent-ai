@@ -76,7 +76,7 @@ Pre-Build contract lock --- Tower 28 & Half Magic, channels: TikTok / Instagram 
 
 "productName": "SOS Daily Rescue Facial Spray",
 
-"coreActives": "Centella Asiatica, Niacinamide, Green Tea Extract",
+"coreActives": "Hypochlorous Acid",
 
 "brief": "Free-text messy brief or dictation from the marketer.",
 
@@ -200,7 +200,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
 "productName": "SOS Daily Rescue Facial Spray",
 
-"coreActives": "Centella Asiatica, Niacinamide, Green Tea Extract",
+"coreActives": "Hypochlorous Acid",
 
 "brief": "Highlight how this spray heals eczema and repairs the skin barrier overnight for redness-prone skin.",
 
@@ -252,7 +252,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
 "productName": "SOS Daily Rescue Facial Spray",
 
-"coreActives": "Centella Asiatica, Niacinamide, Green Tea Extract",
+"coreActives": "Hypochlorous Acid",
 
 "brief": "Introduce the spray as a calming, protective mist for sensitive, redness-prone skin --- no medical claims, just reassurance.",
 
@@ -410,7 +410,7 @@ Demonstrates all three generation_status/compliance_status combinations in one r
 
 "productName": "SOS Daily Rescue Facial Spray",
 
-"coreActives": "Centella Asiatica, Niacinamide, Green Tea Extract",
+"coreActives": "Hypochlorous Acid",
 
 "brief": "Announce the spray across all channels --- calming, protective mist for sensitive, redness-prone skin.",
 

@@ -4,7 +4,7 @@ Static copy for loading, error, empty, and result states. Written as tool UI cop
 
 **Cross-referenced against `BeautyAgent AI_PRD.md` and `beautyagent_api_contract.md` on 2026-07-09 — revision notes:**
 - Removed "Needs review" as a third compliance state. PRD Section 3 is explicit: "binary PASSED/FAILED status, no violation category or risk-level tagging, no NEEDS HUMAN REVIEW state." It's a named Week 2 Backlog item, not in scope for this build.
-- The input form field is **actives** (`coreActives` in the contract — active ingredients, e.g. "Centella Asiatica, Niacinamide"), not "activities." Fields are: brand, product, actives, brief, channels.
+- The input form field is **actives** (`coreActives` in the contract — active ingredients, e.g. "Hypochlorous Acid, Niacinamide"), not "activities." Fields are: brand, product, actives, brief, channels.
 - Error copy now follows the contract's two-tier model: **top-level errors** (`VALIDATION_ERROR`, `RATE_LIMITED`, `INTERNAL_ERROR` — request never starts, `results: []`) vs. **per-channel errors** (`TIMEOUT`, `RATE_LIMITED`, `TOOL_ERROR` — request started, one channel failed mid-flight, siblings display normally).
 - brandId values: `tower_28` / `half_magic` (confirmed final as of naming reconciliation — do not use `tower28`/`halfmagic` or `tower_28_beauty`/`half_magic_beauty`).
 
