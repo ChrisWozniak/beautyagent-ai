@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Check, Copy, Pencil, ChevronDown, Mail, RefreshCw } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Check, Copy, Pencil, ChevronDown, Mail, RefreshCw, HelpCircle } from "lucide-react";
 import clsx from "clsx";
 
 // ─── Brand channel icons (monochrome SVGs, recolored via currentColor) ───────
@@ -192,6 +192,69 @@ function buildPayload(form) {
   return payload;
 }
 
+// ─── Compliance help popover ──────────────────────────────────────────────────
+
+function ComplianceHelpPopover() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onMouseDown(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [open]);
+
+  return (
+    <div className="inline-flex items-center" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="How compliance checks work"
+        aria-expanded={open}
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-secondary transition-colors"
+      >
+        <HelpCircle size={16} strokeWidth={1.8} className="text-[var(--color-charcoal-muted)]" />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-[20px] shadow-[0_1px_5px_rgba(44,44,44,0.05)] z-10 p-5 space-y-4">
+          <h3
+            className="text-[15px] font-bold text-[var(--color-charcoal)] leading-tight"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            How compliance checks work
+          </h3>
+          <p className="text-[13px] text-[var(--color-charcoal)] leading-relaxed">
+            Every draft gets checked before you see it. Here's what the two outcomes mean:
+          </p>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <ComplianceBadge level="compliant" />
+              <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">
+                On-voice, on-tone, nothing flagged. Ready to use as-is.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <ComplianceBadge level="tweak" />
+              <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">
+                Something in the draft could cross into a medical or treatment claim. You'll see exactly what was flagged, why, and a ready-to-use safer version.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border border-border text-foreground hover:bg-secondary transition-all duration-150"
+          >
+            Got it
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Screen 1 · Input form ────────────────────────────────────────────────────
 
 function InputScreen({ form, setForm, onGenerate }) {
@@ -213,12 +276,15 @@ function InputScreen({ form, setForm, onGenerate }) {
   return (
     <div className="max-w-[600px] mx-auto px-6 pt-20 pb-28">
       <div className="pt-6 mb-11">
-        <h1
-          className="text-[1.875rem] font-bold text-foreground tracking-tight leading-tight mb-2.5"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          New campaign
-        </h1>
+        <div className="relative flex items-center gap-2 mb-2.5">
+          <h1
+            className="text-[1.875rem] font-bold text-foreground tracking-tight leading-tight"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            New campaign
+          </h1>
+          <ComplianceHelpPopover />
+        </div>
         <p className="text-[13px] text-muted-foreground leading-relaxed">
           Tell us about the product and drop in your notes. We'll draft and review your copy before you see it.
         </p>
