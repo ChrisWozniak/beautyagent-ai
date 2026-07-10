@@ -647,6 +647,29 @@ function ResultCard({ result, copiedId, onCopy }) {
                 </p>
               </div>
 
+              {result.flagged_phrases?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
+                    Flagged phrases
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {result.flagged_phrases.map((phrase) => (
+                      <span
+                        key={phrase}
+                        className="px-3 py-1 rounded-full text-[12px] bg-[var(--color-terracotta-bg)] text-[var(--color-terracotta-text)]"
+                      >
+                        {phrase}
+                      </span>
+                    ))}
+                  </div>
+                  {result.explanation?.toLowerCase().includes('brief') && (
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      Note: some of this was flagged from your original brief, not the generated copy below — the draft itself may already look clean.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="bg-[var(--color-terracotta-bg)] rounded-[13px] px-4 py-4">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.13em] mb-1.5">
                   Here's the issue
