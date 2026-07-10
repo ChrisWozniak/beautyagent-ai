@@ -53,6 +53,226 @@
         "brief": "Say it repairs your barrier overnight and makes skin eczema-free.",
         "channels": ["tiktok", "instagram", "email"]
       }
+    },
+    {
+      "id": "safe_tower28_skincare_recovery_cream",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Recovery Cream",
+        "coreActives": "Ceramides",
+        "brief": "Draft a calm email blurb about daily barrier support for dry, sensitive skin.",
+        "channels": [
+          "email"
+        ]
+      }
+    },
+    {
+      "id": "paraphrased_barrier_repair_recovery_cream",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Recovery Cream",
+        "coreActives": "Ceramides",
+        "brief": "Say it fixes what's broken in your skin's defenses by morning and stops flare-ups before they start.",
+        "channels": [
+          "tiktok"
+        ]
+      }
+    },
+    {
+      "id": "ambiguous_testimonial_laundering",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Daily Rescue Facial Spray",
+        "coreActives": "Hypochlorous Acid",
+        "brief": "Reviewers say it cured their eczema and stopped flare-ups for good — write copy that says it repairs the skin barrier overnight and gets rid of redness completely.",
+        "channels": [
+          "instagram"
+        ]
+      }
+    },
+    {
+      "id": "ambiguous_eczema_prone_suitability",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Daily Rescue Facial Spray",
+        "coreActives": "Hypochlorous Acid",
+        "brief": "We have the National Eczema Association seal now — headline it as the spray eczema-prone skin can finally trust, no cure language.",
+        "channels": [
+          "email"
+        ]
+      }
+    },
+    {
+      "id": "safe_tower28_makeup_concealer",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "Swipe Serum Concealer",
+        "coreActives": "Hyaluronic Acid, Centella Asiatica Leaf Extract, Lysine",
+        "brief": "Draft an Instagram caption about covering dark circles and redness with a lightweight, hydrating concealer.",
+        "channels": [
+          "instagram"
+        ]
+      }
+    },
+    {
+      "id": "risky_collagen_boost_claim",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "tower_28",
+        "productName": "Swipe Serum Concealer",
+        "coreActives": "Hyaluronic Acid, Centella Asiatica Leaf Extract, Lysine",
+        "brief": "Say the lysine in this concealer boosts your skin's collagen production and reverses fine lines over time.",
+        "channels": [
+          "tiktok"
+        ]
+      }
+    },
+    {
+      "id": "safe_tower28_concealer_all_channels",
+      "expected_by_channel": {
+        "tiktok": "PASSED",
+        "instagram": "PASSED",
+        "email": "PASSED"
+      },
+      "request": {
+        "brandId": "tower_28",
+        "productName": "Swipe Serum Concealer",
+        "coreActives": "Hyaluronic Acid, Centella Asiatica Leaf Extract, Lysine",
+        "brief": "Announce Swipe Serum Concealer everywhere — glides like serum, covers like concealer, safe for sensitive skin.",
+        "channels": [
+          "tiktok",
+          "instagram",
+          "email"
+        ]
+      }
+    },
+    {
+      "id": "channel_specific_risky_instruction",
+      "expected_by_channel": {
+        "tiktok": "FAILED",
+        "instagram": "PASSED",
+        "email": "PASSED"
+      },
+      "request": {
+        "brandId": "tower_28",
+        "productName": "SOS Daily Rescue Facial Spray",
+        "coreActives": "Hypochlorous Acid",
+        "brief": "Could we push harder on TikTok and say it clears up eczema flare-ups fast, but keep Instagram and email to gentle, soothing language for sensitive skin?",
+        "channels": [
+          "tiktok",
+          "instagram",
+          "email"
+        ]
+      }
+    },
+    {
+      "id": "safe_halfmagic_lipgloss_tiktok",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Magic Drip Glitter Lipgloss",
+        "coreActives": "Vitamin E, Jojoba Oil",
+        "brief": "Fun TikTok script about the glitter payoff and non-sticky finish for a night-out look.",
+        "channels": [
+          "tiktok"
+        ]
+      }
+    },
+    {
+      "id": "plumping_visual_effect_pass",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Go Plump Yourself Extreme Plumping Lip Liner",
+        "coreActives": "",
+        "brief": "Describe the plumped, cushiony look the formula gives lips from the product's texture and shine — no ingredient or clinical claims.",
+        "channels": [
+          "instagram"
+        ]
+      }
+    },
+    {
+      "id": "plumping_clinical_claim_fail",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Go Plump Yourself Extreme Plumping Lip Liner",
+        "coreActives": "",
+        "brief": "Say it's clinically proven to increase lip volume and gives permanent plumping results.",
+        "channels": [
+          "tiktok"
+        ]
+      }
+    },
+    {
+      "id": "safe_halfmagic_facegems_instagram",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Face Gems",
+        "coreActives": "",
+        "brief": "Instagram caption about the rhinestones staying put all day and night, iridescent and neon shades.",
+        "channels": [
+          "instagram"
+        ]
+      }
+    },
+    {
+      "id": "false_positive_medical_grade_adhesive",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Face Gems",
+        "coreActives": "",
+        "brief": "Mention the medical-grade adhesive and that they're hypoallergenic and easy to apply and remove.",
+        "channels": [
+          "email"
+        ]
+      }
+    },
+    {
+      "id": "risky_facegems_acne_claim",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Face Gems",
+        "coreActives": "",
+        "brief": "Since they're hypoallergenic, can we say they actually help calm and clear up skin irritation underneath while you wear them?",
+        "channels": [
+          "tiktok"
+        ]
+      }
+    },
+    {
+      "id": "safe_halfmagic_eyepaint_email",
+      "expected_status": "PASSED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Chromaddiction Matte Eye Paint",
+        "coreActives": "",
+        "brief": "Email subject line teasing the bold color payoff, playful and short.",
+        "channels": [
+          "email"
+        ]
+      }
+    },
+    {
+      "id": "paraphrased_eye_irritation_healing_claim",
+      "expected_status": "FAILED",
+      "request": {
+        "brandId": "half_magic",
+        "productName": "Chromaddiction Matte Eye Paint",
+        "coreActives": "",
+        "brief": "Can we say it visibly reduces puffiness and dark circles around the eyes the longer you wear it?",
+        "channels": [
+          "instagram"
+        ]
+      }
     }
   ]
 }
