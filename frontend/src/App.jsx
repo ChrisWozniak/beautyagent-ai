@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Check, Copy, Pencil, ChevronDown, Mail, RefreshCw, HelpCircle } from "lucide-react";
 import clsx from "clsx";
+import { generate } from "./api/generate.js";
 
 // ─── Brand channel icons (monochrome SVGs, recolored via currentColor) ───────
 
@@ -746,6 +747,7 @@ export default function App() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [generatingStep, setGeneratingStep] = useState(0);
   const [copiedId, setCopiedId] = useState(null);
+  const [apiError, setApiError] = useState(null);
 
   const handleGenerate = useCallback(() => {
     const payload = buildPayload(form);
@@ -761,22 +763,26 @@ export default function App() {
       setTimeout(() => setGeneratingStep(4), 18000),
     ];
 
-    function onResponse() {
-      // Fast case: clears any stage timers that haven't fired yet, skips ahead.
+    function onResponse(errOrData) {
       stageTimers.forEach(clearTimeout);
-      setGeneratingStep(5); // Marks all stages done.
+      if (errOrData instanceof Error) {
+        setApiError("Couldn't reach the server — check that the backend is running and try again.");
+        setStep("error");
+        return;
+      }
+      // Fast case: if response arrived before all timers fired, skips ahead.
+      setGeneratingStep(5);
       setTimeout(() => setStep("results"), 400);
     }
 
-    // Mock — replace with: generate(payload).then(onResponse).catch(onResponse)
-    // 21s simulates a near-ceiling response so stage 4 is visible in active state.
-    setTimeout(onResponse, 21000);
+    generate(payload).then(onResponse).catch(onResponse);
   }, [form]);
 
   const handleReset = useCallback(() => {
     setStep("input");
     setGeneratingStep(0);
     setForm(INITIAL_FORM);
+    setApiError(null);
   }, []);
 
   const handleCopy = useCallback((text, id) => {
@@ -795,6 +801,17 @@ export default function App() {
           <InputScreen form={form} setForm={setForm} onGenerate={handleGenerate} />
         )}
         {step === "generating" && <GeneratingScreen activeStep={generatingStep} />}
+        {step === "error" && (
+          <div className="max-w-[460px] mx-auto px-6 pt-32 pb-24 flex flex-col items-center text-center gap-5">
+            <p className="text-[14px] text-[var(--color-charcoal)] leading-relaxed">{apiError}</p>
+            <button
+              onClick={handleReset}
+              className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border border-border text-foreground hover:bg-secondary transition-all duration-150"
+            >
+              Try again
+            </button>
+          </div>
+        )}
         {step === "results" && (
           <ResultsScreen
             results={activeResults}
