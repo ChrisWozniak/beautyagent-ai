@@ -25,6 +25,7 @@ from backend.scripts.smoke_generate_live import main as live_generate_smoke_main
 from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
 from backend.scripts.run_red_team_eval import (
     expected_statuses_for_case,
+    select_cases,
     validate_case,
 )
 
@@ -571,6 +572,45 @@ class GenerateEndpointTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             validate_case(case)
+
+    def test_red_team_eval_selects_case_chunks(self) -> None:
+        cases = [{"id": f"case_{index}"} for index in range(1, 6)]
+
+        selected = select_cases(cases, start=2, end=4)
+
+        self.assertEqual(
+            selected,
+            [
+                (2, {"id": "case_2"}),
+                (3, {"id": "case_3"}),
+                (4, {"id": "case_4"}),
+            ],
+        )
+
+    def test_red_team_eval_selects_repeated_case_ids(self) -> None:
+        cases = [{"id": f"case_{index}"} for index in range(1, 6)]
+
+        selected = select_cases(cases, case_ids=["case_2", "case_5"])
+
+        self.assertEqual(
+            selected,
+            [
+                (2, {"id": "case_2"}),
+                (5, {"id": "case_5"}),
+            ],
+        )
+
+    def test_red_team_eval_rejects_invalid_case_selection(self) -> None:
+        cases = [{"id": "case_1"}]
+
+        with self.assertRaises(ValueError):
+            select_cases(cases, start=0)
+
+        with self.assertRaises(ValueError):
+            select_cases(cases, start=2, end=1)
+
+        with self.assertRaises(ValueError):
+            select_cases(cases, case_ids=["missing"])
 
     def test_cors_allows_vite_frontend_origin(self) -> None:
         response = self.client.options(

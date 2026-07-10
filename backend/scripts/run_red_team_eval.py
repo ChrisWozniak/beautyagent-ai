@@ -3,10 +3,13 @@
 Run from the repository root:
 
     python backend/scripts/run_red_team_eval.py
+    python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
+    python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -23,6 +26,34 @@ from backend.app.main import app
 
 
 VALID_STATUSES = {"PASSED", "FAILED"}
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Run BeautyAgent backend red-team eval cases through /generate.",
+    )
+    parser.add_argument(
+        "--start",
+        type=int,
+        help="1-based first case number to run, inclusive.",
+    )
+    parser.add_argument(
+        "--end",
+        type=int,
+        help="1-based last case number to run, inclusive.",
+    )
+    parser.add_argument(
+        "--case-id",
+        action="append",
+        dest="case_ids",
+        help="Run one case by id. Repeat to run multiple specific cases.",
+    )
+    parser.add_argument(
+        "--compact",
+        action="store_true",
+        help="Print one result line per case with no per-channel details.",
+    )
+    return parser.parse_args(argv)
 
 
 def expected_statuses_for_case(case: dict) -> dict[str, str]:
@@ -70,18 +101,85 @@ def validate_case(case: dict) -> None:
         )
 
 
-def run() -> int:
-    cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))["cases"]
+def select_cases(
+    cases: list[dict],
+    start: int | None = None,
+    end: int | None = None,
+    case_ids: list[str] | None = None,
+) -> list[tuple[int, dict]]:
+    """Return selected cases with their original 1-based case numbers."""
+    if start is not None and start < 1:
+        raise ValueError("--start must be 1 or greater.")
+
+    if end is not None and end < 1:
+        raise ValueError("--end must be 1 or greater.")
+
+    if start is not None and end is not None and start > end:
+        raise ValueError("--start cannot be greater than --end.")
+
+    selected = list(enumerate(cases, start=1))
+
+    if start is not None:
+        selected = [(index, case) for index, case in selected if index >= start]
+
+    if end is not None:
+        selected = [(index, case) for index, case in selected if index <= end]
+
+    if case_ids:
+        wanted = set(case_ids)
+        selected = [
+            (index, case)
+            for index, case in selected
+            if case["id"] in wanted
+        ]
+        found = {case["id"] for _, case in selected}
+        missing = sorted(wanted - found)
+        if missing:
+            raise ValueError(f"Unknown --case-id value(s): {', '.join(missing)}")
+
+    return selected
+
+
+def _shorten(text: str | None, limit: int = 180) -> str:
+    if not text:
+        return ""
+
+    normalized = " ".join(text.split())
+    return normalized if len(normalized) <= limit else f"{normalized[:limit]}..."
+
+
+def _print_case_details(payload: dict, expected_by_channel: dict[str, str]) -> None:
+    for result in payload["results"]:
+        channel = result["channel"]
+        flags = result.get("flagged_phrases") or []
+        explanation = _shorten(result.get("explanation"))
+        print(
+            f"  - {channel}: expected {expected_by_channel[channel]}, "
+            f"got {result['compliance_status']}; flags={flags}; "
+            f"explanation={explanation}"
+        )
+
+
+def run(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    all_cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))["cases"]
+    cases = select_cases(all_cases, args.start, args.end, args.case_ids)
     client = TestClient(app)
     failures: list[str] = []
 
-    for case in cases:
+    if not cases:
+        print("No cases selected.")
+        return 1
+
+    for case_number, case in cases:
         validate_case(case)
         response = client.post("/generate", json=case["request"])
         payload = response.json()
 
         if response.status_code != 200 or payload["error"] is not None:
-            failures.append(f"{case['id']}: request failed with {payload['error']}")
+            failure = f"{case['id']}: request failed with {payload['error']}"
+            print(f"FAIL #{case_number} {failure}")
+            failures.append(failure)
             continue
 
         actual_by_channel = {
@@ -92,14 +190,17 @@ def run() -> int:
         passed = actual_by_channel == expected_by_channel
         result_text = "PASS" if passed else "FAIL"
         print(
-            f"{result_text} {case['id']}: "
+            f"{result_text} #{case_number} {case['id']}: "
             f"expected {expected_by_channel}, got {actual_by_channel}"
         )
+
+        if not args.compact:
+            _print_case_details(payload, expected_by_channel)
 
         if not passed:
             failures.append(case["id"])
 
-    print(f"\n{len(cases) - len(failures)}/{len(cases)} cases passed.")
+    print(f"\n{len(cases) - len(failures)}/{len(cases)} selected cases passed.")
     return 1 if failures else 0
 
 

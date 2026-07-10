@@ -8,6 +8,24 @@ Run from the repository root:
 python backend/scripts/run_red_team_eval.py
 ```
 
+Run a timeout-friendly chunk:
+
+```powershell
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
+```
+
+Run one or more specific cases:
+
+```powershell
+python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --case-id channel_specific_risky_instruction
+```
+
+Options:
+
+- `--start` / `--end`: 1-based inclusive case range.
+- `--case-id`: case id to run; can be repeated.
+- `--compact`: one line per case, without per-channel flag/explanation details.
+
 ## Case Format
 
 Use `expected_status` when every requested channel should return the same compliance status:
