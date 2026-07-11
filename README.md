@@ -65,3 +65,5 @@ Current backend behavior notes:
 - OpenRouter failures fall back to deterministic drafting, and fallback drafts still pass through `check_compliance` plus the final deterministic safety backstop.
 - TikTok `Hook` / `Script` / `CTA` and Email `Subject` / `Body` are formatted inside `raw_draft` and `final_safe_output`; they are not separate API fields.
 - Brief-level compliance violations can return `FAILED` even when the visible generated draft is clean. In that case `flagged_phrases` and `explanation` point back to risky marketer brief language.
+
+Deployment prep lives in `backend/DEPLOYMENT.md`; the repo includes `render.yaml` for a Render web service Blueprint.

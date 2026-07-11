@@ -94,7 +94,7 @@ python backend/scripts/run_red_team_eval.py --compact
 
 ## Deployment
 
-See `backend/DEPLOYMENT.md` for Render start command, environment variables, and health check notes.
+See `backend/DEPLOYMENT.md` for Render Blueprint, manual service settings, environment variables, and health check notes. The root `render.yaml` defines the backend web service.
 
 ## Scope
 
