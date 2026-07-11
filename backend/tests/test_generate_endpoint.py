@@ -455,6 +455,9 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertNotIn("Tower 28", tiktok)
         self.assertNotIn("Tower 28", email)
         self.assertIn("delivers high-shine glitter payoff", email)
+        self.assertIn("quick shine reset", tiktok)
+        self.assertIn("Swipe it on", tiktok)
+        self.assertNotIn("Spritz", tiktok)
         self.assertNotIn("keeps the message", email)
         self.assertNotIn("compliant", email.lower())
 

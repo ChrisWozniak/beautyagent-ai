@@ -8,7 +8,13 @@
         "helps calm the look of stressed skin",
         "supports sensitive skin routines",
         "refreshes skin throughout the day"
-      ]
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick beauty reset",
+        "tiktok_cta": "Spritz it into your routine whenever you want a fresh start.",
+        "instagram_closer": "Keep it close for the moments when your beauty routine needs a calm, fresh reset.",
+        "email_finish": "with a polished finish that fits naturally into your day."
+      }
     },
     {
       "brandId": "half_magic",
@@ -18,7 +24,13 @@
         "delivers bold color payoff",
         "creates expressive eye looks",
         "adds playful dimension to makeup"
-      ]
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick color reset",
+        "tiktok_cta": "Paint it on when your look needs a bolder mood.",
+        "instagram_closer": "Reach for it when your eye look wants more color, more play, and more edge.",
+        "email_finish": "with a bold finish that keeps the look expressive."
+      }
     },
     {
       "brandId": "half_magic",
@@ -28,7 +40,13 @@
         "delivers high-shine glitter payoff",
         "wraps lips in cushiony shine",
         "adds playful sparkle to any look"
-      ]
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick shine reset",
+        "tiktok_cta": "Swipe it on when your look needs a little more sparkle.",
+        "instagram_closer": "Keep it close for the moments when your lip look wants more shine.",
+        "email_finish": "with a glossy finish that brings playful sparkle to your day."
+      }
     },
     {
       "brandId": "half_magic",
@@ -38,7 +56,13 @@
         "creates a fuller-looking lip effect",
         "adds cushiony definition and shine",
         "helps lips look softly sculpted"
-      ]
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick lip reset",
+        "tiktok_cta": "Line it up when your lip look wants extra shape and shine.",
+        "instagram_closer": "Keep it close for the moments when your lip look wants softer-looking shape.",
+        "email_finish": "with a softly sculpted finish that keeps lips looking polished."
+      }
     },
     {
       "brandId": "half_magic",
@@ -48,7 +72,13 @@
         "adds instant sparkle to makeup looks",
         "brings dimensional shine to eyes and face",
         "creates playful, light-catching detail"
-      ]
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick sparkle reset",
+        "tiktok_cta": "Press them on when your look needs instant dimension.",
+        "instagram_closer": "Keep them close for the moments when your look wants a little more light.",
+        "email_finish": "with light-catching detail that makes the look feel finished."
+      }
     }
   ]
 }
