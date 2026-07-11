@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "channel": "instagram",
+      "generation_status": "completed",
+      "raw_draft": "Wake up to eczema-free skin every single day. SOS Daily Rescue Facial Spray repairs your barrier overnight.",
+      "compliance_status": "FAILED",
+      "flagged_phrases": [
+        "eczema-free",
+        "repairs your barrier overnight"
+      ],
+      "explanation": "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory.",
+      "detection_source": "deterministic",
+      "final_safe_output": "Wake up to calmer-looking skin. SOS Daily Rescue Facial Spray helps support your skin barrier with a fresh, easy routine step.",
+      "retry_exhausted": false,
+      "error": null
+    }
+  ],
+  "error": null
+}

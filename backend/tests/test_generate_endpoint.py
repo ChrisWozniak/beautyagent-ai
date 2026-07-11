@@ -20,6 +20,7 @@ from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.config import get_settings
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
+from backend.app.models.response_models import GenerateResponse
 from backend.app.tools.check_compliance import check_compliance_tool
 from backend.scripts.smoke_generate_live import main as live_generate_smoke_main
 from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
@@ -576,6 +577,16 @@ class GenerateEndpointTests(unittest.TestCase):
         for case in cases:
             GenerateRequest(**case["request"])
             validate_case(case)
+
+    def test_live_ui_sample_payloads_match_response_contract(self) -> None:
+        samples_dir = ROOT / "shared/live-ui-samples"
+        sample_paths = sorted(samples_dir.glob("*.response.json"))
+
+        self.assertGreaterEqual(len(sample_paths), 4)
+        for sample_path in sample_paths:
+            with self.subTest(sample=sample_path.name):
+                payload = json.loads(sample_path.read_text(encoding="utf-8"))
+                GenerateResponse(**payload)
 
     def test_red_team_eval_supports_simple_expected_status(self) -> None:
         case = {

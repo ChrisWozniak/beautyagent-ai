@@ -57,6 +57,8 @@ The smoke tests only run live drafting when `USE_LLM_DRAFTING=true` and `OPENROU
 
 Backend work should preserve the `/generate` contract in `BEAUTYAGENT_API_CONTRACT.md` so Jillian's frontend can continue wiring against stable fields.
 
+For mock-to-live frontend wiring, see `docs/LIVE_ENDPOINT_MAPPING.md` and the sample responses in `shared/live-ui-samples/`.
+
 Current backend behavior notes:
 
 - `/generate` is one request -> one full response; there is no streaming, polling, websocket, or mid-request progress endpoint.

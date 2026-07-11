@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "channel": "tiktok",
+      "generation_status": "completed",
+      "raw_draft": "Hook: Swipe Serum Concealer is your quick beauty reset.\n\nScript: Meet Swipe Serum Concealer from Tower 28. It keeps the message beauty-focused and compliant, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Blend it into your routine whenever you want a fresh start.",
+      "compliance_status": "FAILED",
+      "flagged_phrases": [
+        "reverses fine lines",
+        "boosts your skin's collagen production"
+      ],
+      "explanation": "Marketer brief also included risky language: No medical/clinical claims without real substantiation for that specific product.",
+      "detection_source": "deterministic",
+      "final_safe_output": "Hook: Swipe Serum Concealer is your quick beauty reset.\n\nScript: Meet Swipe Serum Concealer from Tower 28. It keeps the message beauty-focused and compliant, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Blend it into your routine whenever you want a fresh start.",
+      "retry_exhausted": false,
+      "error": null
+    }
+  ],
+  "error": null
+}
