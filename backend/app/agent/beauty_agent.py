@@ -18,7 +18,7 @@ from .llm_client import LLMDraftError, generate_draft_with_llm
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 BRAND_CONFIGS_PATH = DATA_DIR / "brand_configs.json"
-PRODUCT_CONFIGS_PATH = DATA_DIR / "product_configs.json"
+PRODUCT_CONFIGS_PATH = DATA_DIR / "product_configs_richer_DRAFT.json"
 CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
     "tiktok": ("tiktok", "tik tok"),
     "instagram": ("instagram", "ig"),
@@ -39,26 +39,68 @@ def load_brand_configs() -> dict[str, dict[str, Any]]:
 
 
 @lru_cache(maxsize=1)
-def load_product_configs() -> list[dict[str, Any]]:
+def load_product_configs() -> dict[str, list[dict[str, Any]]]:
     with PRODUCT_CONFIGS_PATH.open(encoding="utf-8") as config_file:
         payload = json.load(config_file)
 
-    return payload["products"]
+    return {
+        brand_id: products
+        for brand_id, products in payload.items()
+        if brand_id != "_meta"
+    }
 
 
 def _find_product_config(request: GenerateRequest) -> dict[str, Any] | None:
     normalized_name = request.productName.lower()
-    for product in load_product_configs():
-        if product["brandId"] == request.brandId and product["name"].lower() == normalized_name:
+    for product in load_product_configs().get(request.brandId, []):
+        if product["productName"].lower() == normalized_name:
             return product
 
     return None
 
 
+def product_belongs_to_brand(brand_id: str, product_name: str) -> bool:
+    normalized_name = product_name.lower().strip()
+    return any(
+        product["productName"].lower() == normalized_name
+        for product in load_product_configs().get(brand_id, [])
+    )
+
+
 def _safe_claim_for_request(request: GenerateRequest) -> str:
     product_config = _find_product_config(request)
-    if product_config and product_config["safe_claims"]:
+    if product_config and product_config.get("safe_claims"):
         return product_config["safe_claims"][0]
+
+    if product_config and product_config.get("officialMarketingClaims"):
+        return product_config["officialMarketingClaims"][0]
+
+    if product_config and product_config.get("category"):
+        return _safe_claim_for_category(product_config["category"])
+
+    return "adds an easy, expressive finish to your beauty routine"
+
+
+def _safe_claim_for_category(category: str) -> str:
+    normalized = category.lower()
+    if "spray" in normalized:
+        return "refreshes skin throughout the day"
+    if "concealer" in normalized:
+        return "helps even the look of your complexion"
+    if "mascara" in normalized:
+        return "adds visible lift and definition to lashes"
+    if "blush" in normalized:
+        return "adds a soft wash of buildable color"
+    if "glitter" in normalized:
+        return "adds playful sparkle to any look"
+    if "eyeliner" in normalized or "eye paint" in normalized or "liner" in normalized:
+        return "creates expressive eye looks"
+    if "lip" in normalized:
+        return "adds a polished lip finish"
+    if "gem" in normalized:
+        return "creates playful, light-catching detail"
+    if "tool" in normalized:
+        return "helps guide a cleaner makeup application"
 
     return "adds an easy, expressive finish to your beauty routine"
 
@@ -66,20 +108,88 @@ def _safe_claim_for_request(request: GenerateRequest) -> str:
 def _fallback_copy_for_request(request: GenerateRequest) -> dict[str, str]:
     product_config = _find_product_config(request) or {}
     fallback_copy = product_config.get("fallback_copy", {})
+    category_fallback = _fallback_copy_for_category(product_config.get("category", ""))
     return {
-        "tiktok_hook": fallback_copy.get("tiktok_hook", "is your quick beauty reset"),
+        "tiktok_hook": fallback_copy.get("tiktok_hook", category_fallback["tiktok_hook"]),
         "tiktok_cta": fallback_copy.get(
             "tiktok_cta",
-            "Bring it into your routine whenever you want a fresh start.",
+            category_fallback["tiktok_cta"],
         ),
         "instagram_closer": fallback_copy.get(
             "instagram_closer",
-            "Keep it close for the moments when your beauty routine needs a fresh reset.",
+            category_fallback["instagram_closer"],
         ),
         "email_finish": fallback_copy.get(
             "email_finish",
-            "with a polished finish that fits naturally into your day.",
+            category_fallback["email_finish"],
         ),
+    }
+
+
+def _fallback_copy_for_category(category: str) -> dict[str, str]:
+    normalized = category.lower()
+    if "spray" in normalized:
+        return {
+            "tiktok_hook": "is your quick skin refresh",
+            "tiktok_cta": "Spritz it into your routine whenever your skin wants a fresh reset.",
+            "instagram_closer": "Keep it close for the moments when your skin wants a calm, fresh reset.",
+            "email_finish": "with a fresh, easy finish that fits naturally into your day.",
+        }
+    if "concealer" in normalized:
+        return {
+            "tiktok_hook": "is your quick complexion reset",
+            "tiktok_cta": "Tap it on where your look wants a smoother, more even finish.",
+            "instagram_closer": "Keep it close for the moments when your complexion wants a quick polish.",
+            "email_finish": "with a natural-looking finish that keeps your routine easy.",
+        }
+    if "mascara" in normalized:
+        return {
+            "tiktok_hook": "is your quick lash reset",
+            "tiktok_cta": "Sweep it on when your lashes want more visible lift and definition.",
+            "instagram_closer": "Reach for it when your lash look wants a little more movement.",
+            "email_finish": "with a lifted lash look that feels easy to wear.",
+        }
+    if "blush" in normalized:
+        return {
+            "tiktok_hook": "is your quick cheek reset",
+            "tiktok_cta": "Blend it on when your look wants a soft pop of color.",
+            "instagram_closer": "Keep it close for the moments when your cheeks want a fresh flush.",
+            "email_finish": "with a soft color finish that warms up your look.",
+        }
+    if "lip" in normalized:
+        return {
+            "tiktok_hook": "is your quick lip reset",
+            "tiktok_cta": "Swipe it on when your lip look wants a little more polish.",
+            "instagram_closer": "Keep it close for the moments when your lip look wants a fresh finish.",
+            "email_finish": "with a polished lip finish that fits naturally into your day.",
+        }
+    if "glitter" in normalized or "gem" in normalized:
+        return {
+            "tiktok_hook": "is your quick sparkle reset",
+            "tiktok_cta": "Press it on when your look wants instant dimension.",
+            "instagram_closer": "Keep it close for the moments when your look wants a little more light.",
+            "email_finish": "with light-catching detail that makes the look feel finished.",
+        }
+    if "eyeliner" in normalized or "eye paint" in normalized or "liner" in normalized:
+        return {
+            "tiktok_hook": "is your quick eye-look reset",
+            "tiktok_cta": "Paint it on when your look needs a bolder mood.",
+            "instagram_closer": "Reach for it when your eye look wants more color, more play, and more edge.",
+            "email_finish": "with a bold finish that keeps the look expressive.",
+        }
+    if "tool" in normalized:
+        return {
+            "tiktok_hook": "is your quick makeup guide",
+            "tiktok_cta": "Use it when your look wants a cleaner, more confident shape.",
+            "instagram_closer": "Keep it close for the moments when your routine wants an easier guide.",
+            "email_finish": "with a simple guide that helps your makeup routine feel more controlled.",
+        }
+
+    return {
+        "tiktok_hook": "is your quick beauty reset",
+        "tiktok_cta": "Bring it into your routine whenever your look wants a fresh start.",
+        "instagram_closer": "Keep it close for the moments when your beauty routine wants a fresh reset.",
+        "email_finish": "with a polished finish that fits naturally into your day.",
     }
 
 

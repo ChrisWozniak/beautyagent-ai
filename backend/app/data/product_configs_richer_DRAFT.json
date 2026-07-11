@@ -9,6 +9,17 @@
       "category": "Hypochlorous Acid Spray",
       "coreActives": "Water, Sodium Chloride, Hypochlorous Acid",
       "note": "CONFIRMED (10/10 confidence, per official product page and INCI list). Hypochlorous acid is not incidental — it's the primary positioning pillar of this product, with dedicated brand education (\"WTF is Hypochlorous Acid?\"). Published INCI is exactly these 3 ingredients; the previous actives list (Centella Asiatica, Niacinamide, Green Tea Extract, taken from the API contract's example payload) does not match the real formulation — that example was evidently placeholder/illustrative data, not accurate product truth, and should not be relied on for actual ingredient facts. This confirmation makes 'antimicrobial_ingredient_claims' directly and highly relevant, not speculative: officially substantiated benefits (anti-inflammatory, antibacterial, helps defend against harmful bacteria, helps reduce redness, helps soothe irritation) are safe to draw from, but 'disinfectant'/'sanitizer' framing remains off-limits regardless — true antibacterial properties do not make that specific marketing language legally safe.",
+      "safe_claims": [
+        "helps calm the look of stressed skin",
+        "supports sensitive skin routines",
+        "refreshes skin throughout the day"
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick skin refresh",
+        "tiktok_cta": "Spritz it into your routine whenever your skin wants a fresh reset.",
+        "instagram_closer": "Keep it close for the moments when your beauty routine needs a calm, fresh reset.",
+        "email_finish": "with a fresh, easy finish that fits naturally into your day."
+      },
       "officialMarketingClaims": [
         "Naturally produced by the body's immune system",
         "Anti-inflammatory",
@@ -66,10 +77,75 @@
       "productName": "Chromaddiction",
       "category": "Eye Paint + Liner",
       "coreActives": null,
+      "safe_claims": [
+        "delivers bold color payoff",
+        "creates expressive eye looks",
+        "adds playful dimension to makeup"
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick color reset",
+        "tiktok_cta": "Paint it on when your look needs a bolder mood.",
+        "instagram_closer": "Reach for it when your eye look wants more color, more play, and more edge.",
+        "email_finish": "with a bold finish that keeps the look expressive."
+      },
       "triggersComplianceRules": [
         "eye_area_pigment_glitter_usage",
         "color_additive_labeling"
       ]
+    },
+    {
+      "productName": "Chromaddiction Matte Eye Paint",
+      "category": "Eye Paint + Liner",
+      "coreActives": null,
+      "safe_claims": [
+        "delivers bold color payoff",
+        "creates expressive eye looks",
+        "adds playful dimension to makeup"
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick color reset",
+        "tiktok_cta": "Paint it on when your look needs a bolder mood.",
+        "instagram_closer": "Reach for it when your eye look wants more color, more play, and more edge.",
+        "email_finish": "with a bold finish that keeps the look expressive."
+      },
+      "triggersComplianceRules": [
+        "eye_area_pigment_glitter_usage",
+        "color_additive_labeling"
+      ]
+    },
+    {
+      "productName": "Magic Drip Glitter Lipgloss",
+      "category": "Glitter Lip Gloss",
+      "coreActives": "Vitamin E, Jojoba Oil",
+      "safe_claims": [
+        "delivers high-shine glitter payoff",
+        "wraps lips in cushiony shine",
+        "adds playful sparkle to any look"
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick shine reset",
+        "tiktok_cta": "Swipe it on when your look needs a little more sparkle.",
+        "instagram_closer": "Keep it close for the moments when your lip look wants more shine.",
+        "email_finish": "with a glossy finish that brings playful sparkle to your day."
+      },
+      "triggersComplianceRules": []
+    },
+    {
+      "productName": "Go Plump Yourself Extreme Plumping Lip Liner",
+      "category": "Lip Liner",
+      "coreActives": null,
+      "safe_claims": [
+        "creates a fuller-looking lip effect",
+        "adds cushiony definition and shine",
+        "helps lips look softly sculpted"
+      ],
+      "fallback_copy": {
+        "tiktok_hook": "is your quick lip reset",
+        "tiktok_cta": "Line it up when your lip look wants extra shape and shine.",
+        "instagram_closer": "Keep it close for the moments when your lip look wants softer-looking shape.",
+        "email_finish": "with a softly sculpted finish that keeps lips looking polished."
+      },
+      "triggersComplianceRules": []
     },
     {
       "productName": "Mouth Cloud",
