@@ -41,6 +41,14 @@ const GENERATING_STEPS = [
   "Finalizing your campaign",
 ];
 
+const CHANNEL_ORDER = ["tiktok", "instagram", "email"];
+
+const CHANNEL_CHECKED_NOTE = {
+  tiktok: "Checked against cosmetic claim rules for short-form video",
+  instagram: "Checked against cosmetic vs. drug claim rules",
+  email: "Checked against cosmetic claim rules for email",
+};
+
 // Mock results — Example 5 from the API contract (multi-channel partial failure).
 // Order is fixed: TikTok → Instagram → Email, per contract frontend notes.
 // compliance maps to API's compliance_status: "compliant" = PASSED, "tweak" = FAILED.
@@ -191,6 +199,40 @@ function buildPayload(form) {
   const actives = form.adaptiveField.trim();
   if (actives) payload.coreActives = actives;
   return payload;
+}
+
+// ─── API response → card shape mapper ────────────────────────────────────────
+
+function mapApiResults(data) {
+  const labelById = Object.fromEntries(CHANNELS.map((c) => [c.id, c.label]));
+  return data.results
+    .map((r) => {
+      const base = { channelId: r.channel, channelLabel: labelById[r.channel] ?? r.channel };
+      if (r.generation_status === "error") {
+        return { ...base, compliance: "error", errorCode: r.error?.code };
+      }
+      if (r.compliance_status === "PASSED") {
+        return {
+          ...base,
+          compliance: "compliant",
+          checkedNote: CHANNEL_CHECKED_NOTE[r.channel] ?? "",
+          copy: r.final_safe_output,
+        };
+      }
+      return {
+        ...base,
+        compliance: "tweak",
+        checkedNote: CHANNEL_CHECKED_NOTE[r.channel] ?? "",
+        flagged_phrases: r.flagged_phrases,
+        explanation: r.explanation,
+        edit: {
+          originalDraft: r.raw_draft,
+          note: r.explanation,
+          correctedCopy: r.final_safe_output,
+        },
+      };
+    })
+    .sort((a, b) => CHANNEL_ORDER.indexOf(a.channelId) - CHANNEL_ORDER.indexOf(b.channelId));
 }
 
 // ─── Compliance help popover ──────────────────────────────────────────────────
@@ -627,7 +669,7 @@ function ResultCard({ result, copiedId, onCopy }) {
           </div>
 
           {result.compliance === "compliant" ? (
-            result.channelId === "email" ? (
+            result.channelId === "email" && result.emailSubject != null ? (
               <EmailCard result={result} copiedId={copiedId} onCopy={onCopy} />
             ) : (
               <div className="px-6 py-5">
@@ -748,6 +790,7 @@ export default function App() {
   const [generatingStep, setGeneratingStep] = useState(0);
   const [copiedId, setCopiedId] = useState(null);
   const [apiError, setApiError] = useState(null);
+  const [apiResponse, setApiResponse] = useState(null);
 
   const handleGenerate = useCallback(() => {
     const payload = buildPayload(form);
@@ -770,6 +813,12 @@ export default function App() {
         setStep("error");
         return;
       }
+      if (errOrData.error) {
+        setApiError(errOrData.error.message ?? "Something went wrong — please try again.");
+        setStep("error");
+        return;
+      }
+      setApiResponse(errOrData);
       // Fast case: if response arrived before all timers fired, skips ahead.
       setGeneratingStep(5);
       setTimeout(() => setStep("results"), 400);
@@ -783,6 +832,7 @@ export default function App() {
     setGeneratingStep(0);
     setForm(INITIAL_FORM);
     setApiError(null);
+    setApiResponse(null);
   }, []);
 
   const handleCopy = useCallback((text, id) => {
@@ -791,7 +841,9 @@ export default function App() {
     setTimeout(() => setCopiedId(null), 2000);
   }, []);
 
-  const activeResults = ALL_RESULTS.filter((r) => form.channels.includes(r.channelId));
+  const activeResults = apiResponse
+    ? mapApiResults(apiResponse)
+    : ALL_RESULTS.filter((r) => form.channels.includes(r.channelId));
 
   return (
     <div className="min-h-screen bg-background">
