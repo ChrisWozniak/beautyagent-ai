@@ -1,0 +1,106 @@
+{
+  "_meta": {
+    "scope": "Per-brand product data: names, categories, active ingredients, and which compliance_rules.json entries a given product is likely to trigger. Not brand voice — see brand_configs.json for that.",
+    "version": "1.0"
+  },
+  "tower_28": [
+    {
+      "productName": "SOS Daily Rescue Facial Spray",
+      "category": "Hypochlorous Acid Spray",
+      "coreActives": "Water, Sodium Chloride, Hypochlorous Acid",
+      "note": "CONFIRMED (10/10 confidence, per official product page and INCI list). Hypochlorous acid is not incidental — it's the primary positioning pillar of this product, with dedicated brand education (\"WTF is Hypochlorous Acid?\"). Published INCI is exactly these 3 ingredients; the previous actives list (Centella Asiatica, Niacinamide, Green Tea Extract, taken from the API contract's example payload) does not match the real formulation — that example was evidently placeholder/illustrative data, not accurate product truth, and should not be relied on for actual ingredient facts. This confirmation makes 'antimicrobial_ingredient_claims' directly and highly relevant, not speculative: officially substantiated benefits (anti-inflammatory, antibacterial, helps defend against harmful bacteria, helps reduce redness, helps soothe irritation) are safe to draw from, but 'disinfectant'/'sanitizer' framing remains off-limits regardless — true antibacterial properties do not make that specific marketing language legally safe.",
+      "officialMarketingClaims": [
+        "Naturally produced by the body's immune system",
+        "Anti-inflammatory",
+        "Antibacterial",
+        "Helps defend skin from harmful bacteria",
+        "Helps reduce redness",
+        "Helps soothe irritation"
+      ],
+      "triggersComplianceRules": [
+        "antimicrobial_ingredient_claims",
+        "disease_claims"
+      ]
+    },
+    {
+      "productName": "Swipe Serum Concealer",
+      "category": "Concealer",
+      "coreActives": null,
+      "triggersComplianceRules": [
+        "hypoallergenic_claim",
+        "dermatologist_testing_claims"
+      ]
+    },
+    {
+      "productName": "Make Waves Mascara",
+      "category": "Mascara",
+      "coreActives": null,
+      "triggersComplianceRules": []
+    },
+    {
+      "productName": "BeachPlease Cream Blush",
+      "category": "Cream Blush",
+      "coreActives": null,
+      "triggersComplianceRules": []
+    }
+  ],
+  "half_magic": [
+    {
+      "productName": "Glitterpuck",
+      "category": "Pressed Glitter",
+      "coreActives": null,
+      "triggersComplianceRules": [
+        "eye_area_pigment_glitter_usage",
+        "color_additive_labeling"
+      ]
+    },
+    {
+      "productName": "Magic Flik",
+      "category": "Liquid Eyeliner Pen",
+      "coreActives": null,
+      "triggersComplianceRules": [
+        "eye_area_pigment_glitter_usage"
+      ]
+    },
+    {
+      "productName": "Chromaddiction",
+      "category": "Eye Paint + Liner",
+      "coreActives": null,
+      "triggersComplianceRules": [
+        "eye_area_pigment_glitter_usage",
+        "color_additive_labeling"
+      ]
+    },
+    {
+      "productName": "Mouth Cloud",
+      "category": "Soft Matte Lip Cream",
+      "coreActives": null,
+      "triggersComplianceRules": []
+    },
+    {
+      "productName": "Cheek Fluff",
+      "category": "Soft Blur Cream Blush",
+      "coreActives": null,
+      "triggersComplianceRules": []
+    },
+    {
+      "productName": "Spiritually Complexion",
+      "category": "Concealer",
+      "coreActives": null,
+      "triggersComplianceRules": []
+    },
+    {
+      "productName": "Face Gems",
+      "category": "Self-Adhesive Face Gems",
+      "coreActives": null,
+      "brandSpecificClaimToInclude": "Medical-grade, irritation-free self-adhesive — stays put all night, no separate lash glue needed.",
+      "triggersComplianceRules": []
+    },
+    {
+      "productName": "Wing Magician",
+      "category": "Reusable Liner Guide (Tool)",
+      "coreActives": null,
+      "triggersComplianceRules": []
+    }
+  ]
+}
