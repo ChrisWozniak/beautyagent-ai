@@ -63,31 +63,52 @@ def _safe_claim_for_request(request: GenerateRequest) -> str:
     return "adds an easy, expressive finish to your beauty routine"
 
 
+def _fallback_copy_for_request(request: GenerateRequest) -> dict[str, str]:
+    product_config = _find_product_config(request) or {}
+    fallback_copy = product_config.get("fallback_copy", {})
+    return {
+        "tiktok_hook": fallback_copy.get("tiktok_hook", "is your quick beauty reset"),
+        "tiktok_cta": fallback_copy.get(
+            "tiktok_cta",
+            "Bring it into your routine whenever you want a fresh start.",
+        ),
+        "instagram_closer": fallback_copy.get(
+            "instagram_closer",
+            "Keep it close for the moments when your beauty routine needs a fresh reset.",
+        ),
+        "email_finish": fallback_copy.get(
+            "email_finish",
+            "with a polished finish that fits naturally into your day.",
+        ),
+    }
+
+
 def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
     brand = load_brand_configs()[request.brandId]
     brand_name = brand["display_name"]
     safe_claim = _safe_claim_for_request(request)
+    fallback_copy = _fallback_copy_for_request(request)
 
     if channel == "tiktok":
         return (
-            f"Hook: {request.productName} is your quick beauty reset.\n\n"
+            f"Hook: {request.productName} {fallback_copy['tiktok_hook']}.\n\n"
             f"Script: Meet {request.productName} from {brand_name}. It {safe_claim}, "
             f"while keeping the vibe {brand['voice']}.\n\n"
-            f"CTA: Spritz, blend, or tap it into your routine whenever you want a fresh start."
+            f"CTA: {fallback_copy['tiktok_cta']}"
         )
 
     if channel == "instagram":
         return (
             f"Meet {request.productName} from {brand_name}: an easy routine staple that "
             f"{safe_claim}.\n\n"
-            f"Keep it close for the moments when your beauty routine needs a calm, fresh reset."
+            f"{fallback_copy['instagram_closer']}"
         )
 
     return (
         f"Subject: A fresh reset from {brand_name}\n\n"
         "Body: "
         f"{request.productName} brings an easy beauty update to your routine. "
-        f"It {safe_claim}, with a polished finish that fits naturally into your day."
+        f"It {safe_claim}, {fallback_copy['email_finish']}"
     )
 
 
