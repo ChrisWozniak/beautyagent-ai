@@ -27,12 +27,12 @@
     {
       "channel": "email",
       "generation_status": "completed",
-      "raw_draft": "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, while keeping the message clear, polished, and compliant.",
+      "raw_draft": "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, with a polished finish that fits naturally into your day.",
       "compliance_status": "PASSED",
       "flagged_phrases": [],
       "explanation": "",
       "detection_source": null,
-      "final_safe_output": "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, while keeping the message clear, polished, and compliant.",
+      "final_safe_output": "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, with a polished finish that fits naturally into your day.",
       "retry_exhausted": false,
       "error": null
     }

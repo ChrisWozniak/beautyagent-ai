@@ -60,7 +60,7 @@ def _safe_claim_for_request(request: GenerateRequest) -> str:
     if product_config and product_config["safe_claims"]:
         return product_config["safe_claims"][0]
 
-    return "keeps the message beauty-focused and compliant"
+    return "adds an easy, expressive finish to your beauty routine"
 
 
 def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
@@ -87,7 +87,7 @@ def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
         f"Subject: A fresh reset from {brand_name}\n\n"
         "Body: "
         f"{request.productName} brings an easy beauty update to your routine. "
-        f"It {safe_claim}, while keeping the message clear, polished, and compliant."
+        f"It {safe_claim}, with a polished finish that fits naturally into your day."
     )
 
 
