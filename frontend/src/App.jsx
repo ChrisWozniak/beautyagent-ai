@@ -82,6 +82,152 @@ const ALL_RESULTS = [
   },
 ];
 
+// ─── Demo fallback cases ─────────────────────────────────────────────────────
+// Static response payloads for live-demo recovery. Never sent as real requests.
+// brand is normalized (tower_28/half_magic) for form.brand compatibility.
+
+const DEMO_CASES = [
+  {
+    label: "Case 1 — PASS · Email · Tower 28",
+    brand: "tower_28",
+    productName: "SOS Daily Rescue Facial Spray",
+    channels: ["email"],
+    response: {
+      results: [
+        {
+          channel: "email",
+          generation_status: "completed",
+          raw_draft: "Redness had a rough day? SOS is here to help 🌿",
+          compliance_status: "PASSED",
+          flagged_phrases: [],
+          explanation: "",
+          detection_source: null,
+          final_safe_output: "Redness had a rough day? SOS is here to help 🌿",
+          retry_exhausted: false,
+          error: null,
+        },
+      ],
+      error: null,
+    },
+  },
+  {
+    label: "Case 2 — PASS · TikTok · Half Magic",
+    brand: "half_magic",
+    productName: "Magic Drip Glitter Lipgloss",
+    channels: ["tiktok"],
+    response: {
+      results: [
+        {
+          channel: "tiktok",
+          generation_status: "completed",
+          raw_draft: "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
+          compliance_status: "PASSED",
+          flagged_phrases: [],
+          explanation: "",
+          detection_source: null,
+          final_safe_output: "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
+          retry_exhausted: false,
+          error: null,
+        },
+      ],
+      error: null,
+    },
+  },
+  {
+    label: "Case 3 — FAIL · Instagram · Tower 28",
+    brand: "tower_28",
+    productName: "SOS Daily Rescue Facial Spray",
+    channels: ["instagram"],
+    response: {
+      results: [
+        {
+          channel: "instagram",
+          generation_status: "completed",
+          raw_draft: "Say goodbye to eczema and redness for good! Our SOS Daily Rescue Facial Spray heals your skin barrier overnight, so you wake up calm, protected, and finally free of flare-ups. 🌿 #SkinSOS",
+          compliance_status: "FAILED",
+          flagged_phrases: ["eczema", "heals your skin barrier overnight"],
+          explanation: "\"Eczema\" names a diagnosable skin condition — claiming to treat it crosses into a drug claim. \"Heals your skin barrier overnight\" is a structure-function claim, which cosmetics can't legally make.",
+          detection_source: "both",
+          final_safe_output: "Redness-prone skin, meet your new calm-down button. SOS Daily Rescue Facial Spray helps soothe visible redness and support skin comfort, morning to night. 🌿 #SkinSOS",
+          retry_exhausted: false,
+          error: null,
+        },
+      ],
+      error: null,
+    },
+  },
+  {
+    label: "Case 4 — FAIL · TikTok · Half Magic",
+    brand: "half_magic",
+    productName: "Magic Drip Glitter Lipgloss",
+    channels: ["tiktok"],
+    response: {
+      results: [
+        {
+          channel: "tiktok",
+          generation_status: "completed",
+          raw_draft: "Clinically proven to boost lip fullness ✨ Magic Drip's plush cushion formula gives you a plumped-up glow that lasts all day 💧",
+          compliance_status: "FAILED",
+          flagged_phrases: ["clinically proven"],
+          explanation: "\"Clinically proven\" is a literal claim of substantiating trial data — this formula (Vitamin E, Jojoba Oil, no clinical studies) has no clinical backing for a lip-fullness claim. It's an exact banned phrase, not a paraphrase.",
+          detection_source: "deterministic",
+          final_safe_output: "Cushiony, juicy, and dripping with sparkle ✨ Magic Drip's plush, non-sticky formula wraps your lips in rich, cocooning shine all day 💧",
+          retry_exhausted: false,
+          error: null,
+        },
+      ],
+      error: null,
+    },
+  },
+  {
+    label: "Case 5 — MIXED · All 3 · Tower 28",
+    brand: "tower_28",
+    productName: "SOS Daily Rescue Facial Spray",
+    channels: ["tiktok", "instagram", "email"],
+    response: {
+      results: [
+        {
+          channel: "tiktok",
+          generation_status: "completed",
+          raw_draft: "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
+          compliance_status: "PASSED",
+          flagged_phrases: [],
+          explanation: "",
+          detection_source: null,
+          final_safe_output: "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
+          retry_exhausted: false,
+          error: null,
+        },
+        {
+          channel: "instagram",
+          generation_status: "completed",
+          raw_draft: "Centella Asiatica, Niacinamide, and Green Tea Extract — one calming mist, made for redness-prone skin that just wants a quiet day. Mist, breathe, repeat. 🌿",
+          compliance_status: "PASSED",
+          flagged_phrases: [],
+          explanation: "",
+          detection_source: null,
+          final_safe_output: "Centella Asiatica, Niacinamide, and Green Tea Extract — one calming mist, made for redness-prone skin that just wants a quiet day. Mist, breathe, repeat. 🌿",
+          retry_exhausted: false,
+          error: null,
+        },
+        {
+          channel: "email",
+          generation_status: "completed",
+          raw_draft: "Say goodbye to eczema flare-ups — repair your barrier overnight with SOS 🌿",
+          compliance_status: "FAILED",
+          flagged_phrases: ["eczema flare-ups", "repair your barrier overnight"],
+          explanation: "\"Eczema flare-ups\" references a diagnosable skin condition — claiming to resolve it is a drug claim, not a cosmetic one. \"Repair your barrier overnight\" is a structure-function claim, which cosmetics can't legally make.",
+          detection_source: "both",
+          final_safe_output: "Redness had a rough day? SOS helps calm things down, morning and night 🌿",
+          retry_exhausted: false,
+          error: null,
+        },
+      ],
+      error: null,
+    },
+  },
+];
+
 // ─── Error copy ───────────────────────────────────────────────────────────────
 
 function getErrorCopy(code) {
@@ -773,6 +919,40 @@ function EmailCard({ result, copiedId, onCopy }) {
   );
 }
 
+// ─── Demo panel ──────────────────────────────────────────────────────────────
+
+function DemoPanel({ onLoadCase }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      {open && (
+        <div className="mb-2 bg-card border border-border rounded-[16px] shadow-[0_4px_16px_rgba(44,44,44,0.12)] p-3 w-64">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] px-2 mb-2">
+            Demo fallback
+          </p>
+          <div className="space-y-0.5">
+            {DEMO_CASES.map((c, i) => (
+              <button
+                key={i}
+                onClick={() => { onLoadCase(c); setOpen(false); }}
+                className="w-full text-left px-3 py-2 rounded-[8px] text-[12px] text-foreground hover:bg-secondary transition-colors"
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-card border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground shadow-sm transition-colors"
+      >
+        Demo {open ? "▴" : "▾"}
+      </button>
+    </div>
+  );
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 const INITIAL_FORM = {
@@ -835,6 +1015,14 @@ export default function App() {
     setApiResponse(null);
   }, []);
 
+  const handleLoadDemoCase = useCallback((c) => {
+    setForm((prev) => ({ ...prev, brand: c.brand, productName: c.productName, channels: c.channels }));
+    setApiResponse(c.response);
+    setApiError(null);
+    setGeneratingStep(0);
+    setStep("results");
+  }, []);
+
   const handleCopy = useCallback((text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -873,6 +1061,7 @@ export default function App() {
           />
         )}
       </main>
+      <DemoPanel onLoadCase={handleLoadDemoCase} />
     </div>
   );
 }
