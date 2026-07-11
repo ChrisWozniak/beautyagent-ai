@@ -461,6 +461,41 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertNotIn("keeps the message", email)
         self.assertNotIn("compliant", email.lower())
 
+    def test_tower_28_spray_fallback_does_not_use_lip_or_makeup_actions(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft a quick TikTok for a calming skin spray.",
+            channels=["tiktok"],
+        )
+
+        tiktok = draft_channel_copy(request, "tiktok")
+
+        self.assertIn("Spritz it", tiktok)
+        self.assertNotIn("Swipe it on", tiktok)
+        self.assertNotIn("Line it up", tiktok)
+        self.assertNotIn("Paint it on", tiktok)
+        self.assertNotIn("Press it on", tiktok)
+
+    def test_generate_rejects_product_that_does_not_belong_to_brand(self) -> None:
+        response = self.client.post(
+            "/generate",
+            json={
+                "brandId": "tower_28",
+                "productName": "Magic Drip Glitter Lipgloss",
+                "brief": "Draft a product launch post.",
+                "channels": ["tiktok"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertEqual(payload["results"], [])
+        self.assertEqual(payload["error"]["code"], "VALIDATION_ERROR")
+        self.assertIn("Magic Drip Glitter Lipgloss", payload["error"]["detail"])
+        self.assertIn("tower_28", payload["error"]["detail"])
+
     def test_channel_error_result_uses_contract_error_shape(self) -> None:
         result = channel_error_result("email", "TIMEOUT", "Generation timed out after retries.")
 
