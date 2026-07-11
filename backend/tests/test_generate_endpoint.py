@@ -439,6 +439,25 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertTrue(email.startswith("Subject:"))
         self.assertIn("\n\nBody:", email)
 
+    def test_half_magic_fallback_uses_matching_brand_and_product_claim(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Magic Drip Glitter Lipgloss",
+            coreActives="Vitamin E, Jojoba Oil",
+            brief="Draft a fun email about glitter payoff and shine.",
+            channels=["email"],
+        )
+
+        email = draft_channel_copy(request, "email")
+        tiktok = draft_channel_copy(request, "tiktok")
+
+        self.assertIn("from Half Magic", tiktok)
+        self.assertNotIn("Tower 28", tiktok)
+        self.assertNotIn("Tower 28", email)
+        self.assertIn("delivers high-shine glitter payoff", email)
+        self.assertNotIn("keeps the message", email)
+        self.assertNotIn("compliant", email.lower())
+
     def test_channel_error_result_uses_contract_error_shape(self) -> None:
         result = channel_error_result("email", "TIMEOUT", "Generation timed out after retries.")
 

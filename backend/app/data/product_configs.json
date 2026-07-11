@@ -19,6 +19,36 @@
         "creates expressive eye looks",
         "adds playful dimension to makeup"
       ]
+    },
+    {
+      "brandId": "half_magic",
+      "name": "Magic Drip Glitter Lipgloss",
+      "default_actives": "Vitamin E, Jojoba Oil",
+      "safe_claims": [
+        "delivers high-shine glitter payoff",
+        "wraps lips in cushiony shine",
+        "adds playful sparkle to any look"
+      ]
+    },
+    {
+      "brandId": "half_magic",
+      "name": "Go Plump Yourself Extreme Plumping Lip Liner",
+      "default_actives": "",
+      "safe_claims": [
+        "creates a fuller-looking lip effect",
+        "adds cushiony definition and shine",
+        "helps lips look softly sculpted"
+      ]
+    },
+    {
+      "brandId": "half_magic",
+      "name": "Face Gems",
+      "default_actives": "",
+      "safe_claims": [
+        "adds instant sparkle to makeup looks",
+        "brings dimensional shine to eyes and face",
+        "creates playful, light-catching detail"
+      ]
     }
   ]
 }
