@@ -120,12 +120,12 @@ const DEMO_CASES = [
         {
           channel: "tiktok",
           generation_status: "completed",
-          raw_draft: "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
+          raw_draft: "Hook: POV: your last brain cell just found its glow-up ✨\n\nScript: Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Non-sticky formula, full glitter payoff — no compromises. 💧\n\nCTA: Swipe it on when your look needs a little more magic.",
           compliance_status: "PASSED",
           flagged_phrases: [],
           explanation: "",
           detection_source: null,
-          final_safe_output: "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
+          final_safe_output: "Hook: POV: your last brain cell just found its glow-up ✨\n\nScript: Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Non-sticky formula, full glitter payoff — no compromises. 💧\n\nCTA: Swipe it on when your look needs a little more magic.",
           retry_exhausted: false,
           error: null,
         },
@@ -171,7 +171,7 @@ const DEMO_CASES = [
           flagged_phrases: ["clinically proven"],
           explanation: "\"Clinically proven\" is a literal claim of substantiating trial data — this formula (Vitamin E, Jojoba Oil, no clinical studies) has no clinical backing for a lip-fullness claim. It's an exact banned phrase, not a paraphrase.",
           detection_source: "deterministic",
-          final_safe_output: "Cushiony, juicy, and dripping with sparkle ✨ Magic Drip's plush, non-sticky formula wraps your lips in rich, cocooning shine all day 💧",
+          final_safe_output: "Hook: Your lips called — they want their glow back ✨\n\nScript: Magic Drip's plush, non-sticky formula wraps your lips in rich, cocooning shine. All the sparkle, none of the crunch. 💧\n\nCTA: Swipe it on when your look needs a little more magic.",
           retry_exhausted: false,
           error: null,
         },
@@ -731,6 +731,34 @@ function ResultsScreen({ results, form, copiedId, onCopy }) {
   );
 }
 
+function parseTikTokSections(copy) {
+  const pattern = /(?:^|\n\n)(Hook|Script|CTA):\s*/g;
+  const matches = [...copy.matchAll(pattern)];
+  if (matches.length === 0) return null;
+  return matches.map((match, i) => {
+    const start = match.index + match[0].length;
+    const end = matches[i + 1] ? matches[i + 1].index : copy.length;
+    return { label: match[1], text: copy.slice(start, end).trim() };
+  });
+}
+
+function TikTokScriptCopy({ copy }) {
+  const sections = parseTikTokSections(copy);
+  if (!sections) {
+    return <p className="text-[14px] text-foreground leading-[1.8] whitespace-pre-line">{copy}</p>;
+  }
+  return (
+    <div className="space-y-4">
+      {sections.map(({ label, text }) => (
+        <div key={label}>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-1">{label}</p>
+          <p className="text-[14px] text-foreground leading-[1.8]">{text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ResultCard({ result, copiedId, onCopy }) {
   const [open, setOpen] = useState(true);
 
@@ -785,7 +813,10 @@ function ResultCard({ result, copiedId, onCopy }) {
               <EmailCard result={result} copiedId={copiedId} onCopy={onCopy} />
             ) : (
               <div className="px-6 py-5">
-                <p className="text-[14px] text-foreground leading-[1.8] whitespace-pre-line">{result.copy}</p>
+                {result.channelId === "tiktok"
+                  ? <TikTokScriptCopy copy={result.copy} />
+                  : <p className="text-[14px] text-foreground leading-[1.8] whitespace-pre-line">{result.copy}</p>
+                }
                 <div className="mt-5 flex justify-end">
                   <CopyBtn text={result.copy} id={`${result.channelId}-copy`} copiedId={copiedId} onCopy={onCopy} />
                 </div>
@@ -836,9 +867,10 @@ function ResultCard({ result, copiedId, onCopy }) {
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
                   Suggested copy
                 </p>
-                <p className="text-[14px] text-foreground leading-[1.8] whitespace-pre-line">
-                  {result.edit?.correctedCopy}
-                </p>
+                {result.channelId === "tiktok"
+                  ? <TikTokScriptCopy copy={result.edit?.correctedCopy ?? ""} />
+                  : <p className="text-[14px] text-foreground leading-[1.8] whitespace-pre-line">{result.edit?.correctedCopy}</p>
+                }
               </div>
 
               <div className="flex justify-end pt-1">
