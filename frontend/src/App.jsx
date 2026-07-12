@@ -180,50 +180,16 @@ const DEMO_CASES = [
     },
   },
   {
-    label: "Case 5 — MIXED · All 3 · Tower 28",
+    label: "Rate limited — request rejected before generation",
     brand: "tower_28",
     productName: "SOS Daily Rescue Facial Spray",
     channels: ["tiktok", "instagram", "email"],
     response: {
-      results: [
-        {
-          channel: "tiktok",
-          generation_status: "completed",
-          raw_draft: "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
-          compliance_status: "PASSED",
-          flagged_phrases: [],
-          explanation: "",
-          detection_source: null,
-          final_safe_output: "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
-          retry_exhausted: false,
-          error: null,
-        },
-        {
-          channel: "instagram",
-          generation_status: "completed",
-          raw_draft: "Centella Asiatica, Niacinamide, and Green Tea Extract — one calming mist, made for redness-prone skin that just wants a quiet day. Mist, breathe, repeat. 🌿",
-          compliance_status: "PASSED",
-          flagged_phrases: [],
-          explanation: "",
-          detection_source: null,
-          final_safe_output: "Centella Asiatica, Niacinamide, and Green Tea Extract — one calming mist, made for redness-prone skin that just wants a quiet day. Mist, breathe, repeat. 🌿",
-          retry_exhausted: false,
-          error: null,
-        },
-        {
-          channel: "email",
-          generation_status: "completed",
-          raw_draft: "Say goodbye to eczema flare-ups — repair your barrier overnight with SOS 🌿",
-          compliance_status: "FAILED",
-          flagged_phrases: ["eczema flare-ups", "repair your barrier overnight"],
-          explanation: "\"Eczema flare-ups\" references a diagnosable skin condition — claiming to resolve it is a drug claim, not a cosmetic one. \"Repair your barrier overnight\" is a structure-function claim, which cosmetics can't legally make.",
-          detection_source: "both",
-          final_safe_output: "Redness had a rough day? SOS helps calm things down, morning and night 🌿",
-          retry_exhausted: false,
-          error: null,
-        },
-      ],
-      error: null,
+      results: [],
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many requests. Please wait a moment and try again.",
+      },
     },
   },
 ];
@@ -1018,9 +984,14 @@ export default function App() {
   const handleLoadDemoCase = useCallback((c) => {
     setForm((prev) => ({ ...prev, brand: c.brand, productName: c.productName, channels: c.channels }));
     setApiResponse(c.response);
-    setApiError(null);
     setGeneratingStep(0);
-    setStep("results");
+    if (c.response.error) {
+      setApiError(c.response.error.message);
+      setStep("error");
+    } else {
+      setApiError(null);
+      setStep("results");
+    }
   }, []);
 
   const handleCopy = useCallback((text, id) => {
