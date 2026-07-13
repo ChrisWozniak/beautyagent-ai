@@ -29,8 +29,8 @@ const BRANDS = [
 ];
 
 const CHANNELS = [
-  { id: "instagram", label: "Instagram Caption", sub: "With hashtags", Icon: InstagramIcon },
   { id: "tiktok", label: "TikTok Script", sub: "Spoken, 30–60 sec", Icon: TikTokIcon },
+  { id: "instagram", label: "Instagram Caption", sub: "With hashtags", Icon: InstagramIcon },
   { id: "email", label: "Email", sub: "Subject + body", Icon: Mail },
 ];
 
