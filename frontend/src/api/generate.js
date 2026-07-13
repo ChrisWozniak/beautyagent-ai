@@ -16,7 +16,10 @@ export async function generate(payload) {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new Error(body?.error?.message ?? `HTTP ${res.status}`)
+    return {
+      results: [],
+      error: body?.error ?? { code: 'INTERNAL_ERROR', message: `HTTP ${res.status}` },
+    }
   }
 
   return res.json()
