@@ -68,6 +68,8 @@ md
 
 Pre-Build contract lock --- Tower 28 & Half Magic, channels: TikTok / Instagram / Email. (Blog and YouTube are out of scope this week.)
 
+Contract version: 2.0 — adds Brand Voice Agent fields and NEEDS_HUMAN_REVIEW status (Week 2 / Agent 2.0). See Section 9.
+
 ## 1. Request Schema
 
 {
@@ -529,3 +531,91 @@ Note the top-level error stays null --- the request itself succeeded; only one c
 ## 8. Open Questions
 
 All Pre-Build open questions have been resolved --- see decisions.md for what changed and why. No open items remain blocking Day 1.
+
+---
+
+## 9. Week 2 Addendum — Agent 2.0 (Brand Voice Agent)
+
+Added 2026-07-13 per the Week 2 API Contract Meeting. Extends the Section 2/3 response schema — nothing in Sections 1–8 changes.
+
+### 9.1 New Response Fields (per-channel result)
+
+| Field | Type | Always present? | Notes |
+| --- | --- | --- | --- |
+| voice_status | string | yes | "ON_VOICE" \| "DRIFTED"; null if generation_status: "error" |
+| voice_confidence | float 0.0–1.0 | yes | null if generation_status: "error" |
+| voice_reason | string or null | yes | Populated whenever the Brand Voice Agent runs, regardless of verdict; null only if generation_status: "error" (Decision #10) |
+| compliance_confidence | float 0.0–1.0 | yes | Previously discarded internally by check_compliance; now surfaced. Null if generation_status: "error" or if compliance never ran (voice DRIFTED gated it out) |
+| escalation_trigger | string or null | yes | "voice" \| "compliance"; null if not escalated or generation_status: "error". Never "both" — see 9.3 (Decision #12) |
+
+### 9.2 `compliance_status` — third value added
+
+`compliance_status` now allows: `PASSED` | `FAILED` | `NEEDS_HUMAN_REVIEW` (previously `PASSED` | `FAILED` only).
+
+When `compliance_status` is `NEEDS_HUMAN_REVIEW`: if compliance never ran (voice DRIFTED), `flagged_phrases`, `explanation`, `detection_source`, `final_safe_output`, `retry_exhausted`, and `compliance_confidence` are all null. If compliance did run but wasn't confident, `compliance_confidence`, `flagged_phrases`, `explanation`, and `detection_source` may be populated with its actual findings — but `final_safe_output` stays null regardless (Decision #11).
+
+### 9.3 Routing Table (orchestrator logic, internal)
+
+| Voice conf | Compliance conf | compliance_status | escalation_trigger |
+| --- | --- | --- | --- |
+| >= 0.75 | >= 0.75 | PASSED or FAILED | null |
+| < 0.75 | n/a — compliance does not execute | NEEDS_HUMAN_REVIEW | "voice" |
+| >= 0.75 | < 0.75 | NEEDS_HUMAN_REVIEW | "compliance" |
+
+Threshold hardcoded at 0.75 for Agent 2.0. Calibrate with the 6-case near-miss set before demo. `escalation_trigger` never resolves to `"both"` (Decision #12).
+
+### 9.4 Example Payloads — Week 2
+
+**Example 6 — Tower 28, Voice Drift (NEEDS_HUMAN_REVIEW via "voice")**
+
+Response:
+
+```json
+{
+  "channel": "instagram",
+  "generation_status": "completed",
+  "raw_draft": "...",
+  "voice_status": "DRIFTED",
+  "voice_confidence": 0.42,
+  "voice_reason": "Uses 'POV' and 'main character energy' meme-speak structure that doesn't match Tower 28's approachable-but-grounded voice profile.",
+  "compliance_status": "NEEDS_HUMAN_REVIEW",
+  "compliance_confidence": null,
+  "flagged_phrases": null,
+  "explanation": null,
+  "detection_source": null,
+  "final_safe_output": null,
+  "retry_exhausted": null,
+  "escalation_trigger": "voice",
+  "error": null
+}
+```
+
+**Example 7 — Half Magic, Low-Confidence Compliance (NEEDS_HUMAN_REVIEW via "compliance")**
+
+Response:
+
+```json
+{
+  "channel": "tiktok",
+  "generation_status": "completed",
+  "raw_draft": "...",
+  "voice_status": "ON_VOICE",
+  "voice_confidence": 0.88,
+  "voice_reason": "Playful, hook-first structure with product name in ALL CAPS matches Half Magic's TikTok format conventions.",
+  "compliance_status": "NEEDS_HUMAN_REVIEW",
+  "compliance_confidence": 0.61,
+  "flagged_phrases": ["plumping"],
+  "explanation": "\"Plumping\" borders on a structure-function claim depending on context — not a clear-cut violation, but the audit isn't confident enough to pass or fail it outright.",
+  "detection_source": "llm_audit",
+  "final_safe_output": null,
+  "retry_exhausted": null,
+  "escalation_trigger": "compliance",
+  "error": null
+}
+```
+
+### 9.5 Still Open — not yet locked
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| retry_exhausted when compliance ends in low confidence rather than a clean FAILED | Christopher | Default assumption: stays null. Needs a quick confirm since he owns the retry logic — not blocking Phase 1/2, close before Phase 4 regression testing. |
