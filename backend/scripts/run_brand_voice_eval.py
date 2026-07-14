@@ -22,8 +22,10 @@ CASES_PATH = ROOT / "backend/evals/brand_voice_calibration_cases.json"
 sys.path.insert(0, str(ROOT))
 
 from backend.app.agent.beauty_agent import load_brand_configs
+from backend.app.agent.llm_client import reset_llm_usage
 from backend.app.models.request_models import Channel
 from backend.app.tools.check_brand_voice import check_brand_voice
+from backend.scripts.usage_report import print_llm_usage_report
 
 
 VALID_VOICE_STATUSES = {"ON_VOICE", "DRIFTED"}
@@ -135,6 +137,7 @@ def run(
     voice_checker: VoiceChecker = check_brand_voice,
 ) -> int:
     args = parse_args(argv)
+    reset_llm_usage()
     all_cases = _load_cases()
     cases = select_cases(all_cases, args.start, args.end, args.case_ids)
     brand_configs = load_brand_configs()
@@ -172,6 +175,7 @@ def run(
             failures.append(case["id"])
 
     print(f"\n{len(cases) - len(failures)}/{len(cases)} selected cases passed.")
+    print_llm_usage_report()
     return 1 if failures else 0
 
 

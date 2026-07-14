@@ -27,9 +27,11 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from backend.app.agent.beauty_agent import draft_channel_copy
+from backend.app.agent.llm_client import reset_llm_usage
 from backend.app.config import get_settings
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest
+from backend.scripts.usage_report import print_llm_usage_report
 
 
 SMOKE_CASES = [
@@ -117,6 +119,7 @@ def main() -> int:
     model = settings.anthropic_model_sonnet if settings.anthropic_api_key else settings.openrouter_model
     print(f"Model: {model}")
 
+    reset_llm_usage()
     client = TestClient(app)
     failures = 0
     for request in SMOKE_CASES:
@@ -127,9 +130,11 @@ def main() -> int:
 
     if failures:
         print(f"Live /generate smoke test failed: {failures}/{len(SMOKE_CASES)} cases failed.")
+        print_llm_usage_report()
         return 1
 
     print(f"Live /generate smoke test passed: {len(SMOKE_CASES)}/{len(SMOKE_CASES)} cases passed.")
+    print_llm_usage_report()
     return 0
 
 

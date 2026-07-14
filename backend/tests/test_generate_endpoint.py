@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -18,7 +19,13 @@ from backend.app.agent.beauty_agent import (
     process_channel_safely,
 )
 from backend.app.agent.prompts import build_draft_prompt
-from backend.app.agent.llm_client import LLMClientError, LLMDraftError
+from backend.app.agent.llm_client import (
+    LLMClientError,
+    LLMDraftError,
+    get_llm_usage,
+    reset_llm_usage,
+    summarize_llm_usage,
+)
 from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.config import get_settings
 from backend.app.config_loader import ConfigLoadError, load_json_config
@@ -1015,6 +1022,55 @@ class GenerateEndpointTests(unittest.TestCase):
         preview = safe_console_text("gloss ✨ shine\nnow", limit=20)
 
         self.assertEqual(preview, "gloss \\u2728 shine now")
+
+    def test_llm_usage_summary_records_litellm_usage_metadata(self) -> None:
+        from backend.app.agent import llm_client
+
+        reset_llm_usage()
+        response = SimpleNamespace(
+            usage=SimpleNamespace(
+                prompt_tokens=120,
+                completion_tokens=35,
+                total_tokens=155,
+            ),
+            _hidden_params={"response_cost": 0.0042},
+        )
+
+        llm_client._record_usage(response, "anthropic/test-model", "generation")
+
+        records = get_llm_usage()
+        summary = summarize_llm_usage()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].call_name, "generation")
+        self.assertEqual(records[0].model, "anthropic/test-model")
+        self.assertEqual(records[0].prompt_tokens, 120)
+        self.assertEqual(records[0].completion_tokens, 35)
+        self.assertEqual(records[0].total_tokens, 155)
+        self.assertEqual(records[0].cost_usd, 0.0042)
+        self.assertEqual(
+            summary,
+            {
+                "calls": 1,
+                "prompt_tokens": 120,
+                "completion_tokens": 35,
+                "total_tokens": 155,
+                "cost_usd": 0.0042,
+            },
+        )
+
+    def test_llm_usage_summary_handles_missing_usage_metadata(self) -> None:
+        reset_llm_usage()
+
+        self.assertEqual(
+            summarize_llm_usage(),
+            {
+                "calls": 0,
+                "prompt_tokens": None,
+                "completion_tokens": None,
+                "total_tokens": None,
+                "cost_usd": None,
+            },
+        )
 
     def test_red_team_cases_file_has_contract_requests(self) -> None:
         cases_path = ROOT / "backend/evals/red_team_cases.json"

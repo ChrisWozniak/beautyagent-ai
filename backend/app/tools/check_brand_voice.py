@@ -121,6 +121,7 @@ def check_brand_voice(
             resolved_settings.anthropic_model_sonnet,
             temperature=0.0,
             max_tokens=350,
+            call_name="brand_voice",
         )
         payload = _extract_json_object(raw_response)
         return _normalize_brand_voice_payload(payload)

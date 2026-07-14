@@ -22,7 +22,9 @@ CASES_PATH = ROOT / "backend/evals/red_team_cases.json"
 
 sys.path.insert(0, str(ROOT))
 
+from backend.app.agent.llm_client import reset_llm_usage
 from backend.app.main import app
+from backend.scripts.usage_report import print_llm_usage_report
 
 
 VALID_STATUSES = {"PASSED", "FAILED"}
@@ -162,6 +164,7 @@ def _print_case_details(payload: dict, expected_by_channel: dict[str, str]) -> N
 
 def run(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    reset_llm_usage()
     all_cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))["cases"]
     cases = select_cases(all_cases, args.start, args.end, args.case_ids)
     client = TestClient(app)
@@ -201,6 +204,7 @@ def run(argv: list[str] | None = None) -> int:
             failures.append(case["id"])
 
     print(f"\n{len(cases) - len(failures)}/{len(cases)} selected cases passed.")
+    print_llm_usage_report()
     return 1 if failures else 0
 
 
