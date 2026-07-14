@@ -35,6 +35,11 @@ def build_draft_prompt(
     brand_config: dict[str, Any],
     safe_claim: str,
 ) -> list[dict[str, str]]:
+    compliance_notes = brand_config.get("compliance_notes") or []
+    compliance_notes_text = "\n".join(
+        f"- {note}" for note in compliance_notes
+    ) or "- Keep claims cosmetic, appearance-focused, and compliant."
+
     system_prompt = (
         "You are BeautyAgent AI, drafting cosmetic marketing copy for a beauty brand. "
         "Keep claims cosmetic, appearance-focused, and compliant. Avoid disease, cure, "
@@ -46,6 +51,7 @@ def build_draft_prompt(
         [
             f"Brand: {brand_config['display_name']}",
             f"Brand voice: {brand_config['voice']}",
+            f"Brand compliance notes:\n{compliance_notes_text}",
             f"Product: {request.productName}",
             f"Core actives: {request.coreActives or 'not provided'}",
             f"Channel: {channel}",

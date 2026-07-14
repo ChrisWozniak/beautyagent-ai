@@ -2,6 +2,7 @@ import asyncio
 from contextlib import redirect_stdout
 from io import StringIO
 import json
+from tempfile import TemporaryDirectory
 import time
 import unittest
 from pathlib import Path
@@ -16,9 +17,11 @@ from backend.app.agent.beauty_agent import (
     process_channel_loop,
     process_channel_safely,
 )
+from backend.app.agent.prompts import build_draft_prompt
 from backend.app.agent.llm_client import LLMClientError, LLMDraftError
 from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.config import get_settings
+from backend.app.config_loader import ConfigLoadError, load_json_config
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.models.response_models import GenerateResponse
@@ -516,6 +519,48 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("Magic Drip Glitter Lipgloss", payload["error"]["detail"])
         self.assertIn("tower_28", payload["error"]["detail"])
 
+    def test_generate_returns_internal_error_for_unexpected_top_level_failure(self) -> None:
+        with patch(
+            "backend.app.main.generate_mock_response",
+            side_effect=RuntimeError("boom"),
+        ):
+            response = self.client.post(
+                "/generate",
+                json={
+                    "brandId": "tower_28",
+                    "productName": "SOS Daily Rescue Facial Spray",
+                    "brief": "Draft a gentle caption.",
+                    "channels": ["instagram"],
+                },
+            )
+
+        self.assertEqual(response.status_code, 500)
+        payload = response.json()
+        self.assertEqual(payload["results"], [])
+        self.assertEqual(payload["error"]["code"], "INTERNAL_ERROR")
+        self.assertEqual(payload["error"]["message"], "Internal server error.")
+        self.assertIsNone(payload["error"]["detail"])
+
+    def test_generate_returns_internal_error_for_config_load_failure(self) -> None:
+        with patch(
+            "backend.app.main.product_belongs_to_brand",
+            side_effect=ConfigLoadError("brand config file contains invalid JSON"),
+        ):
+            response = self.client.post(
+                "/generate",
+                json={
+                    "brandId": "tower_28",
+                    "productName": "SOS Daily Rescue Facial Spray",
+                    "brief": "Draft a gentle caption.",
+                    "channels": ["instagram"],
+                },
+            )
+
+        self.assertEqual(response.status_code, 500)
+        payload = response.json()
+        self.assertEqual(payload["error"]["code"], "INTERNAL_ERROR")
+        self.assertIn("invalid JSON", payload["error"]["detail"])
+
     def test_channel_error_result_uses_contract_error_shape(self) -> None:
         result = channel_error_result("email", "TIMEOUT", "Generation timed out after retries.")
 
@@ -660,6 +705,49 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIsNone(result.escalation_trigger)
         self.assertEqual(result.final_safe_output, result.raw_draft)
 
+    def test_channel_loop_routes_low_confidence_compliance_to_human_review(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft one caption.",
+            channels=["instagram"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "A gentle daily refresh for sensitive-looking skin."
+
+        audits = [
+            {
+                "compliance_status": "FAILED",
+                "compliance_confidence": 0.61,
+                "flagged_phrases": ["borderline claim"],
+                "explanation": "LLM audit was not confident enough to approve the rewrite.",
+                "detection_source": "llm_audit",
+                "final_safe_output": "A safer rewrite.",
+            },
+            {
+                "compliance_status": "PASSED",
+                "compliance_confidence": 1.0,
+                "flagged_phrases": [],
+                "explanation": "",
+                "detection_source": None,
+                "final_safe_output": "Draft one caption.",
+            },
+        ]
+
+        with patch("backend.app.agent.beauty_agent.check_compliance", side_effect=audits):
+            result = process_channel_loop(request, "instagram", draft_generator)
+
+        self.assertEqual(result.voice_status, "ON_VOICE")
+        self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertEqual(result.compliance_confidence, 0.61)
+        self.assertEqual(result.flagged_phrases, ["borderline claim"])
+        self.assertEqual(result.detection_source, "llm_audit")
+        self.assertIsNone(result.final_safe_output)
+        self.assertIsNone(result.retry_exhausted)
+        self.assertEqual(result.escalation_trigger, "compliance")
+
     def test_brand_configs_include_week2_voice_profiles(self) -> None:
         brands = load_brand_configs()
 
@@ -759,6 +847,37 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result["voice_status"], "DRIFTED")
         self.assertEqual(result["voice_confidence"], 0.0)
         self.assertIn("needs human review", result["voice_reason"])
+
+    def test_build_draft_prompt_includes_brand_compliance_notes(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft one caption.",
+            channels=["instagram"],
+        )
+
+        messages = build_draft_prompt(
+            request,
+            "instagram",
+            load_brand_configs()["tower_28"],
+            "refreshes skin throughout the day",
+        )
+
+        user_prompt = messages[1]["content"]
+        self.assertIn("Brand compliance notes:", user_prompt)
+        self.assertIn("Avoid disease-treatment language.", user_prompt)
+        self.assertIn("Do not imply the product changes skin structure", user_prompt)
+
+    def test_load_json_config_fails_loudly_on_invalid_json(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            bad_config = Path(temp_dir) / "bad.json"
+            bad_config.write_text('{"broken": ', encoding="utf-8")
+
+            with self.assertRaises(ConfigLoadError) as error:
+                load_json_config(bad_config, "test")
+
+        self.assertIn("test config file contains invalid JSON", str(error.exception))
 
     def test_process_channel_safely_converts_timeout_to_error_result(self) -> None:
         request = GenerateRequest(

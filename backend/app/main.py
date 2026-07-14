@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .agent.beauty_agent import generate_mock_response, product_belongs_to_brand
+from .config_loader import ConfigLoadError
 from .models.request_models import GenerateRequest
 from .models.response_models import GenerateResponse, TopLevelError
 
@@ -51,6 +52,17 @@ def validation_error_response(detail: str) -> GenerateResponse:
     )
 
 
+def internal_error_response(detail: str | None = None) -> GenerateResponse:
+    return GenerateResponse(
+        results=[],
+        error=TopLevelError(
+            code="INTERNAL_ERROR",
+            message="Internal server error.",
+            detail=detail,
+        ),
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(
     request: Request, exc: RequestValidationError
@@ -74,10 +86,17 @@ def health() -> dict[str, str]:
 
 @app.post("/generate", response_model=GenerateResponse)
 async def generate(request: GenerateRequest) -> GenerateResponse:
-    if not product_belongs_to_brand(request.brandId, request.productName):
-        response = validation_error_response(
-            f"productName '{request.productName}' is not available for brandId '{request.brandId}'."
-        )
-        return JSONResponse(status_code=400, content=response.model_dump())
+    try:
+        if not product_belongs_to_brand(request.brandId, request.productName):
+            response = validation_error_response(
+                f"productName '{request.productName}' is not available for brandId '{request.brandId}'."
+            )
+            return JSONResponse(status_code=400, content=response.model_dump())
 
-    return await generate_mock_response(request)
+        return await generate_mock_response(request)
+    except ConfigLoadError as exc:
+        response = internal_error_response(str(exc))
+        return JSONResponse(status_code=500, content=response.model_dump())
+    except Exception:
+        response = internal_error_response()
+        return JSONResponse(status_code=500, content=response.model_dump())

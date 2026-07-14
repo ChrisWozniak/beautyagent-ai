@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Protocol
 
+from ..config_loader import ConfigLoadError, load_json_config
 from ..config import get_settings
 from ..models.request_models import Channel, GenerateRequest
 from ..models.response_models import ChannelError, ChannelResult, GenerateResponse
 from ..tools.check_brand_voice import VOICE_CONFIDENCE_THRESHOLD, check_brand_voice
-from ..tools.check_compliance import check_compliance
+from ..tools.check_compliance import COMPLIANCE_CONFIDENCE_THRESHOLD, check_compliance
 from .llm_client import LLMDraftError, generate_draft_with_llm
 
 
@@ -44,17 +44,13 @@ class BrandVoiceChecker(Protocol):
 
 @lru_cache(maxsize=1)
 def load_brand_configs() -> dict[str, dict[str, Any]]:
-    with BRAND_CONFIGS_PATH.open(encoding="utf-8") as config_file:
-        payload = json.load(config_file)
-
+    payload = load_json_config(BRAND_CONFIGS_PATH, "brand")
     return payload["brands"]
 
 
 @lru_cache(maxsize=1)
 def load_product_configs() -> dict[str, list[dict[str, Any]]]:
-    with PRODUCT_CONFIGS_PATH.open(encoding="utf-8") as config_file:
-        payload = json.load(config_file)
-
+    payload = load_json_config(PRODUCT_CONFIGS_PATH, "product")
     return {
         brand_id: products
         for brand_id, products in payload.items()
@@ -289,6 +285,10 @@ def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> d
 
     return {
         "compliance_status": "FAILED",
+        "compliance_confidence": min(
+            draft_audit.get("compliance_confidence", 1.0),
+            brief_audit.get("compliance_confidence", 1.0),
+        ),
         "flagged_phrases": flagged_phrases,
         "explanation": explanation,
         "detection_source": "deterministic",
@@ -323,6 +323,39 @@ def _voice_review_result(
         final_safe_output=None,
         retry_exhausted=None,
         escalation_trigger="voice",
+        error=None,
+    )
+
+
+def _needs_compliance_review(compliance_result: dict[str, Any]) -> bool:
+    confidence = compliance_result.get("compliance_confidence")
+    if compliance_result["compliance_status"] == "NEEDS_HUMAN_REVIEW":
+        return True
+
+    return isinstance(confidence, (int, float)) and confidence < COMPLIANCE_CONFIDENCE_THRESHOLD
+
+
+def _compliance_review_result(
+    channel: Channel,
+    raw_draft: str,
+    voice_result: dict[str, Any],
+    compliance_result: dict[str, Any],
+) -> ChannelResult:
+    return ChannelResult(
+        channel=channel,
+        generation_status="completed",
+        raw_draft=raw_draft,
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
+        compliance_status="NEEDS_HUMAN_REVIEW",
+        compliance_confidence=compliance_result.get("compliance_confidence"),
+        flagged_phrases=compliance_result.get("flagged_phrases"),
+        explanation=compliance_result.get("explanation"),
+        detection_source=compliance_result.get("detection_source"),
+        final_safe_output=None,
+        retry_exhausted=None,
+        escalation_trigger="compliance",
         error=None,
     )
 
@@ -377,6 +410,9 @@ def process_channel_loop(
     draft_audit = check_compliance(raw_draft)
     brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
     first_audit = _merge_audits(draft_audit, brief_audit)
+    if _needs_compliance_review(first_audit):
+        return _compliance_review_result(channel, raw_draft, voice_result, first_audit)
+
     final_safe_output = first_audit["final_safe_output"]
     final_backstop = check_compliance(final_safe_output)
 
@@ -398,6 +434,7 @@ def process_channel_loop(
         final_safe_output = final_backstop["final_safe_output"]
         retry_exhausted = check_compliance(final_safe_output)["compliance_status"] == "FAILED"
 
+    result_confidence = first_audit.get("compliance_confidence", 1.0)
     return ChannelResult(
         channel=channel,
         generation_status="completed",
@@ -406,7 +443,7 @@ def process_channel_loop(
         voice_confidence=voice_result["voice_confidence"],
         voice_reason=voice_result["voice_reason"],
         compliance_status=first_audit["compliance_status"],
-        compliance_confidence=1.0,
+        compliance_confidence=result_confidence,
         flagged_phrases=flagged_phrases,
         explanation=explanation,
         detection_source=detection_source,
@@ -456,6 +493,8 @@ async def process_channel_safely(request: GenerateRequest, channel: Channel) -> 
         )
     except asyncio.TimeoutError:
         return channel_error_result(channel, "TIMEOUT", "Generation timed out after retries.")
+    except ConfigLoadError:
+        raise
     except Exception as exc:
         code, message = _classify_channel_exception(exc)
         return channel_error_result(channel, code, message)
