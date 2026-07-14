@@ -27,7 +27,11 @@ from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.models.response_models import GenerateResponse
 from backend.app.tools.check_brand_voice import check_brand_voice
 from backend.app.tools.check_compliance import check_compliance_tool
-from backend.scripts.smoke_generate_live import main as live_generate_smoke_main
+from backend.scripts.smoke_generate_live import (
+    SMOKE_CASES,
+    main as live_generate_smoke_main,
+    safe_console_text,
+)
 from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
 from backend.scripts.run_red_team_eval import (
     expected_statuses_for_case,
@@ -994,6 +998,18 @@ class GenerateEndpointTests(unittest.TestCase):
             exit_code = live_generate_smoke_main()
 
         self.assertEqual(exit_code, 2)
+
+    def test_live_generate_smoke_cases_cover_both_week2_brands(self) -> None:
+        self.assertEqual(
+            {case.brandId for case in SMOKE_CASES},
+            {"tower_28", "half_magic"},
+        )
+        self.assertEqual(len(SMOKE_CASES), 2)
+
+    def test_safe_console_text_escapes_emoji_for_windows_output(self) -> None:
+        preview = safe_console_text("gloss ✨ shine\nnow", limit=20)
+
+        self.assertEqual(preview, "gloss \\u2728 shine now")
 
     def test_red_team_cases_file_has_contract_requests(self) -> None:
         cases_path = ROOT / "backend/evals/red_team_cases.json"

@@ -32,6 +32,77 @@ from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest
 
 
+SMOKE_CASES = [
+    GenerateRequest(
+        brandId="tower_28",
+        productName="SOS Daily Rescue Facial Spray",
+        coreActives="Hypochlorous Acid",
+        brief="Draft a compliant Instagram caption for sensitive-looking skin. Avoid medical claims.",
+        channels=["instagram"],
+    ),
+    GenerateRequest(
+        brandId="half_magic",
+        productName="Magic Drip Glitter Lipgloss",
+        coreActives="Vitamin E, Jojoba Oil",
+        brief=(
+            "Draft playful TikTok copy about glitter payoff and non-sticky shine "
+            "for a night-out look. Keep it bold and casual."
+        ),
+        channels=["tiktok"],
+    ),
+]
+
+
+def safe_console_text(text: str, limit: int = 240) -> str:
+    """Return an ASCII-safe one-line preview for Windows consoles."""
+    normalized = " ".join(text.split())
+    preview = normalized[:limit]
+    return preview.encode("ascii", errors="backslashreplace").decode("ascii")
+
+
+def run_smoke_case(client: TestClient, request: GenerateRequest) -> tuple[bool, str]:
+    channel = request.channels[0]
+    deterministic_fallback = draft_channel_copy(request, channel)
+    response = client.post("/generate", json=request.model_dump())
+    payload = response.json()
+    label = f"{request.brandId}/{channel}"
+
+    if response.status_code != 200 or payload.get("error") is not None:
+        return (
+            False,
+            f"{label}: failed with HTTP {response.status_code}\n"
+            f"{json.dumps(payload, indent=2, ensure_ascii=True)}",
+        )
+
+    results = payload.get("results", [])
+    if len(results) != 1:
+        return (
+            False,
+            f"{label}: expected 1 result, got {len(results)}.\n"
+            f"{json.dumps(payload, indent=2, ensure_ascii=True)}",
+        )
+
+    result = results[0]
+    if result.get("generation_status") != "completed" or result.get("error") is not None:
+        return (
+            False,
+            f"{label}: channel did not complete.\n"
+            f"{json.dumps(payload, indent=2, ensure_ascii=True)}",
+        )
+
+    if result.get("raw_draft") == deterministic_fallback:
+        return False, f"{label}: endpoint fell back to deterministic mock drafting."
+
+    details = [
+        f"{label}: passed",
+        f"  voice: {result.get('voice_status')} ({result.get('voice_confidence')})",
+        f"  compliance: {result.get('compliance_status')} ({result.get('compliance_confidence')})",
+        f"  escalation: {result.get('escalation_trigger')}",
+        f"  draft preview: {safe_console_text(result.get('raw_draft') or '')}",
+    ]
+    return True, "\n".join(details)
+
+
 def main() -> int:
     settings = get_settings()
     if not settings.use_llm_drafting:
@@ -43,45 +114,22 @@ def main() -> int:
         print("Live /generate smoke test skipped: ANTHROPIC_API_KEY or OPENROUTER_API_KEY is not configured.")
         return 2
 
-    request = GenerateRequest(
-        brandId="tower_28",
-        productName="SOS Daily Rescue Facial Spray",
-        coreActives="Hypochlorous Acid",
-        brief="Draft a compliant Instagram caption for sensitive-looking skin. Avoid medical claims.",
-        channels=["instagram"],
-    )
-    deterministic_fallback = draft_channel_copy(request, "instagram")
-
-    response = TestClient(app).post("/generate", json=request.model_dump())
-    payload = response.json()
-
-    if response.status_code != 200 or payload.get("error") is not None:
-        print(f"Live /generate smoke test failed: {response.status_code}")
-        print(json.dumps(payload, indent=2, ensure_ascii=True))
-        return 1
-
-    results = payload.get("results", [])
-    if len(results) != 1:
-        print(f"Live /generate smoke test failed: expected 1 result, got {len(results)}.")
-        print(json.dumps(payload, indent=2, ensure_ascii=True))
-        return 1
-
-    result = results[0]
-    if result.get("generation_status") != "completed" or result.get("error") is not None:
-        print("Live /generate smoke test failed: channel did not complete.")
-        print(json.dumps(payload, indent=2, ensure_ascii=True))
-        return 1
-
-    if result.get("raw_draft") == deterministic_fallback:
-        print("Live /generate smoke test failed: endpoint fell back to deterministic mock drafting.")
-        return 1
-
     model = settings.anthropic_model_sonnet if settings.anthropic_api_key else settings.openrouter_model
-    print("Live /generate smoke test passed.")
     print(f"Model: {model}")
-    print(f"Channel: {result['channel']}")
-    print(f"Compliance: {result['compliance_status']}")
-    print(f"Draft preview: {result['raw_draft'][:240]}")
+
+    client = TestClient(app)
+    failures = 0
+    for request in SMOKE_CASES:
+        passed, message = run_smoke_case(client, request)
+        print(message)
+        if not passed:
+            failures += 1
+
+    if failures:
+        print(f"Live /generate smoke test failed: {failures}/{len(SMOKE_CASES)} cases failed.")
+        return 1
+
+    print(f"Live /generate smoke test passed: {len(SMOKE_CASES)}/{len(SMOKE_CASES)} cases passed.")
     return 0
 
 
