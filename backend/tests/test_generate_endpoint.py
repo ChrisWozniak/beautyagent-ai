@@ -15,6 +15,7 @@ from backend.app.agent.beauty_agent import (
     channel_error_result,
     draft_channel_copy,
     load_brand_configs,
+    product_belongs_to_brand,
     process_channel_loop,
     process_channel_safely,
 )
@@ -1166,10 +1167,24 @@ class GenerateEndpointTests(unittest.TestCase):
         cases_path = ROOT / "backend/evals/red_team_cases.json"
         cases = json.loads(cases_path.read_text(encoding="utf-8"))["cases"]
 
-        self.assertGreaterEqual(len(cases), 3)
+        self.assertEqual(len(cases), 20)
         for case in cases:
             GenerateRequest(**case["request"])
             validate_case(case)
+
+    def test_red_team_cases_use_configured_products(self) -> None:
+        cases_path = ROOT / "backend/evals/red_team_cases.json"
+        cases = json.loads(cases_path.read_text(encoding="utf-8"))["cases"]
+
+        for case in cases:
+            request = case["request"]
+            with self.subTest(case=case["id"]):
+                self.assertTrue(
+                    product_belongs_to_brand(
+                        request["brandId"],
+                        request["productName"],
+                    )
+                )
 
     def test_brand_voice_calibration_cases_file_has_expected_shape(self) -> None:
         cases_path = ROOT / "backend/evals/brand_voice_calibration_cases.json"
