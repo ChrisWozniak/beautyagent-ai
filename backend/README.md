@@ -80,16 +80,16 @@ This calls the FastAPI route through `TestClient`, verifies the frontend-facing 
 Backend-only red-team eval runner:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
 
-The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes. It supports both a single `expected_status` for all requested channels and an `expected_by_channel` map for mixed multi-channel cases.
+The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes. Use `--mock-brand-voice` for the Week 2 red-team compliance set so the run measures deterministic compliance behavior without spending Sonnet tokens on the Brand Voice Agent. It supports both a single `expected_status` for all requested channels and an `expected_by_channel` map for mixed multi-channel cases.
 
 For timeout-friendly chunks or targeted reruns:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
-python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --compact
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --mock-brand-voice --compact
+python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --mock-brand-voice --compact
 ```
 
 Eval case authoring notes live in `backend/evals/README.md`. Jillian / Person A owns the final expanded eval content.

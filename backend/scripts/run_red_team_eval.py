@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -54,6 +56,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--compact",
         action="store_true",
         help="Print one result line per case with no per-channel details.",
+    )
+    parser.add_argument(
+        "--mock-brand-voice",
+        action="store_true",
+        help=(
+            "Use deterministic drafting and bypass the live Brand Voice Agent "
+            "with an ON_VOICE result so this runner measures deterministic "
+            "compliance outcomes only."
+        ),
     )
     return parser.parse_args(argv)
 
@@ -162,8 +173,24 @@ def _print_case_details(payload: dict, expected_by_channel: dict[str, str]) -> N
         )
 
 
+def _mock_on_voice_result(
+    _text: str,
+    _brand_id: str,
+    _brand_config: dict,
+    _channel: str,
+) -> dict:
+    return {
+        "voice_status": "ON_VOICE",
+        "voice_confidence": 1.0,
+        "voice_reason": "Mocked ON_VOICE result for deterministic compliance eval.",
+    }
+
+
 def run(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if args.mock_brand_voice:
+        os.environ["USE_LLM_DRAFTING"] = "false"
+
     reset_llm_usage()
     all_cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))["cases"]
     cases = select_cases(all_cases, args.start, args.end, args.case_ids)
@@ -176,7 +203,14 @@ def run(argv: list[str] | None = None) -> int:
 
     for case_number, case in cases:
         validate_case(case)
-        response = client.post("/generate", json=case["request"])
+        if args.mock_brand_voice:
+            with patch(
+                "backend.app.agent.beauty_agent.check_brand_voice",
+                side_effect=_mock_on_voice_result,
+            ):
+                response = client.post("/generate", json=case["request"])
+        else:
+            response = client.post("/generate", json=case["request"])
         payload = response.json()
 
         if response.status_code != 200 or payload["error"] is not None:

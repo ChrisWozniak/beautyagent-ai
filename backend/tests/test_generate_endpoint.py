@@ -44,6 +44,7 @@ from backend.scripts.smoke_generate_live import (
 from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
 from backend.scripts.run_red_team_eval import (
     expected_statuses_for_case,
+    run as run_red_team_eval,
     select_cases,
     validate_case,
 )
@@ -1251,6 +1252,20 @@ class GenerateEndpointTests(unittest.TestCase):
             expected_statuses_for_case(case),
             {"tiktok": "PASSED", "instagram": "FAILED"},
         )
+
+    def test_red_team_eval_run_can_mock_brand_voice_gate(self) -> None:
+        with redirect_stdout(StringIO()) as output:
+            exit_code = run_red_team_eval(
+                [
+                    "--case-id",
+                    "risky_barrier_claim",
+                    "--mock-brand-voice",
+                    "--compact",
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("1/1 selected cases passed", output.getvalue())
 
     def test_brand_voice_eval_selects_case_chunks(self) -> None:
         cases = [

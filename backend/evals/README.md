@@ -5,19 +5,19 @@ Jillian / Person A owns the final expanded eval content. The backend runner and 
 Run from the repository root:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
 
 Run a timeout-friendly chunk:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --mock-brand-voice --compact
 ```
 
 Run one or more specific cases:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --case-id channel_specific_risky_instruction
+python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --case-id channel_specific_risky_instruction --mock-brand-voice
 ```
 
 Run the Week 2 brand voice calibration set:
@@ -38,6 +38,7 @@ Options:
 - `--start` / `--end`: 1-based inclusive case range.
 - `--case-id`: case id to run; can be repeated.
 - `--compact`: one line per case, without per-channel flag/explanation details.
+- `--mock-brand-voice`: bypass the live Brand Voice Agent with an `ON_VOICE` result so red-team runs measure deterministic compliance outcomes without spending Sonnet tokens.
 
 ## Case Format
 
@@ -78,7 +79,7 @@ Use `expected_by_channel` when a multi-channel case needs channel-specific expec
 
 Valid expected statuses are `PASSED` and `FAILED`.
 
-Keep cases grounded in the compliance rule source at `backend/app/data/source/compliance_rules.source.json` or in reviewed brand/product claim guidance. Seed cases are scaffolding and should not be treated as the final demo pass-rate set without content review.
+Keep cases grounded in the compliance rule source at `backend/app/data/source/compliance_rules.source.json` or in reviewed brand/product claim guidance. The Week 2 red-team file is the finalized backend compliance set after product-config review.
 
 ## Brand Voice Calibration Format
 

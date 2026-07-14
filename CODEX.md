@@ -139,7 +139,7 @@ Expected LLM calls per channel:
 
 The deterministic scan inside `check_compliance` is not an LLM call. It should remain as a cheap safety backstop.
 
-For local plumbing tests, prefer mocked model responses. Haiku or cheaper models are acceptable for integration plumbing, JSON parsing, fail-safe handling, and routing tests. Use Sonnet for any evaluation that measures brand voice accuracy, confidence calibration, reason quality, the 6-case near-miss set, the 20-case eval set, or final demo behavior.
+For local plumbing tests, prefer mocked model responses. Haiku or cheaper models are acceptable for integration plumbing, JSON parsing, fail-safe handling, and routing tests. Use Sonnet for any evaluation that measures brand voice accuracy, confidence calibration, reason quality, the 6-case near-miss set, or final live demo behavior. Run the 20-case red-team compliance set with `--mock-brand-voice` unless intentionally testing the full live chain.
 
 Keep model names configurable rather than hardcoded where possible:
 
@@ -183,13 +183,14 @@ Backend eval infrastructure lives in:
 - `backend/scripts/run_red_team_eval.py`
 - `backend/scripts/run_brand_voice_eval.py`
 
-Jillian / Person A owns the final expanded eval content. Backend work should keep the runner and schema stable, support both `expected_status` and `expected_by_channel`, and avoid treating seed cases as the final demo pass-rate set without content review.
+The 20-case red-team file is the finalized Week 2 backend compliance set after product-config review. Backend work should keep the runner and schema stable, support both `expected_status` and `expected_by_channel`, and run it with a mocked Brand Voice Agent for deterministic compliance measurement.
 
 Use chunked or targeted eval runs when live LLM calls are slow:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
-python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --compact
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --mock-brand-voice --compact
+python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --mock-brand-voice --compact
 ```
 
 Use the brand voice calibration runner for the Week 2 six-case near-miss set:
@@ -225,7 +226,7 @@ Run these from the repository root after backend changes:
 
 ```powershell
 python -m unittest discover -s backend\tests -v
-python backend/scripts/run_red_team_eval.py --compact
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
 
 Optional live LLM smoke test:
