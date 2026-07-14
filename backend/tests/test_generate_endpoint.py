@@ -193,7 +193,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("Marketer brief also included risky language", result["explanation"])
         self.assertNotIn("repairs your barrier overnight", result["final_safe_output"].lower())
         self.assertNotIn("eczema-free", result["final_safe_output"].lower())
-        self.assertFalse(result["retry_exhausted"])
+        self.assertIsNone(result["retry_exhausted"])
 
     def test_generate_scopes_channel_specific_brief_audit(self) -> None:
         response = self.client.post(
@@ -355,7 +355,7 @@ class GenerateEndpointTests(unittest.TestCase):
         )
         self.assertIn("Final deterministic backstop", result.explanation)
         self.assertEqual(result.final_safe_output, "clean rewrite")
-        self.assertFalse(result.retry_exhausted)
+        self.assertIsNone(result.retry_exhausted)
 
     def test_channel_loop_dedupes_repeated_explanations(self) -> None:
         request = GenerateRequest(
@@ -724,6 +724,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.compliance_confidence, 1.0)
         self.assertIsNone(result.escalation_trigger)
         self.assertEqual(result.final_safe_output, result.raw_draft)
+        self.assertIsNone(result.retry_exhausted)
 
     def test_channel_loop_routes_low_confidence_compliance_to_human_review(self) -> None:
         request = GenerateRequest(

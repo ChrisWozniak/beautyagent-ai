@@ -419,7 +419,7 @@ def process_channel_loop(
     flagged_phrases = first_audit["flagged_phrases"]
     explanation = first_audit["explanation"]
     detection_source = first_audit["detection_source"]
-    retry_exhausted = False
+    retry_exhausted = None
 
     if final_backstop["compliance_status"] == "FAILED":
         flagged_phrases = _combine_unique(
@@ -432,7 +432,8 @@ def process_channel_loop(
         )
         detection_source = "deterministic"
         final_safe_output = final_backstop["final_safe_output"]
-        retry_exhausted = check_compliance(final_safe_output)["compliance_status"] == "FAILED"
+        if check_compliance(final_safe_output)["compliance_status"] == "FAILED":
+            retry_exhausted = True
 
     result_confidence = first_audit.get("compliance_confidence", 1.0)
     return ChannelResult(

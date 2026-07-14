@@ -93,7 +93,7 @@ For completed channel results:
 - `explanation` is a string when compliance runs, or `null` if compliance is skipped or the channel errors. Keep repeated rule explanations deduped when multiple phrases hit the same rule.
 - `detection_source` is `"deterministic"`, `"llm_audit"`, `"both"`, or `null`
 - `final_safe_output` is a string only when the backend is confident enough to return copy. It is `null` for `NEEDS_HUMAN_REVIEW`.
-- `retry_exhausted` is `true` only if `FAILED` after an iteration limit; otherwise `false` for clear completed compliance results and `null` for `NEEDS_HUMAN_REVIEW` or error.
+- `retry_exhausted` is `true` only if `FAILED` after an iteration limit; otherwise it is `null`, including clear `PASSED`, ordinary `FAILED` with a safe rewrite, `NEEDS_HUMAN_REVIEW`, and errors.
 - `escalation_trigger` is `"voice"`, `"compliance"`, or `null`. It is never `"both"`.
 - `error` is `null`
 

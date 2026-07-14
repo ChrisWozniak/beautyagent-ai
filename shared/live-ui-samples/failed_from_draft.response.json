@@ -16,7 +16,7 @@
                         "explanation":  "Cosmetics cannot claim to heal, treat, cure, or eliminate a diagnosable medical skin condition (e.g. eczema, rosacea, acne). Claiming to treat a named condition crosses into FDA drug-claim territory.",
                         "detection_source":  "deterministic",
                         "final_safe_output":  "Wake up to calmer-looking skin. SOS Daily Rescue Facial Spray helps support your skin barrier with a fresh, easy routine step.",
-                        "retry_exhausted":  false,
+                        "retry_exhausted":  null,
                         "escalation_trigger":  null,
                         "error":  null
                     }

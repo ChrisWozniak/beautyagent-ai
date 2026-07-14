@@ -15,7 +15,7 @@
                         "explanation":  "",
                         "detection_source":  null,
                         "final_safe_output":  "Hook: Magic Drip Glitter Lipgloss is your quick shine reset.\n\nScript: Meet Magic Drip Glitter Lipgloss from Half Magic. It delivers a high-shine sparkle payoff, while keeping the vibe expressive, playful, color-forward, and confident.\n\nCTA: Swipe it on when your look needs a little more drama.",
-                        "retry_exhausted":  false,
+                        "retry_exhausted":  null,
                         "escalation_trigger":  null,
                         "error":  null
                     },
@@ -35,7 +35,7 @@
                         "explanation":  "No medical/clinical claims without real substantiation for that specific product.",
                         "detection_source":  "deterministic",
                         "final_safe_output":  "Magic Drip Glitter Lipgloss wraps lips in cushiony shine and high-impact sparkle for a fuller-looking finish.",
-                        "retry_exhausted":  false,
+                        "retry_exhausted":  null,
                         "escalation_trigger":  null,
                         "error":  null
                     },

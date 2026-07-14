@@ -16,7 +16,7 @@
                         "explanation":  "Marketer brief also included risky language: No medical/clinical claims without real substantiation for that specific product.",
                         "detection_source":  "deterministic",
                         "final_safe_output":  "Hook: Swipe Serum Concealer is your quick beauty reset.\n\nScript: Meet Swipe Serum Concealer from Tower 28. It adds an easy, expressive finish to your beauty routine, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Blend it into your routine whenever you want a fresh start.",
-                        "retry_exhausted":  false,
+                        "retry_exhausted":  null,
                         "escalation_trigger":  null,
                         "error":  null
                     }

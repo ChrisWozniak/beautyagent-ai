@@ -112,7 +112,7 @@ Contract version: 2.0 — adds Brand Voice Agent fields and NEEDS_HUMAN_REVIEW s
 
   "final_safe_output": "...",
 
-  "retry_exhausted": false
+  "retry_exhausted": null
 
 }
 
@@ -158,7 +158,7 @@ generation_status is the first thing to check on any result object --- it determ
 | explanation | Response | always | "" if PASSED; null if generation_status: "error" |
 | detection_source | Response | always | "deterministic" |
 | final_safe_output | Response | always | Safe rewrite if FAILED; exact copy of raw_draft if PASSED, no disclosure tag appended (decided); null if generation_status: "error" |
-| retry_exhausted | Response | always | true only if FAILED after hitting iteration limit; null if generation_status: "error" |
+| retry_exhausted | Response | always | true only if FAILED after hitting iteration limit; otherwise null |
 | error (per-channel) | Response | always | {code, message} if generation_status: "error"; null if "completed" |
 | error (top-level) | Response | always present, null on success | {code, message, detail} --- request-level failure, results is [] |
 
@@ -234,7 +234,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "final_safe_output": "Redness-prone skin, meet your new calm-down button. SOS Daily Rescue Facial Spray helps soothe visible redness and support skin comfort, morning to night. 🌿 #SkinSOS",
 
-  "retry_exhausted": false
+  "retry_exhausted": null
 
 }
 
@@ -286,7 +286,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "final_safe_output": "Redness had a rough day? SOS is here to help 🌿",
 
-  "retry_exhausted": false
+  "retry_exhausted": null
 
 }
 
@@ -338,7 +338,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "final_safe_output": "POV: you just found your last brain cell and it's covered in glitter ✨ Magic Drip Glitter Lipgloss = maximum sparkle, zero crunch, all night shine. Swipe once, glow forever (or at least till your next lip check) 💧",
 
-  "retry_exhausted": false
+  "retry_exhausted": null
 
 }
 
@@ -390,7 +390,7 @@ RATE_LIMITED can legitimately appear at either level depending on timing --- sam
 
   "final_safe_output": "Cushiony, juicy, and dripping with sparkle ✨ Magic Drip's plush, non-sticky formula wraps your lips in rich, cocooning shine all day 💧",
 
-  "retry_exhausted": false
+  "retry_exhausted": null
 
 }
 
@@ -444,7 +444,7 @@ Demonstrates all three generation_status/compliance_status combinations in one r
 
   "final_safe_output": "Redness-prone skin, this one's for you 🌿 SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
 
-  "retry_exhausted": false,
+  "retry_exhausted": null,
 
   "error": null
 
@@ -468,7 +468,7 @@ Demonstrates all three generation_status/compliance_status combinations in one r
 
   "final_safe_output": "Wake up to calmer, happier skin ✨ SOS Daily Rescue Facial Spray helps support your skin barrier, morning and night.",
 
-  "retry_exhausted": false,
+  "retry_exhausted": null,
 
   "error": null
 
@@ -618,4 +618,4 @@ Response:
 
 | Item | Owner | Notes |
 | --- | --- | --- |
-| retry_exhausted when compliance ends in low confidence rather than a clean FAILED | Christopher | Default assumption: stays null. Needs a quick confirm since he owns the retry logic — not blocking Phase 1/2, close before Phase 4 regression testing. |
+| retry_exhausted when compliance ends in low confidence rather than a clean FAILED | Christopher | Resolved: stays null unless FAILED after hitting the retry limit. |
