@@ -26,12 +26,15 @@ The API contract is the source of truth for request and response shape.
 Expected location:
 
 - `BEAUTYAGENT_API_CONTRACT.md`
+- `DECISIONS.md`
 
 Current compatibility files may also exist at the repository root while the repo is being organized:
 
 - `BEAUTYAGENT_API_CONTRACT.md`
 - `sample_request.json`
 - `sample_response.json`
+
+No PRD file is committed to this repo. The Week 2 PRD lives outside the repository. If requirements context is unclear from `BEAUTYAGENT_API_CONTRACT.md`, `DECISIONS.md`, or this file, pause and ask rather than guessing.
 
 Do not invent request or response fields. If the contract is unclear, pause and ask.
 
@@ -43,11 +46,11 @@ Core responsibilities:
 
 - Accept the agreed request payload.
 - Generate one result per requested channel.
-- Run an independent generation and compliance loop for each channel.
+- Run an independent Week 2 channel loop: generation, brand voice evaluation, conditional compliance audit, orchestration.
 - Use OpenRouter through LiteLLM for model calls.
 - Use Strands for the Python agent loop.
 - Use tool calling with a `check_compliance` tool.
-- Re-run deterministic compliance checks as a final backend safety backstop.
+- Re-run deterministic compliance checks as a final backend safety backstop whenever compliance runs.
 - Return the exact response shape defined by the API contract.
 
 ## Stack
@@ -71,34 +74,91 @@ For completed channel results:
 
 - `generation_status` is `"completed"`
 - `raw_draft` is a string
-- `compliance_status` is `"PASSED"` or `"FAILED"`
-- Jillian's UI may display these statuses as "Compliant" and "Needs a tweak"; this is display-layer copy only, not an API contract change.
-- `flagged_phrases` is an array
-- `explanation` is a string. Keep repeated rule explanations deduped when multiple phrases hit the same rule.
+- `voice_status` is `"ON_VOICE"` or `"DRIFTED"`
+- `voice_confidence` is a float from `0.0` to `1.0`
+- `voice_reason` is populated whenever the Brand Voice Agent runs, regardless of verdict
+- `compliance_status` is `"PASSED"`, `"FAILED"`, or `"NEEDS_HUMAN_REVIEW"`
+- Jillian's UI may display these statuses as "Compliant", "Needs a tweak", and "Needs Human Review"; this is display-layer copy only, not an API contract change.
+- `compliance_confidence` is a float from `0.0` to `1.0`, or `null` if compliance never ran
+- `flagged_phrases` is an array when compliance runs, or `null` if compliance is skipped or the channel errors
+- `explanation` is a string when compliance runs, or `null` if compliance is skipped or the channel errors. Keep repeated rule explanations deduped when multiple phrases hit the same rule.
 - `detection_source` is `"deterministic"`, `"llm_audit"`, `"both"`, or `null`
-- `final_safe_output` is a string
-- `retry_exhausted` is a boolean
+- `final_safe_output` is a string only when the backend is confident enough to return copy. It is `null` for `NEEDS_HUMAN_REVIEW`.
+- `retry_exhausted` is `true` only if `FAILED` after an iteration limit; otherwise `false` for clear completed compliance results and `null` for `NEEDS_HUMAN_REVIEW` or error.
+- `escalation_trigger` is `"voice"`, `"compliance"`, or `null`. It is never `"both"`.
 - `error` is `null`
 
 For per-channel errors:
 
 - `generation_status` is `"error"`
-- inapplicable fields are `null`
+- all inapplicable fields are `null`, including all Week 2 voice/compliance fields
 - `error` is an object with `code` and `message`
 
 Top-level `error` is reserved for pre-dispatch failures only, such as invalid input or full-batch failure before channel work begins.
 
+Field names are exact: `brandId`, `coreActives`, `results`, `raw_draft`, `final_safe_output`, `generation_status`, `compliance_status`, `detection_source`, `retry_exhausted`, `voice_status`, `voice_confidence`, `voice_reason`, `compliance_confidence`, and `escalation_trigger`. Brand IDs are `tower_28` and `half_magic`.
+
+## Week 2 Routing
+
+Agent 2.0 adds a Brand Voice Agent before compliance. Use a hardcoded `0.75` threshold unless the contract changes.
+
+Per requested channel:
+
+1. Generate draft copy.
+2. Run `check_brand_voice`.
+3. If `voice_confidence < 0.75`, set:
+   - `voice_status: "DRIFTED"`
+   - `compliance_status: "NEEDS_HUMAN_REVIEW"`
+   - `compliance_confidence: null`
+   - `flagged_phrases: null`
+   - `explanation: null`
+   - `detection_source: null`
+   - `final_safe_output: null`
+   - `retry_exhausted: null`
+   - `escalation_trigger: "voice"`
+4. If `voice_confidence >= 0.75`, run compliance.
+5. If compliance confidence is below `0.75`, set:
+   - `compliance_status: "NEEDS_HUMAN_REVIEW"`
+   - `final_safe_output: null`
+   - `retry_exhausted: null`
+   - `escalation_trigger: "compliance"`
+6. If both voice and compliance are confident, return clear `PASSED` or `FAILED` with `escalation_trigger: null`.
+
+Compliance never runs after a voice-drifted result, so `escalation_trigger` cannot be `"both"`.
+
+Per-channel independence is a P0 requirement. A Brand Voice Agent failure, malformed response, timeout, or parsing issue on one channel must not block sibling channels. Fail safe for that channel: route to `NEEDS_HUMAN_REVIEW` with voice confidence `0.0` unless the failure should be represented as a channel-level `generation_status: "error"` under the locked contract.
+
+## Week 2 Model Calls
+
+Expected LLM calls per channel:
+
+- Generation: Sonnet, always.
+- Brand Voice Agent: Sonnet, always.
+- Compliance LLM audit: Haiku, conditional; run only when voice confidence is at least `0.75`.
+
+The deterministic scan inside `check_compliance` is not an LLM call. It should remain as a cheap safety backstop.
+
+For local plumbing tests, prefer mocked model responses. Haiku or cheaper models are acceptable for integration plumbing, JSON parsing, fail-safe handling, and routing tests. Use Sonnet for any evaluation that measures brand voice accuracy, confidence calibration, reason quality, the 6-case near-miss set, the 20-case eval set, or final demo behavior.
+
+Keep model names configurable rather than hardcoded where possible:
+
+- `GENERATION_MODEL`
+- `BRAND_VOICE_MODEL`
+- `COMPLIANCE_AUDIT_MODEL`
+
 ## Compliance Rules
 
-Compliance is hybrid:
+Compliance is hybrid in the Week 2 contract:
 
 - deterministic scan for known banned or risky phrases
-- LLM audit for softer or contextual claim risk
+- LLM audit for softer or contextual claim risk, only after voice passes
 - deterministic re-scan of final output before returning any completed result
 
 The deterministic backstop is required even if the agent already called the compliance tool.
 
 If OpenRouter/LiteLLM drafting fails, deterministic fallback copy must still flow through the same compliance loop: draft audit, marketer brief audit, merged audit, and final deterministic backstop. Do not add a fallback path that returns copy without `check_compliance`.
+
+Current Week 1 code has deterministic compliance only. If implementing Week 2 in phases, either add the Haiku compliance audit or explicitly document a temporary deterministic confidence default. Do not pretend a probabilistic compliance confidence exists if the backend did not compute one.
 
 Brief-level compliance violations are intentional. A result can be `FAILED` even when `raw_draft` and `final_safe_output` look clean because the marketer brief itself included risky direction. In that case, preserve `generation_status: "completed"`, `error: null`, and explain the issue with the `Marketer brief also included risky language:` prefix.
 
@@ -110,6 +170,8 @@ When tuning generated copy, keep output card-friendly for Jillian's UI without c
 - Email drafts should scan as `Subject:` followed by `Body:` inside the single string fields. These are not separate API fields.
 - Instagram drafts should read as polished caption copy.
 - Continue auditing both the generated draft and the marketer brief so risky input language is surfaced even when the generated copy is clean.
+
+Do not add autonomous regeneration loops for Week 2 unless the contract changes. Current backend retry behavior is deterministic safe-output replacement and re-scan, not a new LLM generation attempt. The PRD keeps autonomous re-generation loops out of scope in favor of human review/resubmit.
 
 ## Red-Team Evals
 
@@ -150,16 +212,17 @@ The backend currently returns one full `/generate` response after all requested 
 
 ## MVP Boundaries
 
-Keep the MVP narrow:
+Keep the Week 2 MVP narrow:
 
 - Brands: Tower 28 and Half Magic
 - Channels: TikTok, Instagram, Email
-- Compliance status: binary `PASSED` or `FAILED`
+- Compliance states: `PASSED`, `FAILED`, and `NEEDS_HUMAN_REVIEW`
+- Brand voice verdict: `ON_VOICE` or `DRIFTED`
+- Confidence threshold: `0.75`
 - Static JSON configuration only
 
 Do not implement:
 
-- `NEEDS_HUMAN_REVIEW`
 - user accounts
 - database persistence
 - live scraping
@@ -167,6 +230,9 @@ Do not implement:
 - extra channels
 - campaign management
 - export/share flows
+- reviewer comments, approvals, annotations, or ticket routing
+- violation category/risk-level tagging
+- campaign goal/tone selectors
 
 ## File Organization
 
