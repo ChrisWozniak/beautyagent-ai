@@ -8,6 +8,14 @@ Run from the repository root:
 python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
 
+Run the full backend pre-demo smoke sequence:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
+```
+
+Use `--skip-live-brand-voice` for a token-free local check that skips the live Sonnet calibration step.
+
 Run a timeout-friendly chunk:
 
 ```powershell

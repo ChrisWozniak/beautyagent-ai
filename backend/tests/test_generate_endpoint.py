@@ -53,6 +53,7 @@ from backend.scripts.run_brand_voice_eval import (
     select_cases as select_brand_voice_cases,
     validate_case as validate_brand_voice_case,
 )
+from backend.scripts.run_demo_smoke import build_steps as build_demo_smoke_steps
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -1266,6 +1267,32 @@ class GenerateEndpointTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         self.assertIn("1/1 selected cases passed", output.getvalue())
+
+    def test_demo_smoke_steps_match_pre_demo_checks(self) -> None:
+        steps = build_demo_smoke_steps()
+
+        self.assertEqual(
+            [step.name for step in steps],
+            [
+                "Backend unit tests",
+                "Token-safe red-team compliance eval",
+                "Live Sonnet brand voice calibration eval",
+            ],
+        )
+        self.assertIn("--mock-brand-voice", steps[1].command)
+        self.assertTrue(steps[2].spends_llm_tokens)
+
+    def test_demo_smoke_can_skip_live_brand_voice_step(self) -> None:
+        steps = build_demo_smoke_steps(skip_live_brand_voice=True)
+
+        self.assertEqual(
+            [step.name for step in steps],
+            [
+                "Backend unit tests",
+                "Token-safe red-team compliance eval",
+            ],
+        )
+        self.assertFalse(any(step.spends_llm_tokens for step in steps))
 
     def test_brand_voice_eval_selects_case_chunks(self) -> None:
         cases = [

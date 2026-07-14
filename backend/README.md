@@ -94,6 +94,18 @@ python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim
 
 Eval case authoring notes live in `backend/evals/README.md`. Jillian / Person A owns the final expanded eval content.
 
+Backend-only demo smoke runner:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
+```
+
+This runs the pre-demo sequence in one command: backend unit tests, token-safe red-team compliance eval, and live Sonnet brand voice calibration. To skip the live Sonnet step for a token-free local check:
+
+```powershell
+python backend/scripts/run_demo_smoke.py --skip-live-brand-voice
+```
+
 Backend-only brand voice calibration runner:
 
 ```powershell

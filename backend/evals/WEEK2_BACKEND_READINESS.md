@@ -103,7 +103,13 @@ Autonomous regeneration loops are not implemented. Week 2 routes uncertain or dr
 
 ## Recommended Pre-Demo Commands
 
-Run these from the repository root:
+Run the full backend smoke from the repository root:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
+```
+
+This runs the same sequence as:
 
 ```powershell
 python -m unittest discover -s backend\tests -v
@@ -112,3 +118,9 @@ python backend/scripts/run_brand_voice_eval.py --compact
 ```
 
 Only the brand voice calibration command is expected to spend Claude/Sonnet tokens.
+
+For a token-free local check that skips the live Sonnet calibration step:
+
+```powershell
+python backend/scripts/run_demo_smoke.py --skip-live-brand-voice
+```

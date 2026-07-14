@@ -180,6 +180,7 @@ Backend eval infrastructure lives in:
 - `backend/evals/red_team_cases.json`
 - `backend/evals/brand_voice_calibration_cases.json`
 - `backend/evals/README.md`
+- `backend/scripts/run_demo_smoke.py`
 - `backend/scripts/run_red_team_eval.py`
 - `backend/scripts/run_brand_voice_eval.py`
 
@@ -228,6 +229,14 @@ Run these from the repository root after backend changes:
 python -m unittest discover -s backend\tests -v
 python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
+
+For a full pre-demo backend smoke sequence:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
+```
+
+Use `--skip-live-brand-voice` when a token-free local check is needed.
 
 Optional live LLM smoke test:
 
