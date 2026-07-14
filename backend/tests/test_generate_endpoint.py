@@ -42,6 +42,18 @@ class GenerateEndpointTests(unittest.TestCase):
         env_patch.start()
         self.addCleanup(env_patch.stop)
 
+        self.on_voice_result = {
+            "voice_status": "ON_VOICE",
+            "voice_confidence": 0.92,
+            "voice_reason": "Mocked brand voice result for backend tests.",
+        }
+        voice_patch = patch(
+            "backend.app.agent.beauty_agent.check_brand_voice",
+            return_value=self.on_voice_result,
+        )
+        voice_patch.start()
+        self.addCleanup(voice_patch.stop)
+
         self.client = TestClient(app)
 
     def test_generate_accepts_frontend_brand_ids(self) -> None:
@@ -67,8 +79,8 @@ class GenerateEndpointTests(unittest.TestCase):
         for result in payload["results"]:
             self.assertEqual(result["generation_status"], "completed")
             self.assertEqual(result["voice_status"], "ON_VOICE")
-            self.assertEqual(result["voice_confidence"], 1.0)
-            self.assertEqual(result["voice_reason"], "Brand voice evaluation not yet enabled.")
+            self.assertEqual(result["voice_confidence"], 0.92)
+            self.assertEqual(result["voice_reason"], "Mocked brand voice result for backend tests.")
             self.assertEqual(result["compliance_status"], "PASSED")
             self.assertEqual(result["compliance_confidence"], 1.0)
             self.assertEqual(result["flagged_phrases"], [])
@@ -394,6 +406,7 @@ class GenerateEndpointTests(unittest.TestCase):
             result = process_channel_loop(request, "instagram")
 
         self.assertEqual(result.raw_draft, "LLM generated compliant draft.")
+        self.assertEqual(result.voice_confidence, 0.92)
         self.assertEqual(result.compliance_status, "PASSED")
         llm_draft.assert_called_once()
 
@@ -550,6 +563,102 @@ class GenerateEndpointTests(unittest.TestCase):
 
         self.assertEqual(response.results[0].compliance_status, "NEEDS_HUMAN_REVIEW")
         self.assertEqual(response.results[0].escalation_trigger, "voice")
+
+    def test_channel_loop_skips_compliance_when_voice_drifted(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Magic Drip Glitter Lipgloss",
+            coreActives="Vitamin E, Jojoba Oil",
+            brief="Draft one caption.",
+            channels=["instagram"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "Clinically precise anti-aging gloss for a flawless correction."
+
+        def drifted_voice_checker(*_args: object) -> dict[str, object]:
+            return {
+                "voice_status": "DRIFTED",
+                "voice_confidence": 0.34,
+                "voice_reason": "The clinical phrasing misses Half Magic's playful backstage-friend voice.",
+            }
+
+        with patch("backend.app.agent.beauty_agent.check_compliance") as compliance:
+            result = process_channel_loop(
+                request,
+                "instagram",
+                draft_generator,
+                drifted_voice_checker,
+            )
+
+        self.assertEqual(result.generation_status, "completed")
+        self.assertEqual(result.raw_draft, "Clinically precise anti-aging gloss for a flawless correction.")
+        self.assertEqual(result.voice_status, "DRIFTED")
+        self.assertEqual(result.voice_confidence, 0.34)
+        self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertIsNone(result.compliance_confidence)
+        self.assertIsNone(result.flagged_phrases)
+        self.assertIsNone(result.explanation)
+        self.assertIsNone(result.detection_source)
+        self.assertIsNone(result.final_safe_output)
+        self.assertIsNone(result.retry_exhausted)
+        self.assertEqual(result.escalation_trigger, "voice")
+        compliance.assert_not_called()
+
+    def test_channel_loop_skips_compliance_when_voice_confidence_is_low(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft one caption.",
+            channels=["tiktok"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "Mist, glow, done."
+
+        def low_confidence_voice_checker(*_args: object) -> dict[str, object]:
+            return {
+                "voice_status": "ON_VOICE",
+                "voice_confidence": 0.7,
+                "voice_reason": "The copy is close but too generic to confirm Tower 28 channel fit.",
+            }
+
+        with patch("backend.app.agent.beauty_agent.check_compliance") as compliance:
+            result = process_channel_loop(
+                request,
+                "tiktok",
+                draft_generator,
+                low_confidence_voice_checker,
+            )
+
+        self.assertEqual(result.voice_status, "ON_VOICE")
+        self.assertEqual(result.voice_confidence, 0.7)
+        self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertEqual(result.escalation_trigger, "voice")
+        self.assertIsNone(result.final_safe_output)
+        compliance.assert_not_called()
+
+    def test_channel_loop_runs_compliance_when_voice_passes_threshold(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft one caption.",
+            channels=["email"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "A gentle daily refresh for sensitive-looking skin."
+
+        result = process_channel_loop(request, "email", draft_generator)
+
+        self.assertEqual(result.voice_status, "ON_VOICE")
+        self.assertEqual(result.voice_confidence, 0.92)
+        self.assertEqual(result.compliance_status, "PASSED")
+        self.assertEqual(result.compliance_confidence, 1.0)
+        self.assertIsNone(result.escalation_trigger)
+        self.assertEqual(result.final_safe_output, result.raw_draft)
 
     def test_brand_configs_include_week2_voice_profiles(self) -> None:
         brands = load_brand_configs()

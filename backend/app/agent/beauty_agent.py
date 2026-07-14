@@ -12,6 +12,7 @@ from typing import Any, Protocol
 from ..config import get_settings
 from ..models.request_models import Channel, GenerateRequest
 from ..models.response_models import ChannelError, ChannelResult, GenerateResponse
+from ..tools.check_brand_voice import VOICE_CONFIDENCE_THRESHOLD, check_brand_voice
 from ..tools.check_compliance import check_compliance
 from .llm_client import LLMDraftError, generate_draft_with_llm
 
@@ -28,6 +29,17 @@ CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
 class DraftGenerator(Protocol):
     def __call__(self, request: GenerateRequest, channel: Channel) -> str:
         """Generate a raw draft for one requested channel."""
+
+
+class BrandVoiceChecker(Protocol):
+    def __call__(
+        self,
+        text: str,
+        brand_id: str,
+        brand_config: dict[str, Any],
+        channel: str,
+    ) -> dict[str, Any]:
+        """Evaluate brand voice for one generated channel draft."""
 
 
 @lru_cache(maxsize=1)
@@ -284,6 +296,37 @@ def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> d
     }
 
 
+def _needs_voice_review(voice_result: dict[str, Any]) -> bool:
+    return (
+        voice_result["voice_status"] == "DRIFTED"
+        or voice_result["voice_confidence"] < VOICE_CONFIDENCE_THRESHOLD
+    )
+
+
+def _voice_review_result(
+    channel: Channel,
+    raw_draft: str,
+    voice_result: dict[str, Any],
+) -> ChannelResult:
+    return ChannelResult(
+        channel=channel,
+        generation_status="completed",
+        raw_draft=raw_draft,
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
+        compliance_status="NEEDS_HUMAN_REVIEW",
+        compliance_confidence=None,
+        flagged_phrases=None,
+        explanation=None,
+        detection_source=None,
+        final_safe_output=None,
+        retry_exhausted=None,
+        escalation_trigger="voice",
+        error=None,
+    )
+
+
 def _channel_mentions(text: str) -> set[Channel]:
     lowered = text.lower()
     mentions: set[Channel] = set()
@@ -320,9 +363,17 @@ def process_channel_loop(
     request: GenerateRequest,
     channel: Channel,
     draft_generator: DraftGenerator = draft_channel_with_optional_llm,
+    brand_voice_checker: BrandVoiceChecker | None = None,
 ) -> ChannelResult:
-    """Run draft, deterministic audit, revision, and final backstop for a channel."""
+    """Run draft, brand voice gate, deterministic audit, and final backstop."""
+    brand = load_brand_configs()[request.brandId]
+    resolved_voice_checker = brand_voice_checker or check_brand_voice
     raw_draft = draft_generator(request, channel)
+    voice_result = resolved_voice_checker(raw_draft, request.brandId, brand, channel)
+
+    if _needs_voice_review(voice_result):
+        return _voice_review_result(channel, raw_draft, voice_result)
+
     draft_audit = check_compliance(raw_draft)
     brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
     first_audit = _merge_audits(draft_audit, brief_audit)
@@ -351,9 +402,9 @@ def process_channel_loop(
         channel=channel,
         generation_status="completed",
         raw_draft=raw_draft,
-        voice_status="ON_VOICE",
-        voice_confidence=1.0,
-        voice_reason="Brand voice evaluation not yet enabled.",
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
         compliance_status=first_audit["compliance_status"],
         compliance_confidence=1.0,
         flagged_phrases=flagged_phrases,
