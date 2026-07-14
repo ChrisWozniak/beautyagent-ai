@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "owner": "Christopher owns backend runner/schema; Jillian/Christopher should jointly review final calibration content.",
+    "purpose": "Six near-miss brand voice cases for calibrating the Agent 2.0 0.75 voice confidence threshold.",
+    "valid_statuses": ["ON_VOICE", "DRIFTED"],
+    "notes": "Cases intentionally include close calls, not only obvious pass/fail examples. Run live with Sonnet only when calibrating threshold and reason quality."
+  },
+  "cases": [
+    {
+      "id": "tower28_good_clean_fun_instagram_on_voice",
+      "brandId": "tower_28",
+      "channel": "instagram",
+      "expected_voice_status": "ON_VOICE",
+      "text": "When your skin is doing the most, keep it simple. A few spritzes of SOS Daily Rescue Facial Spray help your skin feel refreshed and comfortable, without making your routine feel complicated. Good Clean Fun for sensitive-looking skin."
+    },
+    {
+      "id": "tower28_clinical_treatment_drifted",
+      "brandId": "tower_28",
+      "channel": "instagram",
+      "expected_voice_status": "DRIFTED",
+      "text": "A clinically advanced antimicrobial facial spray engineered to treat flare-ups, repair barrier dysfunction, and deliver measurable dermatological correction with every application."
+    },
+    {
+      "id": "tower28_near_miss_too_sterile_drifted",
+      "brandId": "tower_28",
+      "channel": "email",
+      "expected_voice_status": "DRIFTED",
+      "text": "Subject: Protocol-grade skin maintenance\n\nBody: This daily-use facial spray supports a controlled hygiene regimen for users seeking a sterile, dermatologist-style intervention for reactive skin events."
+    },
+    {
+      "id": "halfmagic_caps_emoji_tiktok_on_voice",
+      "brandId": "half_magic",
+      "channel": "tiktok",
+      "expected_voice_status": "ON_VOICE",
+      "text": "Hook: MAGIC DRIP said sparkle now, overthink never.\n\nScript: tap it on, let the glitter catch the light, then go be the main character. no rules, just shine.\n\nCTA: tag us when your lips enter the chat."
+    },
+    {
+      "id": "halfmagic_perfectionist_corrective_drifted",
+      "brandId": "half_magic",
+      "channel": "instagram",
+      "expected_voice_status": "DRIFTED",
+      "text": "Correct imperfections with a flawless, age-defying finish. This refined lip formula creates a polished appearance for anyone who wants a more proper, perfected look."
+    },
+    {
+      "id": "halfmagic_near_miss_generic_beauty_drifted",
+      "brandId": "half_magic",
+      "channel": "email",
+      "expected_voice_status": "DRIFTED",
+      "text": "Subject: New gloss is here\n\nBody: Add a pretty shine to your routine with a smooth lip gloss that looks nice for daytime or evening. Shop the latest shade today."
+    }
+  ]
+}

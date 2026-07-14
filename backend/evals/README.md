@@ -20,6 +20,19 @@ Run one or more specific cases:
 python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --case-id channel_specific_risky_instruction
 ```
 
+Run the Week 2 brand voice calibration set:
+
+```powershell
+python backend/scripts/run_brand_voice_eval.py --compact
+```
+
+Run a brand voice chunk or one specific case:
+
+```powershell
+python backend/scripts/run_brand_voice_eval.py --start 1 --end 3 --compact
+python backend/scripts/run_brand_voice_eval.py --case-id tower28_good_clean_fun_instagram_on_voice
+```
+
 Options:
 
 - `--start` / `--end`: 1-based inclusive case range.
@@ -66,3 +79,20 @@ Use `expected_by_channel` when a multi-channel case needs channel-specific expec
 Valid expected statuses are `PASSED` and `FAILED`.
 
 Keep cases grounded in the compliance rule source at `backend/app/data/source/compliance_rules.source.json` or in reviewed brand/product claim guidance. Seed cases are scaffolding and should not be treated as the final demo pass-rate set without content review.
+
+## Brand Voice Calibration Format
+
+Brand voice calibration cases live in `backend/evals/brand_voice_calibration_cases.json`.
+Use `expected_voice_status` with `ON_VOICE` or `DRIFTED`:
+
+```json
+{
+  "id": "tower28_good_clean_fun_instagram_on_voice",
+  "brandId": "tower_28",
+  "channel": "instagram",
+  "expected_voice_status": "ON_VOICE",
+  "text": "Good Clean Fun for sensitive-looking skin."
+}
+```
+
+The six-case set is for threshold calibration and reason-quality review. Run it live with Sonnet intentionally, not as part of ordinary unit tests.

@@ -38,6 +38,11 @@ from backend.scripts.run_red_team_eval import (
     select_cases,
     validate_case,
 )
+from backend.scripts.run_brand_voice_eval import (
+    run as run_brand_voice_eval,
+    select_cases as select_brand_voice_cases,
+    validate_case as validate_brand_voice_case,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -1020,6 +1025,23 @@ class GenerateEndpointTests(unittest.TestCase):
             GenerateRequest(**case["request"])
             validate_case(case)
 
+    def test_brand_voice_calibration_cases_file_has_expected_shape(self) -> None:
+        cases_path = ROOT / "backend/evals/brand_voice_calibration_cases.json"
+        cases = json.loads(cases_path.read_text(encoding="utf-8"))["cases"]
+
+        self.assertEqual(len(cases), 6)
+        self.assertEqual(
+            {case["brandId"] for case in cases},
+            {"tower_28", "half_magic"},
+        )
+        self.assertEqual(
+            {case["expected_voice_status"] for case in cases},
+            {"ON_VOICE", "DRIFTED"},
+        )
+        for case in cases:
+            validate_brand_voice_case(case)
+            self.assertIn(case["channel"], {"tiktok", "instagram", "email"})
+
     def test_live_ui_sample_payloads_match_response_contract(self) -> None:
         samples_dir = ROOT / "shared/live-ui-samples"
         sample_paths = sorted(samples_dir.glob("*.response.json"))
@@ -1068,6 +1090,57 @@ class GenerateEndpointTests(unittest.TestCase):
             expected_statuses_for_case(case),
             {"tiktok": "PASSED", "instagram": "FAILED"},
         )
+
+    def test_brand_voice_eval_selects_case_chunks(self) -> None:
+        cases = [
+            {"id": "case_1"},
+            {"id": "case_2"},
+            {"id": "case_3"},
+        ]
+
+        selected = select_brand_voice_cases(cases, start=2, end=3)
+
+        self.assertEqual(
+            [(index, case["id"]) for index, case in selected],
+            [(2, "case_2"), (3, "case_3")],
+        )
+
+    def test_brand_voice_eval_rejects_invalid_case_selection(self) -> None:
+        with self.assertRaises(ValueError):
+            select_brand_voice_cases([{"id": "case_1"}], start=3, end=1)
+
+        with self.assertRaises(ValueError):
+            select_brand_voice_cases([{"id": "case_1"}], case_ids=["missing"])
+
+    def test_brand_voice_eval_run_uses_mocked_checker(self) -> None:
+        def mocked_voice_checker(
+            text: str,
+            brand_id: str,
+            brand_config: dict[str, object],
+            channel: str,
+        ) -> dict[str, object]:
+            del text, brand_config, channel
+            status = "ON_VOICE" if brand_id == "tower_28" else "DRIFTED"
+            return {
+                "voice_status": status,
+                "voice_confidence": 0.88,
+                "voice_reason": "Mocked calibration reason.",
+            }
+
+        with redirect_stdout(StringIO()) as output:
+            exit_code = run_brand_voice_eval(
+                [
+                    "--case-id",
+                    "tower28_good_clean_fun_instagram_on_voice",
+                    "--case-id",
+                    "halfmagic_perfectionist_corrective_drifted",
+                    "--compact",
+                ],
+                voice_checker=mocked_voice_checker,
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("2/2 selected cases passed", output.getvalue())
 
     def test_red_team_eval_rejects_ambiguous_expected_statuses(self) -> None:
         case = {
