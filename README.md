@@ -46,6 +46,13 @@ python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
 python backend/scripts/run_red_team_eval.py --case-id channel_specific_risky_instruction --compact
 ```
 
+Brand voice calibration evals:
+
+```powershell
+python backend/scripts/run_brand_voice_eval.py --compact
+python backend/scripts/run_brand_voice_eval.py --start 1 --end 3 --compact
+```
+
 Optional live LLM smoke test:
 
 ```powershell
@@ -54,6 +61,7 @@ python backend/scripts/smoke_generate_live.py
 ```
 
 The smoke tests only run live drafting when `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured in the backend environment. Otherwise they exit as skipped.
+Live eval and smoke scripts print current-run token/cost usage plus local grand totals from `backend/logs/llm_usage_local.jsonl`. The `backend/logs/` directory is gitignored.
 
 Backend work should preserve the `/generate` contract in `BEAUTYAGENT_API_CONTRACT.md` so Jillian's frontend can continue wiring against stable fields.
 

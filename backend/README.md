@@ -94,6 +94,43 @@ python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim
 
 Eval case authoring notes live in `backend/evals/README.md`. Jillian / Person A owns the final expanded eval content.
 
+Backend-only brand voice calibration runner:
+
+```powershell
+python backend/scripts/run_brand_voice_eval.py --compact
+```
+
+The brand voice runner evaluates the six-case near-miss set in `backend/evals/brand_voice_calibration_cases.json` against `check_brand_voice`. It supports the same targeted run options:
+
+```powershell
+python backend/scripts/run_brand_voice_eval.py --start 1 --end 3 --compact
+python backend/scripts/run_brand_voice_eval.py --case-id tower28_good_clean_fun_instagram_on_voice
+```
+
+## LLM Usage Tracking
+
+Live `/generate`, red-team, and brand voice eval scripts report token/cost usage when LiteLLM returns usage metadata.
+
+Each run prints:
+
+- current-run usage by LLM call
+- current-run totals
+- local ledger grand totals
+
+The default local ledger path is:
+
+```text
+backend/logs/llm_usage_local.jsonl
+```
+
+`backend/logs/` is ignored by git. Do not commit local usage ledgers. Ledger entries store metadata only: timestamp, call name, model, prompt tokens, completion tokens, total tokens, and estimated cost. They do not store prompts or model responses.
+
+To use a temporary ledger path:
+
+```powershell
+$env:LLM_USAGE_LEDGER_PATH="C:\path\to\usage.jsonl"
+```
+
 ## Tests
 
 ```powershell

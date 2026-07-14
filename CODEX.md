@@ -178,8 +178,10 @@ Do not add autonomous regeneration loops for Week 2 unless the contract changes.
 Backend eval infrastructure lives in:
 
 - `backend/evals/red_team_cases.json`
+- `backend/evals/brand_voice_calibration_cases.json`
 - `backend/evals/README.md`
 - `backend/scripts/run_red_team_eval.py`
+- `backend/scripts/run_brand_voice_eval.py`
 
 Jillian / Person A owns the final expanded eval content. Backend work should keep the runner and schema stable, support both `expected_status` and `expected_by_channel`, and avoid treating seed cases as the final demo pass-rate set without content review.
 
@@ -188,6 +190,33 @@ Use chunked or targeted eval runs when live LLM calls are slow:
 ```powershell
 python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
 python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --compact
+```
+
+Use the brand voice calibration runner for the Week 2 six-case near-miss set:
+
+```powershell
+python backend/scripts/run_brand_voice_eval.py --compact
+python backend/scripts/run_brand_voice_eval.py --start 1 --end 3 --compact
+python backend/scripts/run_brand_voice_eval.py --case-id tower28_good_clean_fun_instagram_on_voice
+```
+
+## LLM Usage Tracking
+
+Live smoke and eval scripts report token/cost usage for the current script run and a local grand total. Usage records are collected from LiteLLM metadata when providers return it.
+
+Usage tracking files:
+
+- `backend/app/agent/llm_client.py` records per-process call usage.
+- `backend/app/agent/llm_usage_ledger.py` appends local-only usage records.
+- `backend/scripts/usage_report.py` prints current-run and ledger grand totals.
+- `backend/logs/llm_usage_local.jsonl` is the default local ledger path.
+
+The local ledger is ignored by git via `backend/logs/`. Do not commit token usage logs. The ledger stores metadata only: timestamp, call name, model, prompt tokens, completion tokens, total tokens, and estimated cost. It must not store prompts, responses, API keys, or user secrets.
+
+To redirect the local ledger for testing or temporary analysis:
+
+```powershell
+$env:LLM_USAGE_LEDGER_PATH="C:\path\to\usage.jsonl"
 ```
 
 ## Backend Validation
