@@ -8,6 +8,7 @@ from typing import Any
 
 from ..config import Settings
 from ..models.request_models import Channel, GenerateRequest
+from .llm_usage_ledger import append_llm_usage_record
 from .prompts import build_draft_prompt
 
 
@@ -143,6 +144,11 @@ def _record_usage(response: Any, model: str, call_name: str) -> None:
     )
     with _usage_lock:
         _usage_records.append(record)
+
+    try:
+        append_llm_usage_record(record)
+    except OSError:
+        pass
 
 
 def complete_messages(

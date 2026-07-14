@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from backend.app.agent.llm_client import get_llm_usage, summarize_llm_usage
+from backend.app.agent.llm_usage_ledger import (
+    llm_usage_ledger_path,
+    summarize_llm_usage_ledger,
+)
 
 
 def print_llm_usage_report() -> None:
@@ -21,10 +25,20 @@ def print_llm_usage_report() -> None:
 
     summary = summarize_llm_usage()
     print(
-        "LLM usage total: "
+        "LLM usage current run total: "
         f"calls={summary['calls']} | "
         f"prompt={summary['prompt_tokens']} | "
         f"completion={summary['completion_tokens']} | "
         f"total={summary['total_tokens']} | "
         f"cost_usd={summary['cost_usd']}"
+    )
+    ledger_summary = summarize_llm_usage_ledger()
+    print(
+        "LLM usage local ledger grand total: "
+        f"calls={ledger_summary['calls']} | "
+        f"prompt={ledger_summary['prompt_tokens']} | "
+        f"completion={ledger_summary['completion_tokens']} | "
+        f"total={ledger_summary['total_tokens']} | "
+        f"cost_usd={ledger_summary['cost_usd']} | "
+        f"path={llm_usage_ledger_path()}"
     )

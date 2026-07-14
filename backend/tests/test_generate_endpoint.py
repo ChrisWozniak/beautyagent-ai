@@ -26,6 +26,7 @@ from backend.app.agent.llm_client import (
     reset_llm_usage,
     summarize_llm_usage,
 )
+from backend.app.agent.llm_usage_ledger import summarize_llm_usage_ledger
 from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.config import get_settings
 from backend.app.config_loader import ConfigLoadError, load_json_config
@@ -1027,36 +1028,89 @@ class GenerateEndpointTests(unittest.TestCase):
         from backend.app.agent import llm_client
 
         reset_llm_usage()
-        response = SimpleNamespace(
-            usage=SimpleNamespace(
-                prompt_tokens=120,
-                completion_tokens=35,
-                total_tokens=155,
-            ),
-            _hidden_params={"response_cost": 0.0042},
-        )
+        with TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "usage.jsonl"
+            response = SimpleNamespace(
+                usage=SimpleNamespace(
+                    prompt_tokens=120,
+                    completion_tokens=35,
+                    total_tokens=155,
+                ),
+                _hidden_params={"response_cost": 0.0042},
+            )
 
-        llm_client._record_usage(response, "anthropic/test-model", "generation")
+            with patch.dict("os.environ", {"LLM_USAGE_LEDGER_PATH": str(ledger_path)}):
+                llm_client._record_usage(response, "anthropic/test-model", "generation")
 
-        records = get_llm_usage()
-        summary = summarize_llm_usage()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].call_name, "generation")
-        self.assertEqual(records[0].model, "anthropic/test-model")
-        self.assertEqual(records[0].prompt_tokens, 120)
-        self.assertEqual(records[0].completion_tokens, 35)
-        self.assertEqual(records[0].total_tokens, 155)
-        self.assertEqual(records[0].cost_usd, 0.0042)
-        self.assertEqual(
-            summary,
-            {
-                "calls": 1,
-                "prompt_tokens": 120,
-                "completion_tokens": 35,
-                "total_tokens": 155,
-                "cost_usd": 0.0042,
-            },
-        )
+            records = get_llm_usage()
+            summary = summarize_llm_usage()
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].call_name, "generation")
+            self.assertEqual(records[0].model, "anthropic/test-model")
+            self.assertEqual(records[0].prompt_tokens, 120)
+            self.assertEqual(records[0].completion_tokens, 35)
+            self.assertEqual(records[0].total_tokens, 155)
+            self.assertEqual(records[0].cost_usd, 0.0042)
+            self.assertEqual(
+                summary,
+                {
+                    "calls": 1,
+                    "prompt_tokens": 120,
+                    "completion_tokens": 35,
+                    "total_tokens": 155,
+                    "cost_usd": 0.0042,
+                },
+            )
+            ledger_lines = ledger_path.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(ledger_lines), 1)
+            ledger_entry = json.loads(ledger_lines[0])
+            self.assertEqual(ledger_entry["call_name"], "generation")
+            self.assertEqual(ledger_entry["model"], "anthropic/test-model")
+            self.assertEqual(ledger_entry["total_tokens"], 155)
+            self.assertEqual(ledger_entry["cost_usd"], 0.0042)
+            self.assertIn("timestamp_utc", ledger_entry)
+            self.assertNotIn("prompt", ledger_entry)
+            self.assertNotIn("response", ledger_entry)
+
+    def test_llm_usage_ledger_summarizes_grand_total(self) -> None:
+        from backend.app.agent import llm_client
+
+        reset_llm_usage()
+        with TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "usage.jsonl"
+            first_response = SimpleNamespace(
+                usage=SimpleNamespace(
+                    prompt_tokens=100,
+                    completion_tokens=25,
+                    total_tokens=125,
+                ),
+                _hidden_params={"response_cost": 0.001},
+            )
+            second_response = SimpleNamespace(
+                usage=SimpleNamespace(
+                    prompt_tokens=200,
+                    completion_tokens=50,
+                    total_tokens=250,
+                ),
+                _hidden_params={"response_cost": 0.0025},
+            )
+
+            with patch.dict("os.environ", {"LLM_USAGE_LEDGER_PATH": str(ledger_path)}):
+                llm_client._record_usage(first_response, "anthropic/model-a", "generation")
+                llm_client._record_usage(second_response, "anthropic/model-a", "brand_voice")
+                with ledger_path.open("a", encoding="utf-8") as ledger_file:
+                    ledger_file.write("not-json\n")
+
+                self.assertEqual(
+                    summarize_llm_usage_ledger(),
+                    {
+                        "calls": 2,
+                        "prompt_tokens": 300,
+                        "completion_tokens": 75,
+                        "total_tokens": 375,
+                        "cost_usd": 0.0035,
+                    },
+                )
 
     def test_llm_usage_summary_handles_missing_usage_metadata(self) -> None:
         reset_llm_usage()
