@@ -1,47 +1,64 @@
 {
-  "results": [
-    {
-      "channel": "tiktok",
-      "generation_status": "completed",
-      "raw_draft": "Hook: Magic Drip Glitter Lipgloss is your quick shine reset.\n\nScript: Meet Magic Drip Glitter Lipgloss from Half Magic. It delivers a high-shine sparkle payoff, while keeping the vibe expressive, playful, color-forward, and confident.\n\nCTA: Swipe it on when your look needs a little more drama.",
-      "compliance_status": "PASSED",
-      "flagged_phrases": [],
-      "explanation": "",
-      "detection_source": null,
-      "final_safe_output": "Hook: Magic Drip Glitter Lipgloss is your quick shine reset.\n\nScript: Meet Magic Drip Glitter Lipgloss from Half Magic. It delivers a high-shine sparkle payoff, while keeping the vibe expressive, playful, color-forward, and confident.\n\nCTA: Swipe it on when your look needs a little more drama.",
-      "retry_exhausted": false,
-      "error": null
-    },
-    {
-      "channel": "instagram",
-      "generation_status": "completed",
-      "raw_draft": "Clinically proven to boost lip fullness, Magic Drip Glitter Lipgloss gives lips a plumped-up glow that lasts.",
-      "compliance_status": "FAILED",
-      "flagged_phrases": [
-        "clinically proven",
-        "proven to boost lip fullness"
-      ],
-      "explanation": "No medical/clinical claims without real substantiation for that specific product.",
-      "detection_source": "deterministic",
-      "final_safe_output": "Magic Drip Glitter Lipgloss wraps lips in cushiony shine and high-impact sparkle for a fuller-looking finish.",
-      "retry_exhausted": false,
-      "error": null
-    },
-    {
-      "channel": "email",
-      "generation_status": "error",
-      "raw_draft": null,
-      "compliance_status": null,
-      "flagged_phrases": null,
-      "explanation": null,
-      "detection_source": null,
-      "final_safe_output": null,
-      "retry_exhausted": null,
-      "error": {
-        "code": "TIMEOUT",
-        "message": "Generation timed out after retries."
-      }
-    }
-  ],
-  "error": null
+    "results":  [
+                    {
+                        "channel":  "tiktok",
+                        "generation_status":  "completed",
+                        "raw_draft":  "Hook: Magic Drip Glitter Lipgloss is your quick shine reset.\n\nScript: Meet Magic Drip Glitter Lipgloss from Half Magic. It delivers a high-shine sparkle payoff, while keeping the vibe expressive, playful, color-forward, and confident.\n\nCTA: Swipe it on when your look needs a little more drama.",
+                        "voice_status":  "ON_VOICE",
+                        "voice_confidence":  1,
+                        "voice_reason":  "Brand voice evaluation not yet enabled.",
+                        "compliance_status":  "PASSED",
+                        "compliance_confidence":  1,
+                        "flagged_phrases":  [
+
+                                            ],
+                        "explanation":  "",
+                        "detection_source":  null,
+                        "final_safe_output":  "Hook: Magic Drip Glitter Lipgloss is your quick shine reset.\n\nScript: Meet Magic Drip Glitter Lipgloss from Half Magic. It delivers a high-shine sparkle payoff, while keeping the vibe expressive, playful, color-forward, and confident.\n\nCTA: Swipe it on when your look needs a little more drama.",
+                        "retry_exhausted":  false,
+                        "escalation_trigger":  null,
+                        "error":  null
+                    },
+                    {
+                        "channel":  "instagram",
+                        "generation_status":  "completed",
+                        "raw_draft":  "Clinically proven to boost lip fullness, Magic Drip Glitter Lipgloss gives lips a plumped-up glow that lasts.",
+                        "voice_status":  "ON_VOICE",
+                        "voice_confidence":  1,
+                        "voice_reason":  "Brand voice evaluation not yet enabled.",
+                        "compliance_status":  "FAILED",
+                        "compliance_confidence":  1,
+                        "flagged_phrases":  [
+                                                "clinically proven",
+                                                "proven to boost lip fullness"
+                                            ],
+                        "explanation":  "No medical/clinical claims without real substantiation for that specific product.",
+                        "detection_source":  "deterministic",
+                        "final_safe_output":  "Magic Drip Glitter Lipgloss wraps lips in cushiony shine and high-impact sparkle for a fuller-looking finish.",
+                        "retry_exhausted":  false,
+                        "escalation_trigger":  null,
+                        "error":  null
+                    },
+                    {
+                        "channel":  "email",
+                        "generation_status":  "error",
+                        "raw_draft":  null,
+                        "voice_status":  null,
+                        "voice_confidence":  null,
+                        "voice_reason":  null,
+                        "compliance_status":  null,
+                        "compliance_confidence":  null,
+                        "flagged_phrases":  null,
+                        "explanation":  null,
+                        "detection_source":  null,
+                        "final_safe_output":  null,
+                        "retry_exhausted":  null,
+                        "escalation_trigger":  null,
+                        "error":  {
+                                      "code":  "TIMEOUT",
+                                      "message":  "Generation timed out after retries."
+                                  }
+                    }
+                ],
+    "error":  null
 }

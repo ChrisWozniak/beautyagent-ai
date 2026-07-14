@@ -12,15 +12,17 @@ from fastapi.testclient import TestClient
 from backend.app.agent.beauty_agent import (
     channel_error_result,
     draft_channel_copy,
+    load_brand_configs,
     process_channel_loop,
     process_channel_safely,
 )
-from backend.app.agent.llm_client import LLMDraftError
+from backend.app.agent.llm_client import LLMClientError, LLMDraftError
 from backend.app.agent.strands_agent import build_strands_adapter
 from backend.app.config import get_settings
 from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.models.response_models import GenerateResponse
+from backend.app.tools.check_brand_voice import check_brand_voice
 from backend.app.tools.check_compliance import check_compliance_tool
 from backend.scripts.smoke_generate_live import main as live_generate_smoke_main
 from backend.scripts.smoke_openrouter import main as openrouter_smoke_main
@@ -64,8 +66,13 @@ class GenerateEndpointTests(unittest.TestCase):
         )
         for result in payload["results"]:
             self.assertEqual(result["generation_status"], "completed")
+            self.assertEqual(result["voice_status"], "ON_VOICE")
+            self.assertEqual(result["voice_confidence"], 1.0)
+            self.assertEqual(result["voice_reason"], "Brand voice evaluation not yet enabled.")
             self.assertEqual(result["compliance_status"], "PASSED")
+            self.assertEqual(result["compliance_confidence"], 1.0)
             self.assertEqual(result["flagged_phrases"], [])
+            self.assertIsNone(result["escalation_trigger"])
             self.assertIsNone(result["error"])
 
     def test_generate_accepts_omitted_core_actives(self) -> None:
@@ -502,13 +509,147 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.channel, "email")
         self.assertEqual(result.generation_status, "error")
         self.assertIsNone(result.raw_draft)
+        self.assertIsNone(result.voice_status)
+        self.assertIsNone(result.voice_confidence)
+        self.assertIsNone(result.voice_reason)
         self.assertIsNone(result.compliance_status)
+        self.assertIsNone(result.compliance_confidence)
         self.assertIsNone(result.flagged_phrases)
         self.assertIsNone(result.explanation)
         self.assertIsNone(result.detection_source)
         self.assertIsNone(result.final_safe_output)
         self.assertIsNone(result.retry_exhausted)
+        self.assertIsNone(result.escalation_trigger)
         self.assertEqual(result.error.code, "TIMEOUT")
+
+    def test_week2_needs_human_review_contract_shape_is_supported(self) -> None:
+        payload = {
+            "results": [
+                {
+                    "channel": "instagram",
+                    "generation_status": "completed",
+                    "raw_draft": "POV your skin said no today.",
+                    "voice_status": "DRIFTED",
+                    "voice_confidence": 0.42,
+                    "voice_reason": "Uses meme-speak structure that does not match the brand voice profile.",
+                    "compliance_status": "NEEDS_HUMAN_REVIEW",
+                    "compliance_confidence": None,
+                    "flagged_phrases": None,
+                    "explanation": None,
+                    "detection_source": None,
+                    "final_safe_output": None,
+                    "retry_exhausted": None,
+                    "escalation_trigger": "voice",
+                    "error": None,
+                }
+            ],
+            "error": None,
+        }
+
+        response = GenerateResponse(**payload)
+
+        self.assertEqual(response.results[0].compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertEqual(response.results[0].escalation_trigger, "voice")
+
+    def test_brand_configs_include_week2_voice_profiles(self) -> None:
+        brands = load_brand_configs()
+
+        tower_voice = brands["tower_28"]["voice"]
+        half_magic_voice = brands["half_magic"]["voice"]
+
+        self.assertIn("Good Clean Fun", tower_voice)
+        self.assertIn("expert-not-clinical", tower_voice)
+        self.assertIn("TikTok", tower_voice)
+        self.assertIn("eczema-prone skin", tower_voice)
+        self.assertIn("backstage-friend voice", half_magic_voice)
+        self.assertIn("experimentation, not perfection", half_magic_voice)
+        self.assertIn("ALL CAPS", half_magic_voice)
+        self.assertIn("TikTok", half_magic_voice)
+
+    def test_check_brand_voice_parses_on_voice_result(self) -> None:
+        brand_config = load_brand_configs()["tower_28"]
+        raw_voice_result = json.dumps(
+            {
+                "voice_status": "ON_VOICE",
+                "voice_confidence": 0.91,
+                "voice_reason": "The phrase 'It's OK to be sensitive' matches the approachable Tower 28 voice.",
+            }
+        )
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            return_value=raw_voice_result,
+        ) as complete:
+            result = check_brand_voice(
+                "It's OK to be sensitive - mist, glow, keep going.",
+                "tower_28",
+                brand_config,
+                "instagram",
+            )
+
+        self.assertEqual(result["voice_status"], "ON_VOICE")
+        self.assertEqual(result["voice_confidence"], 0.91)
+        self.assertIn("approachable Tower 28 voice", result["voice_reason"])
+        complete.assert_called_once()
+        self.assertEqual(complete.call_args.args[2], get_settings().anthropic_model_sonnet)
+
+    def test_check_brand_voice_extracts_json_from_wrapped_response(self) -> None:
+        brand_config = load_brand_configs()["half_magic"]
+        wrapped_response = """
+        Here is the evaluation:
+        {"voice_status": "DRIFTED", "voice_confidence": 0.32, "voice_reason": "The clinical phrase 'reduces visible aging' misses the playful backstage-friend voice."}
+        """
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            return_value=wrapped_response,
+        ):
+            result = check_brand_voice(
+                "Reduces visible aging with a clinically precise finish.",
+                "half_magic",
+                brand_config,
+                "tiktok",
+            )
+
+        self.assertEqual(result["voice_status"], "DRIFTED")
+        self.assertEqual(result["voice_confidence"], 0.32)
+        self.assertIn("backstage-friend voice", result["voice_reason"])
+
+    def test_check_brand_voice_fails_closed_on_malformed_response(self) -> None:
+        brand_config = load_brand_configs()["tower_28"]
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            return_value="not json",
+        ):
+            result = check_brand_voice(
+                "Generic caption.",
+                "tower_28",
+                brand_config,
+                "email",
+            )
+
+        self.assertEqual(result["voice_status"], "DRIFTED")
+        self.assertEqual(result["voice_confidence"], 0.0)
+        self.assertIn("needs human review", result["voice_reason"])
+
+    def test_check_brand_voice_fails_closed_on_llm_error(self) -> None:
+        brand_config = load_brand_configs()["half_magic"]
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            side_effect=LLMClientError("network down"),
+        ):
+            result = check_brand_voice(
+                "Paint it loud.",
+                "half_magic",
+                brand_config,
+                "instagram",
+            )
+
+        self.assertEqual(result["voice_status"], "DRIFTED")
+        self.assertEqual(result["voice_confidence"], 0.0)
+        self.assertIn("needs human review", result["voice_reason"])
 
     def test_process_channel_safely_converts_timeout_to_error_result(self) -> None:
         request = GenerateRequest(

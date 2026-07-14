@@ -1,4 +1,4 @@
-"""LiteLLM drafting client."""
+"""LiteLLM client helpers for backend-only model calls."""
 
 from __future__ import annotations
 
@@ -7,6 +7,10 @@ from typing import Any
 from ..config import Settings
 from ..models.request_models import Channel, GenerateRequest
 from .prompts import build_draft_prompt
+
+
+class LLMClientError(RuntimeError):
+    """Raised when a backend LLM call is unavailable or fails."""
 
 
 class LLMDraftError(RuntimeError):
@@ -20,26 +24,57 @@ def _openrouter_model_name(model: str) -> str:
     return f"openrouter/{model}"
 
 
-def _draft_model_and_key(settings: Settings) -> tuple[str, str]:
+def _model_and_key(settings: Settings, anthropic_model: str) -> tuple[str, str]:
     if settings.anthropic_api_key:
-        return settings.anthropic_model_sonnet, settings.anthropic_api_key
+        return anthropic_model, settings.anthropic_api_key
 
     if settings.openrouter_api_key:
         return _openrouter_model_name(settings.openrouter_model), settings.openrouter_api_key
 
-    raise LLMDraftError("ANTHROPIC_API_KEY or OPENROUTER_API_KEY is not configured.")
+    raise LLMClientError("ANTHROPIC_API_KEY or OPENROUTER_API_KEY is not configured.")
 
 
 def _extract_text(response: Any) -> str:
     try:
         content = response.choices[0].message.content
     except (AttributeError, IndexError, TypeError) as exc:
-        raise LLMDraftError("LiteLLM response did not include message content.") from exc
+        raise LLMClientError("LiteLLM response did not include message content.") from exc
 
     if not isinstance(content, str) or not content.strip():
-        raise LLMDraftError("LiteLLM response content was empty.")
+        raise LLMClientError("LiteLLM response content was empty.")
 
     return content.strip()
+
+
+def complete_messages(
+    messages: list[dict[str, str]],
+    settings: Settings,
+    anthropic_model: str,
+    *,
+    temperature: float,
+    max_tokens: int | None = None,
+) -> str:
+    """Call the configured backend LLM and return plain text content."""
+    try:
+        from litellm import completion
+    except ImportError as exc:
+        raise LLMClientError("LiteLLM is not installed.") from exc
+
+    model, api_key = _model_and_key(settings, anthropic_model)
+
+    try:
+        response = completion(
+            model=model,
+            messages=messages,
+            api_key=api_key,
+            temperature=temperature,
+            max_tokens=max_tokens or settings.llm_max_tokens,
+            timeout=settings.llm_timeout_seconds,
+        )
+    except Exception as exc:
+        raise LLMClientError("LiteLLM call failed.") from exc
+
+    return _extract_text(response)
 
 
 def generate_draft_with_llm(
@@ -50,22 +85,12 @@ def generate_draft_with_llm(
     settings: Settings,
 ) -> str:
     try:
-        from litellm import completion
-    except ImportError as exc:
-        raise LLMDraftError("LiteLLM is not installed.") from exc
-
-    model, api_key = _draft_model_and_key(settings)
-
-    try:
-        response = completion(
-            model=model,
+        return complete_messages(
             messages=build_draft_prompt(request, channel, brand_config, safe_claim),
-            api_key=api_key,
+            settings=settings,
+            anthropic_model=settings.anthropic_model_sonnet,
             temperature=0.7,
             max_tokens=settings.llm_max_tokens,
-            timeout=settings.llm_timeout_seconds,
         )
-    except Exception as exc:
+    except LLMClientError as exc:
         raise LLMDraftError("LiteLLM drafting failed.") from exc
-
-    return _extract_text(response)
