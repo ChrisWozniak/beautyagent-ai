@@ -847,6 +847,42 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result["voice_confidence"], 0.0)
         self.assertIn("needs human review", result["voice_reason"])
 
+    def test_check_brand_voice_recovers_plain_text_drifted_verdict(self) -> None:
+        brand_config = load_brand_configs()["tower_28"]
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            return_value="DRIFTED",
+        ):
+            result = check_brand_voice(
+                "Subject: Protocol-grade skin maintenance",
+                "tower_28",
+                brand_config,
+                "email",
+            )
+
+        self.assertEqual(result["voice_status"], "DRIFTED")
+        self.assertEqual(result["voice_confidence"], 0.0)
+        self.assertIn("without structured JSON", result["voice_reason"])
+
+    def test_check_brand_voice_recovers_plain_text_on_voice_verdict(self) -> None:
+        brand_config = load_brand_configs()["half_magic"]
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            return_value="ON_VOICE - Uses ALL CAPS product naming and playful creator cadence.",
+        ):
+            result = check_brand_voice(
+                "MAGIC DRIP said sparkle now, overthink never.",
+                "half_magic",
+                brand_config,
+                "tiktok",
+            )
+
+        self.assertEqual(result["voice_status"], "ON_VOICE")
+        self.assertEqual(result["voice_confidence"], 1.0)
+        self.assertIn("ALL CAPS", result["voice_reason"])
+
     def test_check_brand_voice_fails_closed_on_llm_error(self) -> None:
         brand_config = load_brand_configs()["half_magic"]
 

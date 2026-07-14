@@ -37,7 +37,8 @@ def _brand_voice_messages(
             "content": (
                 "You are BeautyAgent AI's Brand Voice Agent. Evaluate whether beauty "
                 "marketing copy matches the supplied brand voice profile. Return only "
-                "valid JSON with keys voice_status, voice_confidence, and voice_reason."
+                "valid JSON with keys voice_status, voice_confidence, and voice_reason. "
+                "Do not return plain text, Markdown, code fences, or explanations outside JSON."
             ),
         },
         {
@@ -54,6 +55,9 @@ def _brand_voice_messages(
                 "- voice_reason must be one short sentence citing a specific phrase, "
                 "cadence, structural trait, emoji/caps usage, or channel fit.\n"
                 "- Do not evaluate regulatory compliance here.\n"
+                '- Example response: {"voice_status":"DRIFTED","voice_confidence":0.86,'
+                '"voice_reason":"The sterile phrase protocol-grade skin maintenance '
+                'misses the brand\'s friendly, conversational voice."}\n'
             ),
         },
     ]
@@ -96,6 +100,38 @@ def _normalize_brand_voice_payload(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _recover_plain_text_verdict(raw_text: str) -> dict[str, Any]:
+    normalized = raw_text.strip()
+    upper_text = normalized.upper()
+
+    if not normalized:
+        raise ValueError("Brand voice response was empty.")
+
+    if "DRIFTED" in upper_text and "ON_VOICE" not in upper_text:
+        return {
+            "voice_status": "DRIFTED",
+            "voice_confidence": 0.0,
+            "voice_reason": (
+                normalized
+                if len(normalized) > len("DRIFTED")
+                else "The model returned a DRIFTED verdict without structured JSON."
+            ),
+        }
+
+    if "ON_VOICE" in upper_text and "DRIFTED" not in upper_text:
+        return {
+            "voice_status": "ON_VOICE",
+            "voice_confidence": 1.0,
+            "voice_reason": (
+                normalized
+                if len(normalized) > len("ON_VOICE")
+                else "The model returned an ON_VOICE verdict without structured JSON."
+            ),
+        }
+
+    raise ValueError("Brand voice response did not include a recoverable verdict.")
+
+
 def _failed_brand_voice_result(reason: str) -> dict[str, Any]:
     return {
         "voice_status": "DRIFTED",
@@ -125,7 +161,14 @@ def check_brand_voice(
         )
         payload = _extract_json_object(raw_response)
         return _normalize_brand_voice_payload(payload)
-    except (LLMClientError, json.JSONDecodeError, ValueError):
+    except (json.JSONDecodeError, ValueError):
+        try:
+            return _recover_plain_text_verdict(raw_response)
+        except ValueError:
+            return _failed_brand_voice_result(
+                "Brand voice evaluation failed; needs human review before compliance audit."
+            )
+    except LLMClientError:
         return _failed_brand_voice_result(
             "Brand voice evaluation failed; needs human review before compliance audit."
         )
