@@ -131,3 +131,13 @@ Locked decisions made before Day 1 build started (and one confirmed during Day 2
 **Decision:** `beautyagent_api_contract.md` keeps its existing filename. A "Contract version: 2.0" line is added near the top, with the Week 2 additions living in a new Section 9.
 
 **Rationale:** Keeps one stable, always-current path that `CLAUDE.md` and other docs already reference by exact name — avoids updating every cross-reference and renaming again for future versions.
+
+---
+
+## 15. Direct Anthropic API is the primary model path, not paid OpenRouter tier
+
+**Decision:** Agent 2.0 calls Anthropic directly from the backend (FastAPI → LiteLLM → Anthropic), using `ANTHROPIC_API_KEY` (backend-only, never exposed to React/Vite). OpenRouter is retained only as a fallback path carried over from Week 1, not the default.
+
+**What changed:** The original PRD (Dependency #3) assumed Agent 2.0's Sonnet/Haiku model assignments depended on paid OpenRouter tier access. That dependency is replaced with: a valid Anthropic API key with access to the Sonnet and Haiku models. `ANTHROPIC_MODEL_SONNET` and `ANTHROPIC_MODEL_HAIKU` env vars were also updated to drop the retired `claude-3-5-haiku-latest` model.
+
+**Rationale:** Removes a paid-tier dependency the team doesn't control and simplifies the call path by one hop. Doesn't touch `beautyagent_api_contract.md` — this is an internal provider change, not a change to the `/generate` request/response shape — so it doesn't require the usual contract-coordination step, just a doc update so the PRD stops describing a path no longer being built.

@@ -4,7 +4,7 @@ Behavioral guidelines for Claude when working on this project. Scope: `frontend/
 
 Read these companion files before starting any session:
 - `BEAUTYAGENT_API_CONTRACT.md` — the `/generate` request/response schema. Source of truth. Never invent fields.
-- `DECISIONS.md` — 14 locked decisions with rationale (5 pre-build + 9 from Week 2 / Agent 2.0 planning). Note: repo root, not docs/.
+- `DECISIONS.md` — 15 locked decisions with rationale (5 pre-build + 9 from Week 2 / Agent 2.0 planning). Note: repo root, not docs/.
 - `DESIGN_SYSTEM.md` — finalized and reconciled against the Figma Make export (2026-07-09) for v1. Not yet updated for Week 2 — see section 10.
 - `docs/BRAND_COPY_REFERENCE.md` — real sourced brand/product facts (Tower 28, Half Magic) and grounded test briefs.
 - `docs/TEAM_WORKFLOW.md` — GitHub collaboration protocol: working areas per builder (Jillian = frontend, Christopher = backend), shared file conventions, and recommended git flow.
@@ -192,7 +192,7 @@ If asked to add anything in the out-of-scope list, flag it as a Backlog item (PR
 | File | Purpose |
 |---|---|
 | `BEAUTYAGENT_API_CONTRACT.md` | Full request/response schema, error codes, example payloads |
-| `DECISIONS.md` | 14 locked decisions with rationale |
+| `DECISIONS.md` | 15 locked decisions with rationale |
 | `shared/sample_request.json` | Mock request matching the locked contract |
 | `shared/sample_response.json` | Mock response — should mirror Example 5 (multi-channel partial failure) |
 | `docs/BRAND_COPY_REFERENCE.md` | Real sourced brand/product facts + grounded test briefs for Tower 28 & Half Magic |
