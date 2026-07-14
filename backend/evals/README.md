@@ -1,6 +1,6 @@
-# Red-Team Eval Cases
+# Week 2 Backend Evals
 
-Jillian / Person A owns the final expanded eval content. The backend runner and tests only enforce format and execute the cases.
+The Week 2 red-team compliance set is finalized for backend handoff. The backend runner and tests enforce format, product-config coverage, and execution.
 
 Run from the repository root:
 

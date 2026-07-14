@@ -70,17 +70,22 @@ Then add the environment variables listed above.
 Run from the repository root:
 
 ```powershell
-python -m unittest discover -s backend\tests -v
-python backend/scripts/run_red_team_eval.py --compact
+python backend/scripts/run_demo_smoke.py
 ```
 
-Optional live LLM smoke test:
+For a token-free local check that skips live Sonnet calibration:
 
 ```powershell
-python backend/scripts/smoke_openrouter.py
+python backend/scripts/run_demo_smoke.py --skip-live-brand-voice
 ```
 
-The smoke test exits as skipped unless `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured.
+Optional live `/generate` smoke test:
+
+```powershell
+python backend/scripts/smoke_generate_live.py
+```
+
+The live `/generate` smoke test exits as skipped unless `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured.
 
 ## Health Check
 
@@ -98,6 +103,18 @@ After deployment, verify:
 
 ```text
 https://<render-service-url>/health
+```
+
+Current Week 2 backend URL:
+
+```text
+https://beautyagent-ai.onrender.com
+```
+
+Verified health response on July 14, 2026:
+
+```json
+{"status": "ok"}
 ```
 
 Then send Jill the backend base URL for her frontend env:

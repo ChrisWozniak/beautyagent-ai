@@ -92,7 +92,7 @@ python backend/scripts/run_red_team_eval.py --start 1 --end 5 --mock-brand-voice
 python backend/scripts/run_red_team_eval.py --case-id risky_collagen_boost_claim --mock-brand-voice --compact
 ```
 
-Eval case authoring notes live in `backend/evals/README.md`. Jillian / Person A owns the final expanded eval content.
+Eval case authoring notes live in `backend/evals/README.md`. The Week 2 red-team compliance set is finalized for backend handoff.
 
 Backend-only demo smoke runner:
 
@@ -153,12 +153,20 @@ Current backend checks:
 
 ```powershell
 python -m unittest discover -s backend\tests -v
-python backend/scripts/run_red_team_eval.py --compact
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
+```
+
+Full handoff smoke:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
 ```
 
 ## Deployment
 
 See `backend/DEPLOYMENT.md` for Render Blueprint, manual service settings, environment variables, and health check notes. The root `render.yaml` defines the backend web service.
+
+Week 2 backend readiness and frontend handoff notes live in `backend/evals/WEEK2_BACKEND_READINESS.md`.
 
 ## Scope
 

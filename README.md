@@ -36,15 +36,23 @@ Run these from the repository root before pushing backend changes:
 
 ```powershell
 python -m unittest discover -s backend\tests -v
-python backend/scripts/run_red_team_eval.py --compact
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
 
 For timeout-friendly eval chunks:
 
 ```powershell
-python backend/scripts/run_red_team_eval.py --start 1 --end 5 --compact
-python backend/scripts/run_red_team_eval.py --case-id channel_specific_risky_instruction --compact
+python backend/scripts/run_red_team_eval.py --start 1 --end 5 --mock-brand-voice --compact
+python backend/scripts/run_red_team_eval.py --case-id channel_specific_risky_instruction --mock-brand-voice --compact
 ```
+
+Full Week 2 backend demo smoke:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
+```
+
+Use `--skip-live-brand-voice` for a token-free local check.
 
 Brand voice calibration evals:
 
@@ -69,6 +77,7 @@ For mock-to-live frontend wiring, see `docs/LIVE_ENDPOINT_MAPPING.md` and the sa
 
 Current backend behavior notes:
 
+- Week 2 backend is ready for Jillian's frontend testing on branch `week-2`; see `backend/evals/WEEK2_BACKEND_READINESS.md`.
 - `/generate` is one request -> one full response; there is no streaming, polling, websocket, or mid-request progress endpoint.
 - LLM provider failures fall back to deterministic drafting, and fallback drafts still pass through `check_compliance` plus the final deterministic safety backstop.
 - TikTok `Hook` / `Script` / `CTA` and Email `Subject` / `Body` are formatted inside `raw_draft` and `final_safe_output`; they are not separate API fields.

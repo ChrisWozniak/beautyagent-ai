@@ -42,6 +42,14 @@ Do not invent request or response fields. If the contract is unclear, pause and 
 
 Build the backend for the `/generate` endpoint.
 
+Current Week 2 backend handoff status:
+
+- Backend build is complete on branch `week-2`.
+- Latest handoff commit: `4036766 Add Week 2 demo smoke runner`.
+- Render base URL for frontend testing: `https://beautyagent-ai.onrender.com`.
+- Render `/health` was verified on July 14, 2026 with `{"status":"ok"}`.
+- Final demo smoke passed: unit tests `67/67`, red-team compliance eval `20/20`, brand voice calibration `6/6`.
+
 Core responsibilities:
 
 - Accept the agreed request payload.

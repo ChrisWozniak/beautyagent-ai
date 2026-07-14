@@ -5,7 +5,25 @@ Branch: `week-2`
 
 ## Status
 
-Backend Week 2 is ready for frontend integration and demo validation.
+Backend Week 2 is complete and ready for Jillian's frontend integration testing.
+
+Latest pushed backend handoff commit:
+
+```text
+4036766 Add Week 2 demo smoke runner
+```
+
+Backend base URL for deployed frontend testing:
+
+```text
+https://beautyagent-ai.onrender.com
+```
+
+Health check verified on July 14, 2026:
+
+```json
+{"status": "ok"}
+```
 
 The backend now supports the Week 2 channel loop:
 
@@ -25,7 +43,7 @@ Backend unit test suite:
 python -m unittest discover -s backend\tests -v
 ```
 
-Result: `65/65 passed`
+Result: `67/67 passed`
 
 Week 2 red-team compliance eval:
 
@@ -49,19 +67,19 @@ This run intentionally uses Sonnet because it validates brand voice accuracy, co
 
 ## Latest LLM Usage Snapshot
 
-Latest brand voice calibration run:
+Latest full demo smoke live Sonnet calibration run:
 
 - calls: `6`
 - prompt tokens: `2,539`
-- completion tokens: `557`
-- total tokens: `3,096`
-- estimated cost: `$0.015972`
+- completion tokens: `559`
+- total tokens: `3,098`
+- estimated cost: `$0.016002`
 
 Local ledger grand total after the latest run:
 
-- calls: `16`
-- total tokens: `7,391`
-- estimated cost: `$0.035829`
+- calls: `22`
+- total tokens: `10,489`
+- estimated cost: `$0.051831`
 
 The local ledger file is ignored by git:
 
@@ -72,6 +90,18 @@ backend/logs/llm_usage_local.jsonl
 Do not commit API keys or local usage logs.
 
 ## Ready For Jill / Frontend
+
+Slack-ready handoff message:
+
+```text
+backend/evals/JILL_FRONTEND_HANDOFF_SLACK.md
+```
+
+Jillian can set her frontend API base URL to:
+
+```text
+VITE_API_URL=https://beautyagent-ai.onrender.com
+```
 
 The frontend can rely on the `/generate` response contract for:
 
@@ -92,6 +122,8 @@ Expected Week 2 statuses include:
 - `NEEDS_HUMAN_REVIEW`
 
 Per-channel independence is implemented: one channel can fail, drift, or route to human review without blocking sibling channels.
+
+Render note: the Blueprint default has `USE_LLM_DRAFTING=false`, which is appropriate for deterministic frontend contract/UI testing. For live Claude drafting and Brand Voice Agent testing on Render, set `USE_LLM_DRAFTING=true` and configure `ANTHROPIC_API_KEY` in Render environment variables.
 
 ## Known Limitations
 
@@ -124,3 +156,9 @@ For a token-free local check that skips the live Sonnet calibration step:
 ```powershell
 python backend/scripts/run_demo_smoke.py --skip-live-brand-voice
 ```
+
+Latest full demo smoke result:
+
+- backend unit tests: `67/67 passed`
+- red-team compliance eval: `20/20 passed`
+- live Sonnet brand voice calibration: `6/6 passed`
