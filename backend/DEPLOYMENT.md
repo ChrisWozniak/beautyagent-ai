@@ -32,6 +32,9 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT --app-dir backend
 
 ```text
 FRONTEND_ORIGINS=https://your-vercel-app.example
+ANTHROPIC_API_KEY=your_claude_api_key_here
+ANTHROPIC_MODEL_SONNET=anthropic/claude-sonnet-4-5
+ANTHROPIC_MODEL_HAIKU=anthropic/claude-haiku-4-5-20251001
 OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=poolside/laguna-m.1:free
 USE_LLM_DRAFTING=false
@@ -40,7 +43,10 @@ LLM_MAX_TOKENS=1000
 CHANNEL_TIMEOUT_SECONDS=20
 ```
 
-`OPENROUTER_API_KEY` is only required when `USE_LLM_DRAFTING=true`.
+`ANTHROPIC_API_KEY` is the preferred Claude API key for live backend drafting when `USE_LLM_DRAFTING=true`.
+`ANTHROPIC_MODEL_SONNET` is used for generation and the Week 2 Brand Voice Agent. `ANTHROPIC_MODEL_HAIKU` is reserved for the Week 2 compliance audit path.
+`OPENROUTER_API_KEY` remains supported as a fallback provider for existing setups.
+Never expose either provider key through the frontend; the frontend should call this backend's `/generate` route only.
 `FRONTEND_ORIGINS` is required before browser-based deployed frontend calls will work.
 The timeout and token values are optional. Keep `CHANNEL_TIMEOUT_SECONDS` higher than `LLM_TIMEOUT_SECONDS` so compliance checks have time to finish after drafting.
 Set `FRONTEND_ORIGINS` to the deployed Vercel URL before live frontend/backend wiring. Use a comma-separated list if both preview and production origins need access.
@@ -74,7 +80,7 @@ Optional live LLM smoke test:
 python backend/scripts/smoke_openrouter.py
 ```
 
-The smoke test exits as skipped unless `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured.
+The smoke test exits as skipped unless `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured.
 
 ## Health Check
 

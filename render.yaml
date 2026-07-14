@@ -10,6 +10,10 @@ services:
     envVars:
       - key: USE_LLM_DRAFTING
         value: false
+      - key: ANTHROPIC_MODEL_SONNET
+        value: anthropic/claude-sonnet-4-5
+      - key: ANTHROPIC_MODEL_HAIKU
+        value: anthropic/claude-haiku-4-5-20251001
       - key: OPENROUTER_MODEL
         value: poolside/laguna-m.1:free
       - key: LLM_TIMEOUT_SECONDS
@@ -19,6 +23,8 @@ services:
       - key: CHANNEL_TIMEOUT_SECONDS
         value: 20
       - key: FRONTEND_ORIGINS
+        sync: false
+      - key: ANTHROPIC_API_KEY
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false

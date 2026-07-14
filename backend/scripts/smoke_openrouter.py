@@ -1,4 +1,4 @@
-"""Backend-only LiteLLM/OpenRouter smoke test.
+"""Backend-only LiteLLM provider smoke test.
 
 Run from the repository root:
 
@@ -24,12 +24,12 @@ from backend.app.models.request_models import GenerateRequest
 def main() -> int:
     settings = get_settings()
     if not settings.use_llm_drafting:
-        print("OpenRouter smoke test skipped: USE_LLM_DRAFTING is false.")
-        print("Set USE_LLM_DRAFTING=true and OPENROUTER_API_KEY to test live drafting.")
+        print("LiteLLM smoke test skipped: USE_LLM_DRAFTING is false.")
+        print("Set USE_LLM_DRAFTING=true and ANTHROPIC_API_KEY to test live drafting.")
         return 2
 
-    if not settings.openrouter_api_key:
-        print("OpenRouter smoke test skipped: OPENROUTER_API_KEY is not configured.")
+    if not settings.anthropic_api_key and not settings.openrouter_api_key:
+        print("LiteLLM smoke test skipped: ANTHROPIC_API_KEY or OPENROUTER_API_KEY is not configured.")
         return 2
 
     request = GenerateRequest(
@@ -50,11 +50,12 @@ def main() -> int:
             settings=settings,
         )
     except LLMDraftError as exc:
-        print(f"OpenRouter smoke test failed: {exc}")
+        print(f"LiteLLM smoke test failed: {exc}")
         return 1
 
-    print("OpenRouter smoke test passed.")
-    print(f"Model: {settings.openrouter_model}")
+    model = settings.anthropic_model_sonnet if settings.anthropic_api_key else settings.openrouter_model
+    print("LiteLLM smoke test passed.")
+    print(f"Model: {model}")
     print(draft)
     return 0
 

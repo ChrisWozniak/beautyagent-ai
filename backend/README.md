@@ -24,7 +24,22 @@ Use a comma-separated list for multiple origins.
 
 Mock drafting is the default so frontend integration stays stable without an LLM key.
 
-To enable LiteLLM/OpenRouter drafting:
+To enable LiteLLM/Claude drafting, put the key in backend-only environment config, such as `backend/.env` for local development or Render environment variables for deployment:
+
+```text
+USE_LLM_DRAFTING=true
+ANTHROPIC_API_KEY=your_claude_api_key_here
+ANTHROPIC_MODEL_SONNET=anthropic/claude-sonnet-4-5
+ANTHROPIC_MODEL_HAIKU=anthropic/claude-haiku-4-5-20251001
+LLM_TIMEOUT_SECONDS=15
+LLM_MAX_TOKENS=1000
+CHANNEL_TIMEOUT_SECONDS=20
+```
+
+Do not put `ANTHROPIC_API_KEY` or any provider key in React/Vite frontend files. The frontend should call FastAPI `/generate`; the backend calls Claude through LiteLLM.
+`ANTHROPIC_MODEL_SONNET` is used for generation and the Week 2 Brand Voice Agent. `ANTHROPIC_MODEL_HAIKU` is reserved for the Week 2 compliance audit path.
+
+OpenRouter remains supported as a fallback provider for existing setups:
 
 ```text
 USE_LLM_DRAFTING=true
@@ -45,14 +60,14 @@ The backend audits both the generated draft and the original marketer brief befo
 
 `/generate` currently returns one full response after all requested channels complete or error. There is no streaming, polling, websocket, or mid-request progress endpoint.
 
-Backend-only OpenRouter smoke test:
+Backend-only LiteLLM smoke test:
 
 ```powershell
 python backend/scripts/smoke_openrouter.py
 ```
 
-The smoke test calls LiteLLM/OpenRouter directly and does not involve the frontend.
-It exits as skipped unless `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured.
+The smoke test calls LiteLLM directly and does not involve the frontend.
+It exits as skipped unless `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured.
 
 Backend-only live `/generate` smoke test:
 
@@ -100,5 +115,5 @@ See `backend/DEPLOYMENT.md` for Render Blueprint, manual service settings, envir
 
 - Brands: Tower 28 and Half Magic
 - Channels: TikTok, Instagram, Email
-- Compliance status: PASSED or FAILED
+- Compliance status: PASSED, FAILED, or NEEDS_HUMAN_REVIEW for Week 2
 - Static JSON config only

@@ -47,7 +47,7 @@ Core responsibilities:
 - Accept the agreed request payload.
 - Generate one result per requested channel.
 - Run an independent Week 2 channel loop: generation, brand voice evaluation, conditional compliance audit, orchestration.
-- Use OpenRouter through LiteLLM for model calls.
+- Use LiteLLM for model calls. Direct Anthropic/Claude via `ANTHROPIC_API_KEY` is preferred for Week 2; OpenRouter remains a fallback provider for existing setups.
 - Use Strands for the Python agent loop.
 - Use tool calling with a `check_compliance` tool.
 - Re-run deterministic compliance checks as a final backend safety backstop whenever compliance runs.
@@ -61,7 +61,8 @@ Backend stack:
 - FastAPI
 - Strands
 - LiteLLM
-- OpenRouter
+- Anthropic/Claude
+- OpenRouter fallback
 - Static JSON config files for rules, brands, and products
 
 Do not add a database, auth system, scraping workflow, or persistent user storage unless explicitly requested.
@@ -142,9 +143,8 @@ For local plumbing tests, prefer mocked model responses. Haiku or cheaper models
 
 Keep model names configurable rather than hardcoded where possible:
 
-- `GENERATION_MODEL`
-- `BRAND_VOICE_MODEL`
-- `COMPLIANCE_AUDIT_MODEL`
+- `ANTHROPIC_MODEL_SONNET` for generation and `check_brand_voice`
+- `ANTHROPIC_MODEL_HAIKU` for the compliance LLM audit
 
 ## Compliance Rules
 
@@ -156,7 +156,7 @@ Compliance is hybrid in the Week 2 contract:
 
 The deterministic backstop is required even if the agent already called the compliance tool.
 
-If OpenRouter/LiteLLM drafting fails, deterministic fallback copy must still flow through the same compliance loop: draft audit, marketer brief audit, merged audit, and final deterministic backstop. Do not add a fallback path that returns copy without `check_compliance`.
+If LiteLLM/provider drafting fails, deterministic fallback copy must still flow through the same compliance loop: draft audit, marketer brief audit, merged audit, and final deterministic backstop. Do not add a fallback path that returns copy without `check_compliance`.
 
 Current Week 1 code has deterministic compliance only. If implementing Week 2 in phases, either add the Haiku compliance audit or explicitly document a temporary deterministic confidence default. Do not pretend a probabilistic compliance confidence exists if the backend did not compute one.
 
@@ -199,14 +199,16 @@ python -m unittest discover -s backend\tests -v
 python backend/scripts/run_red_team_eval.py --compact
 ```
 
-Optional live OpenRouter smoke test:
+Optional live LLM smoke test:
 
 ```powershell
 python backend/scripts/smoke_openrouter.py
 python backend/scripts/smoke_generate_live.py
 ```
 
-The smoke tests should only be considered a live pass when `USE_LLM_DRAFTING=true` and `OPENROUTER_API_KEY` are configured. A skipped smoke test is acceptable for local backend-only work but should be called out before demo/deploy.
+The smoke tests should only be considered a live pass when `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured in the backend environment. A skipped smoke test is acceptable for local backend-only work but should be called out before demo/deploy.
+
+Never put Anthropic, OpenRouter, or other provider keys in React/Vite frontend files. The frontend calls FastAPI `/generate`; the backend calls the model provider.
 
 The backend currently returns one full `/generate` response after all requested channels complete or error. There is no streaming, polling, websocket, or mid-request progress endpoint.
 

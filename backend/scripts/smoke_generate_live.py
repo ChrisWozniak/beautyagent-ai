@@ -6,7 +6,7 @@ Run from the repository root:
 
 Requires:
     USE_LLM_DRAFTING=true
-    OPENROUTER_API_KEY=...
+    ANTHROPIC_API_KEY=...
 
 The script calls the FastAPI route through TestClient, so it verifies the same
 response shape the frontend will consume while still avoiding a local server.
@@ -36,11 +36,11 @@ def main() -> int:
     settings = get_settings()
     if not settings.use_llm_drafting:
         print("Live /generate smoke test skipped: USE_LLM_DRAFTING is false.")
-        print("Set USE_LLM_DRAFTING=true and OPENROUTER_API_KEY to test live endpoint drafting.")
+        print("Set USE_LLM_DRAFTING=true and ANTHROPIC_API_KEY to test live endpoint drafting.")
         return 2
 
-    if not settings.openrouter_api_key:
-        print("Live /generate smoke test skipped: OPENROUTER_API_KEY is not configured.")
+    if not settings.anthropic_api_key and not settings.openrouter_api_key:
+        print("Live /generate smoke test skipped: ANTHROPIC_API_KEY or OPENROUTER_API_KEY is not configured.")
         return 2
 
     request = GenerateRequest(
@@ -76,8 +76,9 @@ def main() -> int:
         print("Live /generate smoke test failed: endpoint fell back to deterministic mock drafting.")
         return 1
 
+    model = settings.anthropic_model_sonnet if settings.anthropic_api_key else settings.openrouter_model
     print("Live /generate smoke test passed.")
-    print(f"Model: {settings.openrouter_model}")
+    print(f"Model: {model}")
     print(f"Channel: {result['channel']}")
     print(f"Compliance: {result['compliance_status']}")
     print(f"Draft preview: {result['raw_draft'][:240]}")
