@@ -780,9 +780,52 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("TikTok", tower_voice)
         self.assertIn("eczema-prone skin", tower_voice)
         self.assertIn("backstage-friend voice", half_magic_voice)
-        self.assertIn("experimentation, not perfection", half_magic_voice)
-        self.assertIn("ALL CAPS", half_magic_voice)
+        self.assertIn("experimentation & artistry", half_magic_voice)
+        self.assertIn("Donni Davy", half_magic_voice)
         self.assertIn("TikTok", half_magic_voice)
+
+    def test_brand_configs_use_exact_runtime_voice_files(self) -> None:
+        tower_path = ROOT / "backend/app/data/brand_voice_tower28.md"
+        half_magic_path = ROOT / "backend/app/data/brand_voice_halfmagic.md"
+        expected_tower_voice = (
+            '[TOWER 28 (tower_28_beauty): Makeup for sensitive/reactive/eczema-prone skin. '
+            'Mission: "Good Clean Fun"; ethos: "It\'s ok to be sensitive." Voice: '
+            'approachable, friendly, conversational, expert-not-clinical; 8.5/10 casual. '
+            'Tagline: "Sensitive skin deserves fun makeup." Avoid: "medically proven," '
+            '"toxin-free," "anti-aging miracle," unverified derm-recommended claims. NEVER '
+            'claim to cure/heal/treat eczema, rosacea, or acne — speak to comfort & support '
+            'instead. Compliance: frame as "safe for" eczema-prone skin; "hypoallergenic" '
+            'only w/ HRIPT-test reference; SOS Spray — use soothes/purifies/calms, never '
+            'sanitizer/disinfectant; NEA claims: "follows NEA Seal of Acceptance," never '
+            '"NEA-endorsed." IG: 75-250 words, 1-3 emoji (✨💖☀️👀🤍🌊), CTA "find your '
+            'shade"/"shop now". TikTok: hook-demo-result-CTA, friend/creator voice, <150 '
+            'chars, CTAs low-pressure. Email: benefit-driven subject, 30-50 chars, 0-1 emoji. '
+            'Visual: real skin texture, sunny daylight, no clinical/lab imagery.]'
+        )
+        expected_half_magic_voice = (
+            '[HALF MAGIC (half_magic_beauty): Editorial makeup brand founded by Donni Davy '
+            '(Euphoria). Sells experimentation & artistry, not correction/perfection. Voice: '
+            'bold, artistic, playful, confident, expressive, inclusive, irreverent; 9/10 '
+            'casual. Avoid: flawless, perfect skin, anti-aging, corrective, hide '
+            'imperfections, beauty rules, clinical tone, medical claims. Compliance: '
+            'glitter/pigment/liner near eyes -> include eye-safety usage note (verify per '
+            'SKU); Face Gems -> always note medical-grade, irritation-free adhesive, no lash '
+            'glue needed. IG: 100-250 words, hook first, moderate emoji (✨💜🖤🌈💫⚡🪩👁️), '
+            'CTA like “tag us”/“shop now”. TikTok: fast, tutorial/trend style, '
+            'backstage-friend voice, <100-char caption. Email: playful/curious subject, '
+            '25-45 chars, casual. Visual: electric purple, chrome, cobalt, hot pink, lime, '
+            'holographic; maximalist editorial, real skin texture, no “clean girl” '
+            'minimalism.]'
+        )
+
+        tower_file_voice = tower_path.read_text(encoding="utf-8").rstrip("\n")
+        half_magic_file_voice = half_magic_path.read_text(encoding="utf-8").rstrip("\n")
+        brands = load_brand_configs()
+
+        self.assertEqual(tower_file_voice, expected_tower_voice)
+        self.assertEqual(half_magic_file_voice, expected_half_magic_voice)
+        self.assertEqual(brands["tower_28"]["voice"], expected_tower_voice)
+        self.assertEqual(brands["half_magic"]["voice"], expected_half_magic_voice)
 
     def test_check_brand_voice_parses_on_voice_result(self) -> None:
         brand_config = load_brand_configs()["tower_28"]

@@ -20,6 +20,10 @@ from .llm_client import LLMDraftError, generate_draft_with_llm
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 BRAND_CONFIGS_PATH = DATA_DIR / "brand_configs.json"
 PRODUCT_CONFIGS_PATH = DATA_DIR / "product_configs_richer_DRAFT.json"
+BRAND_VOICE_PROFILE_PATHS = {
+    "tower_28": DATA_DIR / "brand_voice_tower28.md",
+    "half_magic": DATA_DIR / "brand_voice_halfmagic.md",
+}
 CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
     "tiktok": ("tiktok", "tik tok"),
     "instagram": ("instagram", "ig"),
@@ -45,7 +49,11 @@ class BrandVoiceChecker(Protocol):
 @lru_cache(maxsize=1)
 def load_brand_configs() -> dict[str, dict[str, Any]]:
     payload = load_json_config(BRAND_CONFIGS_PATH, "brand")
-    return payload["brands"]
+    brands = payload["brands"]
+    for brand_id, profile_path in BRAND_VOICE_PROFILE_PATHS.items():
+        brands[brand_id]["voice"] = profile_path.read_text(encoding="utf-8").rstrip("\n")
+
+    return brands
 
 
 @lru_cache(maxsize=1)
@@ -211,7 +219,7 @@ def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
         return (
             f"Hook: {request.productName} {fallback_copy['tiktok_hook']}.\n\n"
             f"Script: Meet {request.productName} from {brand_name}. It {safe_claim}, "
-            f"while keeping the vibe {brand['voice']}.\n\n"
+            f"while keeping the vibe true to {brand_name}.\n\n"
             f"CTA: {fallback_copy['tiktok_cta']}"
         )
 
