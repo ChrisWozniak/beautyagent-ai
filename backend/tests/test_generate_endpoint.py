@@ -1251,13 +1251,16 @@ class GenerateEndpointTests(unittest.TestCase):
 
     def test_live_ui_sample_payloads_match_response_contract(self) -> None:
         samples_dir = ROOT / "shared/live-ui-samples"
-        sample_paths = sorted(samples_dir.glob("*.response.json"))
+        sample_paths = [ROOT / "sample_response.json"]
+        sample_paths.extend(sorted(samples_dir.glob("*.response.json")))
 
-        self.assertGreaterEqual(len(sample_paths), 4)
+        self.assertGreaterEqual(len(sample_paths), 5)
         for sample_path in sample_paths:
             with self.subTest(sample=sample_path.name):
                 payload = json.loads(sample_path.read_text(encoding="utf-8"))
                 GenerateResponse(**payload)
+                for result in payload["results"]:
+                    self.assertIn("error", result)
 
     def test_red_team_eval_supports_simple_expected_status(self) -> None:
         case = {

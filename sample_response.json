@@ -5,17 +5,17 @@
                         "generation_status":  "completed",
                         "raw_draft":  "Redness-prone skin, this one\u0027s for you ðŸŒ¿ SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
                         "voice_status":  "ON_VOICE",
-                        "voice_confidence":  1,
+                        "voice_confidence":  1.0,
                         "voice_reason":  "Brand voice evaluation not yet enabled.",
                         "compliance_status":  "PASSED",
-                        "compliance_confidence":  1,
+                        "compliance_confidence":  1.0,
                         "flagged_phrases":  [
 
                                             ],
                         "explanation":  "",
                         "detection_source":  null,
                         "final_safe_output":  "Redness-prone skin, this one\u0027s for you ðŸŒ¿ SOS Daily Rescue Facial Spray keeps you calm and protected, no matter what today throws at you.",
-                        "retry_exhausted":  false,
+                        "retry_exhausted":  null,
                         "escalation_trigger":  null,
                         "error":  null
                     },
@@ -24,10 +24,10 @@
                         "generation_status":  "completed",
                         "raw_draft":  "Wake up to eczema-free skin every single day âœ¨ SOS Daily Rescue Facial Spray repairs your barrier while you sleep.",
                         "voice_status":  "ON_VOICE",
-                        "voice_confidence":  1,
+                        "voice_confidence":  1.0,
                         "voice_reason":  "Brand voice evaluation not yet enabled.",
                         "compliance_status":  "FAILED",
-                        "compliance_confidence":  1,
+                        "compliance_confidence":  1.0,
                         "flagged_phrases":  [
                                                 "eczema-free",
                                                 "repairs your barrier while you sleep"
@@ -35,7 +35,7 @@
                         "explanation":  "\"Eczema-free\" claims to treat a diagnosable condition â€” a drug claim. \"Repairs your barrier while you sleep\" is a structure-function claim cosmetics can\u0027t legally make.",
                         "detection_source":  "both",
                         "final_safe_output":  "Wake up to calmer, happier skin âœ¨ SOS Daily Rescue Facial Spray helps support your skin barrier, morning and night.",
-                        "retry_exhausted":  false,
+                        "retry_exhausted":  null,
                         "escalation_trigger":  null,
                         "error":  null
                     },
