@@ -2,6 +2,44 @@
 
 BeautyAgent AI project workspace.
 
+## Agent Role
+
+BeautyAgent AI is a beauty marketing content agent. It generates channel-specific draft copy for supported brands, checks whether the draft matches the brand voice, audits the copy and marketer brief for compliance risk, and returns a structured result the frontend can render.
+
+## Problem It Solves
+
+Beauty teams need faster first drafts without losing brand fit or accidentally making risky cosmetic claims. This app helps turn a short marketing brief into TikTok, Instagram, and email copy while flagging off-voice or compliance-sensitive output before it is used.
+
+## Tools Used
+
+- Frontend: React/Vite dashboard owned by Jillian.
+- Backend: FastAPI `/generate` endpoint owned by Christopher.
+- Agent tools: draft generation, Brand Voice Agent, deterministic compliance checker, final safety backstop, red-team evals, and live smoke tests.
+- LLM providers: Claude through LiteLLM when backend API keys are configured, with OpenRouter still supported as a fallback path.
+- Shared contract files: `BEAUTYAGENT_API_CONTRACT.md`, `docs/`, and `shared/live-ui-samples/`.
+
+## How to Run
+
+Start the backend from the repository root:
+
+```powershell
+uvicorn app.main:app --reload --app-dir backend
+```
+
+Run the frontend from `frontend/`:
+
+```powershell
+npm install
+npm run dev
+```
+
+Run backend checks from the repository root:
+
+```powershell
+python -m unittest discover -s backend\tests -v
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
+```
+
 ## Project Structure
 
 ```text

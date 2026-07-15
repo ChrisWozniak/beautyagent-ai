@@ -4,6 +4,46 @@ FastAPI backend for the BeautyAgent AI `/generate` endpoint.
 
 This side of the project owns agent orchestration, compliance tooling, static backend config, and the response shape defined by the shared API contract.
 
+## Agent Role
+
+The backend agent receives a structured marketing brief, generates copy per requested channel, runs the Week 2 Brand Voice Agent, audits compliance-sensitive language, and returns a strict `GenerateResponse` for the frontend.
+
+## Problem It Solves
+
+The backend helps beauty marketing teams create faster first-draft content while reducing two key risks: copy that drifts away from approved brand voice and copy that makes unsafe or unsupported cosmetic claims.
+
+## Tools Used
+
+- FastAPI route: `/generate`
+- Drafting: deterministic mock drafting by default, optional Claude/LiteLLM drafting when backend keys are configured
+- Brand voice: Sonnet-backed `check_brand_voice`
+- Compliance: deterministic `check_compliance`, brief audit, merged audit, and final safety backstop
+- Config/data: brand configs, product configs, compliance rules, and runtime brand voice profile markdown files
+- Validation: Pydantic request/response models with strict frontend-facing fields
+- Verification: unit tests, red-team evals, brand voice calibration evals, live smoke tests, and demo smoke script
+- Usage tracking: local token/cost ledger for live LLM calls
+
+## How to Run
+
+Start the backend from the repository root:
+
+```powershell
+uvicorn app.main:app --reload --app-dir backend
+```
+
+Run the main backend checks:
+
+```powershell
+python -m unittest discover -s backend\tests -v
+python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
+```
+
+Run the full handoff smoke:
+
+```powershell
+python backend/scripts/run_demo_smoke.py
+```
+
 ## Local Entry Point
 
 ```powershell
