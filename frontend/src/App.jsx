@@ -274,7 +274,7 @@ function FieldLabel({ children, hint }) {
 
 // ─── Top nav ──────────────────────────────────────────────────────────────────
 
-function TopNav({ step, onReset }) {
+function TopNav({ step, onReset, onEditBrief }) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
       <div className="max-w-[680px] mx-auto px-8 py-4 flex items-center justify-between">
@@ -295,12 +295,20 @@ function TopNav({ step, onReset }) {
           </span>
         </button>
         {step === "results" && (
-          <button
-            onClick={onReset}
-            className="text-[12px] font-medium text-muted-foreground hover:text-foreground border-[1.5px] border-[var(--color-charcoal-muted)] px-3.5 py-1.5 rounded-[8px] transition-colors"
-          >
-            New campaign
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onEditBrief}
+              className="text-[13px] text-[var(--color-charcoal-muted)] hover:text-[var(--color-charcoal)] transition-colors duration-150"
+            >
+              Edit &amp; regenerate
+            </button>
+            <button
+              onClick={onReset}
+              className="text-[12px] font-medium text-muted-foreground hover:text-foreground border-[1.5px] border-[var(--color-charcoal-muted)] px-3.5 py-1.5 rounded-[8px] transition-colors"
+            >
+              New campaign
+            </button>
+          </div>
         )}
       </div>
     </header>
@@ -427,6 +435,9 @@ function ComplianceHelpPopover() {
               <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">Both checks ran, but one wasn't confident enough to approve or reject.</p>
             </div>
           </div>
+          <p className="text-[12px] text-[var(--color-charcoal-muted)] mt-4 border-t border-[var(--color-border)] pt-3">
+            Verdicts are advisory — always review before publishing.
+          </p>
           <button
             onClick={() => setOpen(false)}
             className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border-[1.5px] border-[var(--color-charcoal-muted)] text-foreground hover:bg-secondary transition-all duration-150"
@@ -912,7 +923,7 @@ function ResultCard({ result, copiedId, onCopy }) {
               </div>
 
               <p className="text-[13px] text-[var(--color-charcoal-muted)] italic">
-                No safe rewrite available — needs a human decision.
+                Review with your team before publishing.
               </p>
             </div>
           ) : (
@@ -1117,6 +1128,17 @@ export default function App() {
     setApiResponse(null);
   }, []);
 
+  const handleEditBrief = useCallback(() => {
+    setStep("input");
+    setTimeout(() => {
+      const briefEl = document.querySelector('textarea[name="brief"], textarea#brief, textarea');
+      if (briefEl) {
+        briefEl.focus();
+        briefEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  }, []);
+
   const handleLoadDemoCase = useCallback((c) => {
     setForm((prev) => ({ ...prev, brand: c.brand, productName: c.productName, channels: c.channels }));
     setApiResponse(c.response);
@@ -1142,7 +1164,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNav step={step} onReset={handleReset} />
+      <TopNav step={step} onReset={handleReset} onEditBrief={handleEditBrief} />
       <main className="pt-[52px]">
         {step === "input" && (
           <InputScreen form={form} setForm={setForm} onGenerate={handleGenerate} />
