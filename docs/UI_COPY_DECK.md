@@ -88,7 +88,7 @@ Three compliance states exist for Week 2. Use shared UI constants, not per-brand
 |---|---|---|
 | Passed | Compliant | On-voice, on-tone. No restricted phrases detected. |
 | Failed | Needs a tweak | Flagged for review — see explanation below. |
-| Needs Human Review | Needs Human Review | Needs a human check before copy can be used. |
+| Needs Sign-Off | Needs Sign-Off | Needs a human check before copy can be used. |
 
 **Generic failure reason template** (mirrors the contract's `explanation` field — plain-language, no legal jargon):
 > "[flagged phrase]" — [one-line reason, e.g. "claims to treat a medical condition, which cosmetics can't legally do"]. Here's a safer rewrite:
@@ -126,9 +126,12 @@ Adapted directly from `beautyagent_api_contract.md` Section 5 (canonical example
 
 ### NEEDS_HUMAN_REVIEW example
 
-**Status:** Needs Human Review
+**Status:** Needs Sign-Off
 **Generated copy:** show `raw_draft`
 **System note:** use `voice_reason` when `escalation_trigger` is `"voice"`, or `explanation` when `escalation_trigger` is `"compliance"`.
+**Card header subtext:**
+- `escalation_trigger: "voice"` -> "Flagged by brand voice review — compliance check not yet run."
+- `escalation_trigger: "compliance"` -> "Passed brand voice review. Flagged during compliance check."
 **Safe rewrite:** do not show a final rewrite when `final_safe_output` is `null`.
 
 ### Partial-failure example (Tower 28, all 3 channels — the dashboard's key test case)
@@ -151,4 +154,4 @@ This is the layout to build and screenshot-test before Day 3 — it's the only e
 - `generation_status` and `compliance_status` are two separate axes, not one status field. Check `generation_status` first when rendering any card — a `"completed"` card shows the compliance badge; an `"error"` card shows the neutral error treatment instead and never has a compliance badge at all.
 - Card order should be fixed (TikTok → Instagram → Email) regardless of selection order, per the contract's frontend notes — helps build muscle memory for returning users.
 - The failure reason template pulls its "why" text from each brand's compliance rules (Half Magic and Tower 28 configs already have those written as if/then statements) — this should be close to a lookup against the agent's actual `explanation` output, not separately authored copy.
-- Badge labels are a rendering concern only: the frontend maps `PASSED` to "Compliant", `FAILED` to "Needs a tweak", and `NEEDS_HUMAN_REVIEW` to "Needs Human Review". Never display the raw API string to the user.
+- Badge labels are a rendering concern only: the frontend maps `PASSED` to "Compliant", `FAILED` to "Needs a tweak", and `NEEDS_HUMAN_REVIEW` to "Needs Sign-Off". Never display the raw API string to the user.
