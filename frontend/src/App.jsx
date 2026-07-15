@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Check, Copy, Pencil, ChevronDown, Mail, RefreshCw, HelpCircle } from "lucide-react";
+import { Check, Copy, Eye, Pencil, ChevronDown, Mail, RefreshCw, HelpCircle } from "lucide-react";
 import clsx from "clsx";
 import { generate } from "./api/generate.js";
 
@@ -216,6 +216,14 @@ function ComplianceBadge({ level }) {
       </span>
     );
   }
+  if (level === "signoff") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[var(--color-berry-bg)] text-[var(--color-berry)] border border-[var(--color-berry)]">
+        <Eye size={9} strokeWidth={2.5} className="flex-shrink-0" />
+        Needs Sign-Off
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-[7px] text-[11px] font-semibold tracking-wide bg-[var(--color-terracotta-bg)] text-[var(--color-terracotta-text)] border border-[#E8C9A8]">
       <Pencil size={9} strokeWidth={2.5} className="flex-shrink-0" />
@@ -331,6 +339,20 @@ function mapApiResults(data) {
           copy: r.final_safe_output,
         };
       }
+      if (r.compliance_status === "NEEDS_HUMAN_REVIEW") {
+        return {
+          ...base,
+          compliance: "signoff",
+          checkedNote: r.escalation_trigger === "voice"
+            ? "Flagged by brand voice review — compliance check not yet run."
+            : "Passed brand voice review. Flagged during compliance check.",
+          escalation_trigger: r.escalation_trigger,
+          raw_draft: r.raw_draft,
+          voice_reason: r.voice_reason,
+          flagged_phrases: r.flagged_phrases,
+          explanation: r.explanation,
+        };
+      }
       return {
         ...base,
         compliance: "tweak",
@@ -382,7 +404,7 @@ function ComplianceHelpPopover() {
             How compliance checks work
           </h3>
           <p className="text-[13px] text-[var(--color-charcoal)] leading-relaxed">
-            Every draft gets checked before you see it. Here's what the two outcomes mean:
+            Every draft gets checked before you see it. Here's what each outcome means:
           </p>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -395,6 +417,12 @@ function ComplianceHelpPopover() {
               <ComplianceBadge level="tweak" />
               <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">
                 Something in the draft could cross into a medical or treatment claim. You'll see exactly what was flagged, why, and a ready-to-use safer version.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <ComplianceBadge level="signoff" />
+              <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">
+                Needs Sign-Off: the brand voice or compliance check wasn't confident enough to auto-approve or reject this copy. A person should review it before it's used.
               </p>
             </div>
           </div>
@@ -696,11 +724,13 @@ function ResultsScreen({ results, form, copiedId, onCopy }) {
   const activeBrand = BRANDS.find((b) => b.id === form.brand);
   const compliantCount = results.filter((r) => r.compliance === "compliant").length;
   const tweakCount = results.filter((r) => r.compliance === "tweak").length;
+  const signoffCount = results.filter((r) => r.compliance === "signoff").length;
   const errorCount = results.filter((r) => r.compliance === "error").length;
 
   const parts = [];
   if (compliantCount) parts.push(`${compliantCount} ready`);
   if (tweakCount) parts.push(`${tweakCount} with a suggested edit`);
+  if (signoffCount) parts.push(`${signoffCount} Needs Sign-Off`);
   if (errorCount) parts.push(`${errorCount} couldn't be generated`);
   const summaryLine = `${results.length} output${results.length !== 1 ? "s" : ""} · ${parts.join(" · ")}`;
 
@@ -822,6 +852,48 @@ function ResultCard({ result, copiedId, onCopy }) {
                 </div>
               </div>
             )
+          ) : result.compliance === "signoff" ? (
+            <div className="px-6 py-5 space-y-5">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
+                  Draft copy
+                </p>
+                <p className="text-[13px] text-muted-foreground leading-[1.75] whitespace-pre-line">
+                  {result.raw_draft}
+                </p>
+              </div>
+
+              {result.escalation_trigger === "compliance" && result.flagged_phrases?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
+                    Flagged phrases
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {result.flagged_phrases.map((phrase) => (
+                      <span
+                        key={phrase}
+                        className="px-3 py-1 rounded-full text-[12px] bg-[var(--color-berry-bg)] text-[var(--color-berry)]"
+                      >
+                        {phrase}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-[var(--color-berry-bg)] rounded-[13px] px-4 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.13em] mb-1.5 text-[var(--color-berry)]">
+                  Why it needs a human look
+                </p>
+                <p className="text-[13px] text-[var(--color-berry)] leading-[1.7]">
+                  {result.escalation_trigger === "voice" ? result.voice_reason : result.explanation}
+                </p>
+              </div>
+
+              <p className="text-[13px] text-[var(--color-charcoal-muted)] italic">
+                No safe rewrite available — needs a human decision.
+              </p>
+            </div>
           ) : (
             <div className="px-6 py-5 space-y-5">
               <div>
