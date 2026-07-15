@@ -2,6 +2,8 @@
 
 This file guides Codex work in this repository. It is backend-focused and should be read before creating or changing backend code.
 
+If present locally, also read `docs/CODEX_LESSONS_AND_GUARDRAILS.md` before contract, API response, fixture, eval, or handoff work. That local file records mistakes we specifically do not want to repeat.
+
 ## Ownership
 
 Christopher owns the backend build with Codex.
@@ -37,6 +39,8 @@ Current compatibility files may also exist at the repository root while the repo
 No PRD file is committed to this repo. The Week 2 PRD lives outside the repository. If requirements context is unclear from `BEAUTYAGENT_API_CONTRACT.md`, `DECISIONS.md`, or this file, pause and ask rather than guessing.
 
 Do not invent request or response fields. If the contract is unclear, pause and ask.
+
+Before declaring backend work ready, reconcile contract, implementation, tests, shared fixtures, and frontend-facing docs. Existing tests or fixtures can encode old behavior; they are not proof that the behavior still matches the final contract.
 
 ## Backend Scope
 
