@@ -17,6 +17,7 @@ DEFAULT_FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://beautyagent-ai-git-week2-jillk83s-projects.vercel.app",
 ]
 
 
@@ -25,11 +26,12 @@ def get_frontend_origins() -> list[str]:
     if not configured_origins:
         return DEFAULT_FRONTEND_ORIGINS
 
-    return [
+    configured = [
         origin.strip()
         for origin in configured_origins.split(",")
         if origin.strip()
     ]
+    return list(dict.fromkeys([*DEFAULT_FRONTEND_ORIGINS, *configured]))
 
 
 app.add_middleware(
