@@ -28,3 +28,15 @@ body {
   background-color: var(--color-ivory);
   color: var(--color-charcoal);
 }
+
+/* Unified moss focus treatment — replaces Tailwind ring system */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: 2px solid rgba(49, 91, 76, 0.5) !important;
+  outline-offset: 1px;
+  box-shadow: none !important;
+}

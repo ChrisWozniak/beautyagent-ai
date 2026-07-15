@@ -277,9 +277,9 @@ function FieldLabel({ children, hint }) {
 function TopNav({ step, onReset }) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
-      <div className="max-w-[680px] mx-auto px-8 h-[52px] flex items-center justify-between">
+      <div className="max-w-[680px] mx-auto px-8 py-4 flex items-center justify-between">
         <button onClick={onReset} className="flex items-center gap-2.5 focus:outline-none">
-          <div className="w-[26px] h-[26px] rounded-[7px] bg-[#2C2C2C] flex items-center justify-center flex-shrink-0">
+          <div className="w-[30px] h-[30px] rounded-[7px] bg-[#2C2C2C] flex items-center justify-center flex-shrink-0">
             <span
               className="text-[#FCFBF9] text-[13px] font-black leading-none tracking-tighter"
               style={{ fontFamily: "var(--font-heading)" }}
@@ -288,7 +288,7 @@ function TopNav({ step, onReset }) {
             </span>
           </div>
           <span
-            className="text-[13px] font-bold text-foreground tracking-tight"
+            className="text-[17px] font-semibold text-foreground tracking-tight"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             Aura Beauty Intelligence
@@ -297,7 +297,7 @@ function TopNav({ step, onReset }) {
         {step === "results" && (
           <button
             onClick={onReset}
-            className="text-[12px] font-medium text-muted-foreground hover:text-foreground border border-border px-3.5 py-1.5 rounded-[8px] transition-colors"
+            className="text-[12px] font-medium text-muted-foreground hover:text-foreground border-[1.5px] border-[var(--color-charcoal-muted)] px-3.5 py-1.5 rounded-[8px] transition-colors"
           >
             New campaign
           </button>
@@ -337,6 +337,7 @@ function mapApiResults(data) {
           compliance: "compliant",
           checkedNote: CHANNEL_CHECKED_NOTE[r.channel] ?? "",
           copy: r.final_safe_output,
+          voice_reason: r.voice_reason,
         };
       }
       if (r.compliance_status === "NEEDS_HUMAN_REVIEW") {
@@ -359,6 +360,7 @@ function mapApiResults(data) {
         checkedNote: CHANNEL_CHECKED_NOTE[r.channel] ?? "",
         flagged_phrases: r.flagged_phrases,
         explanation: r.explanation,
+        voice_reason: r.voice_reason,
         edit: {
           originalDraft: r.raw_draft,
           note: r.explanation,
@@ -421,14 +423,13 @@ function ComplianceHelpPopover() {
             </div>
             <div className="space-y-1.5">
               <ComplianceBadge level="signoff" />
-              <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">
-                Needs Sign-Off: the brand voice or compliance check wasn't confident enough to auto-approve or reject this copy. A person should review it before it's used.
-              </p>
+              <p className="text-[13px] leading-relaxed">Needs a human decision.</p>
+              <p className="text-[13px] text-[var(--color-charcoal-muted)] leading-relaxed">Both checks ran, but one wasn't confident enough to approve or reject.</p>
             </div>
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border border-border text-foreground hover:bg-secondary transition-all duration-150"
+            className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border-[1.5px] border-[var(--color-charcoal-muted)] text-foreground hover:bg-secondary transition-all duration-150"
           >
             Got it
           </button>
@@ -486,8 +487,8 @@ function InputScreen({ form, setForm, onGenerate }) {
                 className={clsx(
                   "flex-1 flex items-start gap-3 px-4 py-3.5 rounded-[14px] border text-left transition-all duration-200",
                   form.brand === b.id
-                    ? "bg-card border-border shadow-[0_1px_6px_rgba(44,44,44,0.08)]"
-                    : "bg-secondary border-transparent hover:border-border"
+                    ? "bg-card border-[var(--color-moss)] shadow-[0_1px_6px_rgba(44,44,44,0.08)]"
+                    : "bg-secondary border-[var(--color-border)]"
                 )}
               >
                 <span
@@ -496,7 +497,6 @@ function InputScreen({ form, setForm, onGenerate }) {
                 />
                 <div>
                   <p className="text-[13px] font-semibold text-foreground leading-tight">{b.name}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{b.subline}</p>
                 </div>
               </button>
             ))}
@@ -510,7 +510,7 @@ function InputScreen({ form, setForm, onGenerate }) {
             value={form.productName}
             onChange={(e) => setForm((p) => ({ ...p, productName: e.target.value }))}
             placeholder={activeBrand.id === "tower_28" ? "e.g. SkinTint SPF 30" : "e.g. Celestial Liner"}
-            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#6B6B6B]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
+            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#6B6B6B]/50 focus:outline-none focus-visible:outline-none transition-all"
           />
         </div>
 
@@ -523,7 +523,7 @@ function InputScreen({ form, setForm, onGenerate }) {
                 key={type}
                 onClick={() => setForm((p) => ({ ...p, productType: type, adaptiveField: "" }))}
                 className={clsx(
-                  "px-5 py-2 rounded-[8px] text-[12px] font-semibold capitalize transition-all duration-150",
+                  "px-5 py-2 rounded-[8px] text-[12px] font-semibold capitalize transition-all duration-150 focus:outline-none focus-visible:outline-none",
                   form.productType === type
                     ? "bg-card text-foreground shadow-[0_1px_3px_rgba(44,44,44,0.09)] border border-border"
                     : "text-muted-foreground hover:text-foreground"
@@ -546,7 +546,7 @@ function InputScreen({ form, setForm, onGenerate }) {
                 ? "e.g. Niacinamide, Squalane"
                 : "e.g. shade name/number, undertone notes"
             }
-            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#6B6B6B]/50 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/20 focus:border-[#315B4C]/30 transition-all"
+            className="w-full bg-secondary border border-border rounded-[11px] px-4 py-3 text-[14px] text-foreground placeholder:text-[#6B6B6B]/50 focus:outline-none focus-visible:outline-none transition-all"
           />
         </div>
 
@@ -564,7 +564,7 @@ function InputScreen({ form, setForm, onGenerate }) {
                 ? 'e.g. Launching SkinTint for summer. Angle: "your skin but better" — light coverage, clean, fragrance-free, SPF 30. Target: sensitive-skin girlies who are done with heavy bases. Key claims: dermatologist-tested, free of fragrance/parabens/sulfates. Tone: confident, minimalist, not clinical.'
                 : "e.g. Launching Celestial Liner in three new shades for holiday. Angle: otherworldly precision, all-day wear. Key claims: smudge-proof, ophthalmologist-tested. Tone: fantasy-forward, luxe, unapologetically bold."
             }
-            className="w-full bg-card border border-border rounded-[18px] px-5 py-4 text-[14px] text-foreground placeholder:text-[#6B6B6B]/40 focus:outline-none focus:ring-2 focus:ring-[#315B4C]/15 focus:border-[#315B4C]/25 transition-all resize-none leading-[1.75] shadow-[inset_0_1px_3px_rgba(44,44,44,0.04)]"
+            className="w-full bg-card border border-border rounded-[18px] px-5 py-4 text-[14px] text-foreground placeholder:text-[#6B6B6B]/40 focus:outline-none focus-visible:outline-none transition-all resize-none leading-[1.75] shadow-[inset_0_1px_3px_rgba(44,44,44,0.04)]"
           />
           {form.brief.length > 900 && (
             <p className="mt-2 text-[12px] text-[#C4714A] leading-snug">
@@ -584,22 +584,22 @@ function InputScreen({ form, setForm, onGenerate }) {
                   key={ch.id}
                   onClick={() => toggleChannel(ch.id)}
                   className={clsx(
-                    "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[12px] text-left transition-all duration-150",
+                    "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[12px] text-left transition-all duration-150 focus:outline-none focus-visible:outline-none",
                     active
-                      ? "bg-[rgba(199,215,206,0.35)] border border-[#C7D7CE]"
-                      : "bg-[#F4F0EA] border border-[rgba(44,44,44,0.09)] hover:border-[#C7D7CE]"
+                      ? "bg-[var(--color-sage-transparent)] border border-[var(--color-sage)]"
+                      : "bg-[var(--color-sand)] border border-[var(--color-border)] hover:border-[var(--color-sage)]"
                   )}
                 >
                   <div
                     className={clsx(
                       "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-150",
-                      active ? "bg-[#315B4C]" : "border-2 border-[#C7D7CE] bg-transparent"
+                      active ? "bg-[var(--color-moss)]" : "border-2 border-[var(--color-sage)] bg-transparent"
                     )}
                   >
                     <ch.Icon
                       size={14}
                       strokeWidth={1.8}
-                      className={active ? "text-[#FCFBF9]" : "text-[#315B4C]"}
+                      className={active ? "text-[var(--color-ivory)]" : "text-[var(--color-moss)]"}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -609,10 +609,10 @@ function InputScreen({ form, setForm, onGenerate }) {
                   <div
                     className={clsx(
                       "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150",
-                      active ? "bg-[#315B4C]" : "border-2 border-[#C7D7CE]"
+                      active ? "bg-[var(--color-moss)]" : "border-2 border-[var(--color-sage)]"
                     )}
                   >
-                    {active && <Check size={9} strokeWidth={3} className="text-[#FCFBF9]" />}
+                    {active && <Check size={9} strokeWidth={3} className="text-[var(--color-ivory)]" />}
                   </div>
                 </button>
               );
@@ -727,12 +727,11 @@ function ResultsScreen({ results, form, copiedId, onCopy }) {
   const signoffCount = results.filter((r) => r.compliance === "signoff").length;
   const errorCount = results.filter((r) => r.compliance === "error").length;
 
-  const parts = [];
-  if (compliantCount) parts.push(`${compliantCount} ready`);
-  if (tweakCount) parts.push(`${tweakCount} with a suggested edit`);
-  if (signoffCount) parts.push(`${signoffCount} Needs Sign-Off`);
-  if (errorCount) parts.push(`${errorCount} couldn't be generated`);
-  const summaryLine = `${results.length} output${results.length !== 1 ? "s" : ""} · ${parts.join(" · ")}`;
+  const summaryParts = [];
+  if (compliantCount) summaryParts.push({ key: "compliant", text: `${compliantCount} ready`, highlight: true });
+  if (tweakCount) summaryParts.push({ key: "tweak", text: `${tweakCount} needs a tweak` });
+  if (signoffCount) summaryParts.push({ key: "signoff", text: `${signoffCount} needs sign-off` });
+  if (errorCount) summaryParts.push({ key: "error", text: `${errorCount} couldn't be generated` });
 
   return (
     <div className="max-w-[680px] mx-auto px-6 pt-20 pb-28">
@@ -749,7 +748,17 @@ function ResultsScreen({ results, form, copiedId, onCopy }) {
         >
           {form.productName || "Campaign"}
         </h1>
-        <p className="text-[13px] text-muted-foreground">{summaryLine}</p>
+        <p className="text-[13px] text-muted-foreground">
+          {results.length} output{results.length !== 1 ? "s" : ""}: {summaryParts.map((part, i) => (
+            <span key={part.key}>
+              {i > 0 && ", "}
+              {part.highlight
+                ? <span className="font-semibold text-[var(--color-moss)]">{part.text}</span>
+                : part.text
+              }
+            </span>
+          ))}
+        </p>
       </div>
 
       <div className="space-y-4">
@@ -791,6 +800,7 @@ function TikTokScriptCopy({ copy }) {
 
 function ResultCard({ result, copiedId, onCopy }) {
   const [open, setOpen] = useState(true);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   if (result.compliance === "error") {
     return (
@@ -806,7 +816,7 @@ function ResultCard({ result, copiedId, onCopy }) {
             {getErrorCopy(result.errorCode)}
           </p>
           <div className="mt-5 flex justify-end">
-            <button className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border border-border text-foreground hover:bg-secondary transition-all duration-150">
+            <button className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border-[1.5px] border-[var(--color-charcoal-muted)] text-foreground hover:bg-secondary transition-all duration-150">
               Retry this channel
             </button>
           </div>
@@ -835,7 +845,18 @@ function ResultCard({ result, copiedId, onCopy }) {
       {open && (
         <div>
           <div className="px-6 pt-4">
-            <p className="text-[11px] text-muted-foreground">{result.checkedNote}</p>
+            {result.compliance === "signoff" ? (
+              <p className="text-[11px] text-muted-foreground">{result.checkedNote}</p>
+            ) : (
+              <p className="text-[12px] font-medium text-[var(--color-charcoal-muted)] mt-1 mb-3">
+                <span style={{color: 'var(--color-moss)'}}>Voice ✓</span>
+                {' · '}
+                {result.compliance === "compliant"
+                  ? <span style={{color: 'var(--color-moss)'}}>Compliance ✓</span>
+                  : <span style={{color: 'var(--color-terracotta-text)'}}>Compliance ✗</span>
+                }
+              </p>
+            )}
           </div>
 
           {result.compliance === "compliant" ? (
@@ -896,15 +917,6 @@ function ResultCard({ result, copiedId, onCopy }) {
             </div>
           ) : (
             <div className="px-6 py-5 space-y-5">
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
-                  Original draft
-                </p>
-                <p className="text-[13px] text-muted-foreground leading-[1.75] whitespace-pre-line">
-                  {result.edit?.originalDraft}
-                </p>
-              </div>
-
               {result.flagged_phrases?.length > 0 && (
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
@@ -928,12 +940,32 @@ function ResultCard({ result, copiedId, onCopy }) {
                 </div>
               )}
 
-              <div className="bg-[var(--color-terracotta-bg)] rounded-[13px] px-4 py-4">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.13em] mb-1.5">
-                  Here's the issue
-                </p>
-                <p className="text-[13px] text-[var(--color-terracotta-text)] leading-[1.7]">{result.edit?.note}</p>
-              </div>
+              <button
+                onClick={() => setDetailsOpen(!detailsOpen)}
+                className="text-[12px] font-medium text-[var(--color-charcoal-muted)] underline underline-offset-2 mb-3 text-left"
+              >
+                {detailsOpen ? 'Hide details' : 'See details'}
+              </button>
+
+              {detailsOpen && (
+                <>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
+                      Original draft
+                    </p>
+                    <p className="text-[13px] text-muted-foreground leading-[1.75] whitespace-pre-line">
+                      {result.edit?.originalDraft}
+                    </p>
+                  </div>
+
+                  <div className="bg-[var(--color-terracotta-bg)] rounded-[13px] px-4 py-4">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.13em] mb-1.5">
+                      Here's the issue
+                    </p>
+                    <p className="text-[13px] text-[var(--color-terracotta-text)] leading-[1.7]">{result.edit?.note}</p>
+                  </div>
+                </>
+              )}
 
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em] mb-2">
@@ -1121,7 +1153,7 @@ export default function App() {
             <p className="text-[14px] text-[var(--color-charcoal)] leading-relaxed">{apiError}</p>
             <button
               onClick={handleReset}
-              className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border border-border text-foreground hover:bg-secondary transition-all duration-150"
+              className="inline-flex items-center text-[12px] font-semibold px-3.5 py-2 rounded-[8px] border-[1.5px] border-[var(--color-charcoal-muted)] text-foreground hover:bg-secondary transition-all duration-150"
             >
               Try again
             </button>
