@@ -117,6 +117,14 @@ python backend/scripts/smoke_generate_live.py
 
 This calls the FastAPI route through `TestClient`, verifies the frontend-facing response shape, and fails if the endpoint silently falls back to deterministic mock drafting.
 
+Backend-only live Render smoke test:
+
+```powershell
+python backend/scripts/smoke_render_live.py
+```
+
+This checks the deployed Render backend for `/health`, `/version`, CORS preflight from the Week 2 Vercel preview origin, and `POST /generate` with a free-text product name. It does not change the `/generate` response contract or touch frontend files.
+
 Backend-only red-team eval runner:
 
 ```powershell
@@ -200,6 +208,12 @@ Full handoff smoke:
 
 ```powershell
 python backend/scripts/run_demo_smoke.py
+```
+
+Live Render smoke:
+
+```powershell
+python backend/scripts/smoke_render_live.py
 ```
 
 ## Deployment

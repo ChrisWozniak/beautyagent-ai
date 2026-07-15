@@ -12,6 +12,9 @@ from .models.response_models import GenerateResponse, TopLevelError
 
 app = FastAPI(title="BeautyAgent AI Backend")
 
+APP_NAME = "beautyagent-ai-backend"
+EXPECTED_RENDER_BRANCH = "week-2"
+
 DEFAULT_FRONTEND_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -84,6 +87,23 @@ async def request_validation_exception_handler(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/version")
+def version() -> dict[str, str]:
+    return {
+        "status": "ok",
+        "app": APP_NAME,
+        "expected_branch": EXPECTED_RENDER_BRANCH,
+        "git_commit": (
+            os.getenv("RENDER_GIT_COMMIT")
+            or os.getenv("GIT_COMMIT")
+            or os.getenv("COMMIT_SHA")
+            or "unknown"
+        ),
+        "render_service_name": os.getenv("RENDER_SERVICE_NAME", "unknown"),
+        "render_external_url": os.getenv("RENDER_EXTERNAL_URL", "unknown"),
+    }
 
 
 @app.post("/generate", response_model=GenerateResponse)

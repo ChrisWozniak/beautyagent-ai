@@ -41,6 +41,7 @@ USE_LLM_DRAFTING=false
 LLM_TIMEOUT_SECONDS=15
 LLM_MAX_TOKENS=1000
 CHANNEL_TIMEOUT_SECONDS=20
+AGENT_TRACE=false
 ```
 
 `ANTHROPIC_API_KEY` is the preferred Claude API key for live backend drafting when `USE_LLM_DRAFTING=true`.
@@ -50,6 +51,7 @@ Never expose either provider key through the frontend; the frontend should call 
 `FRONTEND_ORIGINS` is required before browser-based deployed frontend calls will work.
 The timeout and token values are optional. Keep `CHANNEL_TIMEOUT_SECONDS` higher than `LLM_TIMEOUT_SECONDS` so compliance checks have time to finish after drafting.
 Set `FRONTEND_ORIGINS` to the deployed Vercel URL before live frontend/backend wiring. Use a comma-separated list if both preview and production origins need access.
+`AGENT_TRACE=true` enables backend console trace logs for the channel loop. It does not change the `/generate` response contract.
 
 ## Manual Render Settings
 
@@ -87,6 +89,14 @@ python backend/scripts/smoke_generate_live.py
 
 The live `/generate` smoke test exits as skipped unless `USE_LLM_DRAFTING=true` and either `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is configured.
 
+Live Render smoke test:
+
+```powershell
+python backend/scripts/smoke_render_live.py
+```
+
+This checks the deployed `https://beautyagent-ai.onrender.com` service for `/health`, `/version`, CORS preflight from Jillian's Week 2 Vercel preview, and `POST /generate` with a free-text product name.
+
 ## Health Check
 
 ```text
@@ -98,6 +108,29 @@ Expected response:
 ```json
 {"status": "ok"}
 ```
+
+## Version Check
+
+Use `/version` to confirm the deployed service is running the expected Week 2 backend branch:
+
+```text
+GET /version
+```
+
+Expected response shape:
+
+```json
+{
+  "status": "ok",
+  "app": "beautyagent-ai-backend",
+  "expected_branch": "week-2",
+  "git_commit": "unknown",
+  "render_service_name": "unknown",
+  "render_external_url": "unknown"
+}
+```
+
+`git_commit` and Render fields are read from environment variables when Render exposes them. If they are `unknown`, use this endpoint together with Render's deploy event and GitHub branch selection.
 
 After deployment, verify:
 

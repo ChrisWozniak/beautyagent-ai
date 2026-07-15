@@ -1,16 +1,16 @@
 # Week 2 Backend Readiness Summary
 
-Date: July 14, 2026
+Date: July 15, 2026
 Branch: `week-2`
 
 ## Status
 
 Backend Week 2 is complete and ready for Jillian's frontend integration testing.
 
-Latest pushed backend handoff commit:
+Latest live backend behavior verified before deploy visibility work:
 
 ```text
-4036766 Add Week 2 demo smoke runner
+3daa143 fix: relax product validation and optional prompt fields
 ```
 
 Backend base URL for deployed frontend testing:
@@ -24,6 +24,14 @@ Health check verified on July 14, 2026:
 ```json
 {"status": "ok"}
 ```
+
+Version check:
+
+```text
+GET https://beautyagent-ai.onrender.com/version
+```
+
+Use `/version` to confirm Render is serving the expected `week-2` backend branch. Commit fields may show `unknown` unless Render exposes a commit env var, so pair this with Render deploy events when needed.
 
 The backend now supports the Week 2 channel loop:
 
@@ -43,7 +51,7 @@ Backend unit test suite:
 python -m unittest discover -s backend\tests -v
 ```
 
-Result: `67/67 passed`
+Result: `71/71 passed`
 
 Week 2 red-team compliance eval:
 
@@ -159,6 +167,14 @@ python backend/scripts/run_demo_smoke.py --skip-live-brand-voice
 
 Latest full demo smoke result:
 
-- backend unit tests: `67/67 passed`
+- backend unit tests: `71/71 passed`
 - red-team compliance eval: `20/20 passed`
 - live Sonnet brand voice calibration: `6/6 passed`
+
+Live Render smoke:
+
+```powershell
+python backend/scripts/smoke_render_live.py
+```
+
+Checks `/health`, `/version`, CORS preflight from Jillian's Week 2 Vercel preview, and `POST /generate` using the free-text product name `SOS spray`.

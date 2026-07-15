@@ -1508,6 +1508,18 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
 
+    def test_version_endpoint_reports_deploy_context(self) -> None:
+        response = self.client.get("/version")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["app"], "beautyagent-ai-backend")
+        self.assertEqual(payload["expected_branch"], "week-2")
+        self.assertIn("git_commit", payload)
+        self.assertIn("render_service_name", payload)
+        self.assertIn("render_external_url", payload)
+
 
 if __name__ == "__main__":
     unittest.main()

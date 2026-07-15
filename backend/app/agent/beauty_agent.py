@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -29,6 +30,20 @@ CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
     "instagram": ("instagram", "ig"),
     "email": ("email",),
 }
+
+
+def _agent_trace_enabled() -> bool:
+    return os.getenv("AGENT_TRACE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _trace_agent_step(channel: Channel, step: str, **fields: Any) -> None:
+    if not _agent_trace_enabled():
+        return
+
+    details = " ".join(f"{key}={value}" for key, value in fields.items())
+    suffix = f" {details}" if details else ""
+    print(f"[agent-trace] channel={channel} step={step}{suffix}", flush=True)
+
 
 class DraftGenerator(Protocol):
     def __call__(self, request: GenerateRequest, channel: Channel) -> str:
@@ -409,20 +424,41 @@ def process_channel_loop(
     """Run draft, brand voice gate, deterministic audit, and final backstop."""
     brand = load_brand_configs()[request.brandId]
     resolved_voice_checker = brand_voice_checker or check_brand_voice
+    _trace_agent_step(channel, "start", brand_id=request.brandId)
     raw_draft = draft_generator(request, channel)
+    _trace_agent_step(channel, "draft_generated", draft_chars=len(raw_draft))
     voice_result = resolved_voice_checker(raw_draft, request.brandId, brand, channel)
+    _trace_agent_step(
+        channel,
+        "brand_voice_checked",
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+    )
 
     if _needs_voice_review(voice_result):
+        _trace_agent_step(channel, "routed_to_human_review", trigger="voice")
         return _voice_review_result(channel, raw_draft, voice_result)
 
     draft_audit = check_compliance(raw_draft)
     brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
     first_audit = _merge_audits(draft_audit, brief_audit)
+    _trace_agent_step(
+        channel,
+        "compliance_checked",
+        compliance_status=first_audit["compliance_status"],
+        compliance_confidence=first_audit.get("compliance_confidence"),
+    )
     if _needs_compliance_review(first_audit):
+        _trace_agent_step(channel, "routed_to_human_review", trigger="compliance")
         return _compliance_review_result(channel, raw_draft, voice_result, first_audit)
 
     final_safe_output = first_audit["final_safe_output"]
     final_backstop = check_compliance(final_safe_output)
+    _trace_agent_step(
+        channel,
+        "final_backstop_checked",
+        compliance_status=final_backstop["compliance_status"],
+    )
 
     flagged_phrases = first_audit["flagged_phrases"]
     explanation = first_audit["explanation"]
@@ -444,6 +480,12 @@ def process_channel_loop(
             retry_exhausted = True
 
     result_confidence = first_audit.get("compliance_confidence", 1.0)
+    _trace_agent_step(
+        channel,
+        "completed",
+        compliance_status=first_audit["compliance_status"],
+        retry_exhausted=retry_exhausted,
+    )
     return ChannelResult(
         channel=channel,
         generation_status="completed",
