@@ -5,10 +5,10 @@
                         "generation_status":  "completed",
                         "raw_draft":  "Wake up to eczema-free skin every single day. SOS Daily Rescue Facial Spray repairs your barrier overnight.",
                         "voice_status":  "ON_VOICE",
-                        "voice_confidence":  1,
+                        "voice_confidence":  1.0,
                         "voice_reason":  "Brand voice evaluation not yet enabled.",
                         "compliance_status":  "FAILED",
-                        "compliance_confidence":  1,
+                        "compliance_confidence":  1.0,
                         "flagged_phrases":  [
                                                 "eczema-free",
                                                 "repairs your barrier overnight"
