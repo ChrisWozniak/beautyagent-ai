@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .agent.beauty_agent import generate_mock_response, product_belongs_to_brand
+from .agent.beauty_agent import generate_mock_response
 from .config_loader import ConfigLoadError
 from .models.request_models import GenerateRequest
 from .models.response_models import GenerateResponse, TopLevelError
@@ -89,12 +89,6 @@ def health() -> dict[str, str]:
 @app.post("/generate", response_model=GenerateResponse)
 async def generate(request: GenerateRequest) -> GenerateResponse:
     try:
-        if not product_belongs_to_brand(request.brandId, request.productName):
-            response = validation_error_response(
-                f"productName '{request.productName}' is not available for brandId '{request.brandId}'."
-            )
-            return JSONResponse(status_code=400, content=response.model_dump())
-
         return await generate_mock_response(request)
     except ConfigLoadError as exc:
         response = internal_error_response(str(exc))

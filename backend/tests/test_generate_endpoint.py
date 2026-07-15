@@ -521,23 +521,22 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertNotIn("Paint it on", tiktok)
         self.assertNotIn("Press it on", tiktok)
 
-    def test_generate_rejects_product_that_does_not_belong_to_brand(self) -> None:
+    def test_generate_accepts_free_text_product_name(self) -> None:
         response = self.client.post(
             "/generate",
             json={
                 "brandId": "tower_28",
-                "productName": "Magic Drip Glitter Lipgloss",
+                "productName": "SOS spray",
                 "brief": "Draft a product launch post.",
                 "channels": ["tiktok"],
             },
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["results"], [])
-        self.assertEqual(payload["error"]["code"], "VALIDATION_ERROR")
-        self.assertIn("Magic Drip Glitter Lipgloss", payload["error"]["detail"])
-        self.assertIn("tower_28", payload["error"]["detail"])
+        self.assertIsNone(payload["error"])
+        self.assertEqual(payload["results"][0]["generation_status"], "completed")
+        self.assertIn("SOS spray", payload["results"][0]["raw_draft"])
 
     def test_generate_returns_internal_error_for_unexpected_top_level_failure(self) -> None:
         with patch(
@@ -563,7 +562,7 @@ class GenerateEndpointTests(unittest.TestCase):
 
     def test_generate_returns_internal_error_for_config_load_failure(self) -> None:
         with patch(
-            "backend.app.main.product_belongs_to_brand",
+            "backend.app.main.generate_mock_response",
             side_effect=ConfigLoadError("brand config file contains invalid JSON"),
         ):
             response = self.client.post(
@@ -968,6 +967,29 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("Brand compliance notes:", user_prompt)
         self.assertIn("Avoid disease-treatment language.", user_prompt)
         self.assertIn("Do not imply the product changes skin structure", user_prompt)
+        self.assertIn("Product detail: Hypochlorous Acid", user_prompt)
+
+    def test_build_draft_prompt_omits_blank_product_detail(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Celestial Liner",
+            coreActives=" ",
+            brief="Draft one caption for a makeup launch.",
+            channels=["instagram"],
+        )
+
+        messages = build_draft_prompt(
+            request,
+            "instagram",
+            load_brand_configs()["half_magic"],
+            "creates expressive eye looks",
+        )
+
+        user_prompt = messages[1]["content"]
+        self.assertIn("Product: Celestial Liner", user_prompt)
+        self.assertNotIn("Core actives:", user_prompt)
+        self.assertNotIn("Product detail:", user_prompt)
+        self.assertNotIn("not provided", user_prompt)
 
     def test_load_json_config_fails_loudly_on_invalid_json(self) -> None:
         with TemporaryDirectory() as temp_dir:

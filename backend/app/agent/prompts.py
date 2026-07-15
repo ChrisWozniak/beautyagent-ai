@@ -47,13 +47,17 @@ def build_draft_prompt(
         "Return only the draft copy, with no explanation or compliance analysis."
     )
 
-    user_prompt = "\n".join(
+    prompt_lines = [
+        f"Brand: {brand_config['display_name']}",
+        f"Brand voice: {brand_config['voice']}",
+        f"Brand compliance notes:\n{compliance_notes_text}",
+        f"Product: {request.productName}",
+    ]
+    if request.coreActives:
+        prompt_lines.append(f"Product detail: {request.coreActives}")
+
+    prompt_lines.extend(
         [
-            f"Brand: {brand_config['display_name']}",
-            f"Brand voice: {brand_config['voice']}",
-            f"Brand compliance notes:\n{compliance_notes_text}",
-            f"Product: {request.productName}",
-            f"Core actives: {request.coreActives or 'not provided'}",
             f"Channel: {channel}",
             f"Channel instruction: {CHANNEL_INSTRUCTIONS[channel]}",
             f"Required output format: {CHANNEL_FORMATS[channel]}",
@@ -61,6 +65,8 @@ def build_draft_prompt(
             f"Marketer brief: {request.brief}",
         ]
     )
+
+    user_prompt = "\n".join(prompt_lines)
 
     return [
         {"role": "system", "content": system_prompt},
