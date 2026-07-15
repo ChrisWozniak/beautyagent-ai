@@ -1502,6 +1502,23 @@ class GenerateEndpointTests(unittest.TestCase):
             preview_origin,
         )
 
+    def test_cors_allows_production_vercel_origin(self) -> None:
+        production_origin = "https://beautyagent-ai.vercel.app"
+        response = self.client.options(
+            "/generate",
+            headers={
+                "Origin": production_origin,
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "Content-Type",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers["access-control-allow-origin"],
+            production_origin,
+        )
+
     def test_health_endpoint_supports_deployment_checks(self) -> None:
         response = self.client.get("/health")
 

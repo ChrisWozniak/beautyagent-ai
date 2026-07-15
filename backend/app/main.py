@@ -20,6 +20,7 @@ DEFAULT_FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://beautyagent-ai.vercel.app",
     "https://beautyagent-ai-git-week2-jillk83s-projects.vercel.app",
 ]
 
