@@ -13,7 +13,7 @@ from .models.response_models import GenerateResponse, TopLevelError
 app = FastAPI(title="BeautyAgent AI Backend")
 
 APP_NAME = "beautyagent-ai-backend"
-EXPECTED_RENDER_BRANCH = "week-2"
+EXPECTED_RENDER_BRANCH = "main"
 
 DEFAULT_FRONTEND_ORIGINS = [
     "http://localhost:5173",

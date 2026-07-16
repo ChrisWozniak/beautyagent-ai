@@ -2,6 +2,7 @@ import asyncio
 from contextlib import redirect_stdout
 from io import StringIO
 import json
+import sys
 from tempfile import TemporaryDirectory
 import time
 import unittest
@@ -23,6 +24,7 @@ from backend.app.agent.prompts import build_draft_prompt
 from backend.app.agent.llm_client import (
     LLMClientError,
     LLMDraftError,
+    complete_messages,
     get_llm_usage,
     reset_llm_usage,
     summarize_llm_usage,
@@ -947,6 +949,40 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result["voice_confidence"], 0.0)
         self.assertIn("needs human review", result["voice_reason"])
 
+    def test_complete_messages_logs_provider_error_without_secret(self) -> None:
+        settings = SimpleNamespace(
+            anthropic_api_key="test-secret-key",
+            openrouter_api_key=None,
+            openrouter_model="openrouter/test-model",
+            llm_max_tokens=500,
+            llm_timeout_seconds=15,
+        )
+
+        def failing_completion(**_kwargs: object) -> object:
+            raise RuntimeError("provider rejected model id")
+
+        fake_litellm = SimpleNamespace(completion=failing_completion)
+        output = StringIO()
+
+        with patch.dict(sys.modules, {"litellm": fake_litellm}):
+            with redirect_stdout(output):
+                with self.assertRaises(LLMClientError):
+                    complete_messages(
+                        [{"role": "user", "content": "hello"}],
+                        settings,
+                        "anthropic/test-sonnet",
+                        temperature=0.1,
+                        call_name="brand_voice",
+                    )
+
+        log_line = output.getvalue()
+        self.assertIn("[llm-error]", log_line)
+        self.assertIn("call_name=brand_voice", log_line)
+        self.assertIn("model=anthropic/test-sonnet", log_line)
+        self.assertIn("error_type=RuntimeError", log_line)
+        self.assertIn("provider rejected model id", log_line)
+        self.assertNotIn("test-secret-key", log_line)
+
     def test_build_draft_prompt_includes_brand_compliance_notes(self) -> None:
         request = GenerateRequest(
             brandId="tower_28",
@@ -1532,7 +1568,7 @@ class GenerateEndpointTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["app"], "beautyagent-ai-backend")
-        self.assertEqual(payload["expected_branch"], "week-2")
+        self.assertEqual(payload["expected_branch"], "main")
         self.assertIn("git_commit", payload)
         self.assertIn("render_service_name", payload)
         self.assertIn("render_external_url", payload)

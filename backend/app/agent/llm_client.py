@@ -178,6 +178,11 @@ def complete_messages(
             timeout=settings.llm_timeout_seconds,
         )
     except Exception as exc:
+        print(
+            f"[llm-error] call_name={call_name} model={model} "
+            f"error_type={type(exc).__name__} error={exc}",
+            flush=True,
+        )
         raise LLMClientError("LiteLLM call failed.") from exc
 
     _record_usage(response, model, call_name)

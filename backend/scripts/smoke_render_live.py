@@ -85,7 +85,7 @@ def check_version(base_url: str) -> SmokeResult:
     passed = (
         payload.get("status") == "ok"
         and payload.get("app") == "beautyagent-ai-backend"
-        and payload.get("expected_branch") == "week-2"
+        and payload.get("expected_branch") == "main"
     )
     return SmokeResult("version", passed, json.dumps(payload, ensure_ascii=True))
 
