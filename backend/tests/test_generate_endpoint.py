@@ -1005,6 +1005,92 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("Do not imply the product changes skin structure", user_prompt)
         self.assertIn("Product detail: Hypochlorous Acid", user_prompt)
 
+    def test_build_draft_prompt_includes_exact_runtime_voice_profile(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Magic Drip Glitter Lipgloss",
+            coreActives="Vitamin E, Jojoba Oil",
+            brief="Draft one TikTok script.",
+            channels=["tiktok"],
+        )
+        brand_config = load_brand_configs()["half_magic"]
+
+        messages = build_draft_prompt(
+            request,
+            "tiktok",
+            brand_config,
+            "delivers high-shine glitter payoff",
+        )
+
+        user_prompt = messages[1]["content"]
+        self.assertIn(f"Brand voice: {brand_config['voice']}", user_prompt)
+        self.assertIn("Editorial makeup brand founded by Donni Davy", user_prompt)
+        self.assertIn("backstage-friend voice", user_prompt)
+
+    def test_build_draft_prompt_uses_week2_channel_specs(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft one caption.",
+            channels=["instagram"],
+        )
+
+        instagram_prompt = build_draft_prompt(
+            request,
+            "instagram",
+            load_brand_configs()["tower_28"],
+            "refreshes skin throughout the day",
+        )[1]["content"]
+        self.assertIn("zero hashtags", instagram_prompt)
+        self.assertIn("No hashtag blocks", instagram_prompt)
+        self.assertNotIn("optional light hashtags", instagram_prompt)
+
+        email_prompt = build_draft_prompt(
+            request,
+            "email",
+            load_brand_configs()["tower_28"],
+            "refreshes skin throughout the day",
+        )[1]["content"]
+        self.assertIn("Body should be 3-5 sentences max", email_prompt)
+        self.assertIn("Subject: [subject line, 30-50 chars]", email_prompt)
+
+        tiktok_prompt = build_draft_prompt(
+            request,
+            "tiktok",
+            load_brand_configs()["tower_28"],
+            "refreshes skin throughout the day",
+        )[1]["content"]
+        self.assertIn("hook, demo/script, and a soft low-pressure CTA", tiktok_prompt)
+        self.assertIn("<150 chars per section", tiktok_prompt)
+        self.assertIn("No hashtags in the script body", tiktok_prompt)
+
+    def test_check_brand_voice_prompt_uses_exact_runtime_voice_profile(self) -> None:
+        brand_config = load_brand_configs()["tower_28"]
+
+        with patch(
+            "backend.app.tools.check_brand_voice.complete_messages",
+            return_value=json.dumps(
+                {
+                    "voice_status": "ON_VOICE",
+                    "voice_confidence": 0.91,
+                    "voice_reason": "The phrase 'It's OK to be sensitive' matches the Tower 28 voice.",
+                }
+            ),
+        ) as complete:
+            check_brand_voice(
+                "It's OK to be sensitive - shop now.",
+                "tower_28",
+                brand_config,
+                "instagram",
+            )
+
+        messages = complete.call_args.args[0]
+        user_prompt = messages[1]["content"]
+        self.assertIn(f"Brand voice profile:\n{brand_config['voice']}", user_prompt)
+        self.assertIn("Good Clean Fun", user_prompt)
+        self.assertIn("Sensitive skin deserves fun makeup", user_prompt)
+
     def test_build_draft_prompt_omits_blank_product_detail(self) -> None:
         request = GenerateRequest(
             brandId="half_magic",

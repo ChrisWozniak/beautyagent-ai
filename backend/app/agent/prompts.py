@@ -9,23 +9,47 @@ from ..models.request_models import Channel, GenerateRequest
 
 CHANNEL_INSTRUCTIONS: dict[Channel, str] = {
     "tiktok": (
-        "Write a short TikTok script with a hook, 2-3 spoken lines, and a soft CTA. "
-        "Make it easy to scan in a results card."
+        "Write a short TikTok script with a hook, demo/script, and a soft low-pressure CTA. "
+        "Friend/creator voice - casual, conversational, real. "
+        "Tower 28: approachable and skin-first, <150 chars per section. "
+        "Half Magic: fast, tutorial/trend style, backstage-friend energy, <100-char caption. "
+        "No hashtags in the script body."
     ),
     "instagram": (
-        "Write a polished Instagram caption with one clear beauty benefit, 1-2 short "
-        "paragraphs, and optional light hashtags."
+        "Write an Instagram caption. Hook first, then 1-2 short paragraphs, then CTA. "
+        "Tower 28: 75-250 words, 1-3 emoji max, CTA 'find your shade' or 'shop now', zero hashtags. "
+        "Half Magic: 100-250 words, hook-first, moderate emoji, CTA 'tag us' or 'shop now', zero hashtags. "
+        "No hashtag blocks. No more than 3 emoji total."
     ),
     "email": (
-        "Write a short email draft. Start with 'Subject:' on its own line, then 'Body:' "
-        "with concise body copy."
+        "Write a short email. Start with 'Subject:' on its own line, then 'Body:' with concise copy. "
+        "Tower 28: benefit-driven subject line, 30-50 chars, 0-1 emoji, warm and reassuring tone. "
+        "Half Magic: playful/curious subject line, 25-45 chars, casual and expressive tone. "
+        "Body should be 3-5 sentences max. One clear CTA. No bullet points."
     ),
 }
 
 CHANNEL_FORMATS: dict[Channel, str] = {
-    "tiktok": "Format exactly as: Hook: ... then Script: ... then CTA: ...",
-    "instagram": "Format as caption copy only. No labels unless they are natural to the caption.",
-    "email": "Format exactly as: Subject: ... then a blank line then Body: ...",
+    "tiktok": (
+        "Format exactly as:\n"
+        "Hook: [one punchy line]\n"
+        "Script: [2-3 casual spoken lines]\n"
+        "CTA: [one soft, low-pressure line]"
+    ),
+    "instagram": (
+        "Format as caption copy only. "
+        "No section labels. Natural paragraph breaks. "
+        "End with a single CTA line. No hashtag block."
+    ),
+    "email": (
+        "Format exactly as:\n"
+        "Subject: [subject line, 30-50 chars]\n"
+        "\n"
+        "Body:\n"
+        "[3-5 sentence body]\n"
+        "\n"
+        "[Single CTA line]"
+    ),
 }
 
 

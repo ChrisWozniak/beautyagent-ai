@@ -105,3 +105,5 @@ Use `expected_voice_status` with `ON_VOICE` or `DRIFTED`:
 ```
 
 The six-case set is for threshold calibration and reason-quality review. Run it live with Sonnet intentionally, not as part of ordinary unit tests.
+
+Current Week 2 behavior: Brand Voice evaluates the generated draft copy, not the raw marketer brief. If a messy or off-brand brief is rewritten into copy that matches the brand voice profile, an `ON_VOICE` result is expected. Compliance still audits the relevant marketer brief text separately, so risky claims in the brief can be caught even when the generated draft is clean.
