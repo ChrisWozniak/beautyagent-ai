@@ -1,0 +1,24 @@
+{
+    "results":  [
+                    {
+                        "channel":  "tiktok",
+                        "generation_status":  "completed",
+                        "raw_draft":  "Hook: PLUMPING PARTY starts now.\n\nScript: MAGIC DRIP GLITTER LIPGLOSS gives your lips that plumping, glassy look everyone's obsessed with rn ✨\n\nCTA: Grab yours before it sells out again!!",
+                        "voice_status":  "ON_VOICE",
+                        "voice_confidence":  0.88,
+                        "voice_reason":  "Playful, hook-first structure with product name in ALL CAPS matches Half Magic's TikTok format conventions.",
+                        "compliance_status":  "NEEDS_HUMAN_REVIEW",
+                        "compliance_confidence":  0.61,
+                        "flagged_phrases":  [
+                                                "plumping"
+                                            ],
+                        "explanation":  "\"Plumping\" borders on a structure-function claim depending on context — not a clear-cut violation, but the audit isn't confident enough to pass or fail it outright.",
+                        "detection_source":  "llm_audit",
+                        "final_safe_output":  null,
+                        "retry_exhausted":  null,
+                        "escalation_trigger":  "compliance",
+                        "error":  null
+                    }
+                ],
+    "error":  null
+}

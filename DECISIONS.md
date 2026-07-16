@@ -51,3 +51,93 @@ Locked decisions made before Day 1 build started (and one confirmed during Day 2
 **What changed:** This was previously framed as a recommendation in `api_contract.md`'s Backend Notes, not a locked decision. Now confirmed and stated as decided.
 
 **Rationale:** The response schema already assumes this structure — each result object carries its own `retry_exhausted` and `detection_source`, which only makes sense if channels can pass, fail, and retry independently. Running the three loops concurrently (rather than sequentially) is also likely necessary to hit the PRD's `<3s` response-time target.
+
+---
+
+## 6. brandId values use snake_case with underscores
+
+**Decision:** `brandId` values are `"tower_28"` and `"half_magic"` — not `"tower28"`/`"halfmagic"` as in the original locked contract.
+
+**What changed:** The original contract locked `brandId` as `"tower28"` | `"halfmagic"`. Renamed to `"tower_28"` | `"half_magic"` and propagated across `BEAUTYAGENT_API_CONTRACT.md`, `CLAUDE.md`, and `docs/TEAM_WORKFLOW.md`.
+
+**Rationale:** Snake_case is more readable for a two-word value than mashing the words together with no separator. Confirmed safe to change before renaming — nothing in the codebase depended on the original no-underscore values yet, so the switching cost was zero.
+
+---
+
+## 7. Brand and product configs stay as single combined files, not split per brand
+
+**Decision:** `brand_configs.json` and `product_configs.json` each remain one file covering both brands, keyed internally by `brandId` — not split into `tower_28.json`/`half_magic.json` per type.
+
+**What changed:** Considered splitting to mirror how brand-specific human-facing docs were split per brand; decided against it for the machine-facing config files.
+
+**Rationale:** Consistency with `compliance_rules.json`, which is already one shared, brand-agnostic file — splitting brand/product configs while compliance stays single-file would create an inconsistent pattern in the same data directory for no functional gain. Confirmed via repo-wide grep that nothing depended on the existing single-file shape (only two non-functional references, both in a directory diagram in `CODEX.md`). At a fixed 2-brand POC scope, one file keyed by `brandId` is also easier to eyeball side-by-side and needs only one `json.load()` + dict lookup on the backend.
+
+---
+
+## 8. `coreActives` is omitted from the request when empty, not sent as `""` or `null`
+
+**Decision:** The frontend omits the `coreActives` key entirely from the `/generate` request body when the field is left blank.
+
+**What changed:** Contract marked `coreActives` optional but never specified the shape when empty. Confirmed via the contract-vs-implementation audit that the backend's request validator handles this correctly (normalizes `""` to `None`, and accepts the key being absent entirely).
+
+**Rationale:** Decision #2 (fields always present, null when inapplicable) is explicitly scoped to response fields, not requests — there's no existing precedent requiring the same treatment on the request side. Omitting a genuinely-not-provided optional field is the more natural request convention, and the backend already handles it gracefully.
+
+---
+
+## 9. Form channel order now matches results dashboard order (TikTok → Instagram → Email)
+
+**Decision:** Channel chips on the input form are ordered TikTok → Instagram → Email, matching the results dashboard. Previously the form used Instagram → TikTok → Email while the dashboard used TikTok → Instagram → Email.
+
+**What changed:** Form chip order updated to align with the dashboard's existing fixed order.
+
+**Rationale:** The mismatch was a frontend-only accident of the two components being spec'd separately, not a deliberate UX choice. There's no reason for a marketer to select channels in one order and see results come back in a different order — aligning removes unnecessary inconsistency across the app.
+
+---
+
+## 10. `voice_reason` populated whenever the agent runs, `null` only on error
+
+**Decision:** `voice_reason` carries real content whenever the Brand Voice Agent actually runs — `ON_VOICE` or `DRIFTED`, doesn't matter — and is `null` only when `generation_status` is `"error"`.
+
+**Rationale:** Matches the precedent already set by `explanation` (populated whenever compliance runs and has something to report, `null` only when it never ran). The Brand Voice Agent's prompt always generates a reason sentence regardless of verdict, so there's no "ran but had nothing to say" case here the way `explanation` has for a clean PASS.
+
+---
+
+## 11. Compliance-related fields `null` when compliance is skipped or unconfident
+
+**Decision:** When `voice_status` is `DRIFTED` and compliance never runs, its fields (`compliance_confidence`, `flagged_phrases`, `explanation`, `detection_source`, `final_safe_output`, `retry_exhausted`) are all `null`. This extends to any `NEEDS_HUMAN_REVIEW` result generally — `final_safe_output` stays `null` whenever `compliance_status` is `NEEDS_HUMAN_REVIEW`, whether compliance actually ran or not, since the agent doesn't hand over a rewrite it isn't confident enough to stand behind.
+
+**Rationale:** Same logic as Decision #2 — "never ran" and "ran but not confident enough to commit to an answer" are both treated as nothing actionable to offer, consistent with how the rest of the schema already handles inapplicable data.
+
+---
+
+## 12. `escalation_trigger` never resolves to `"both"` — the row is dropped
+
+**Decision:** `escalation_trigger` only ever ends up `"voice"` or `"compliance"`. The routing table's fourth row (`voice_confidence < 0.75 AND compliance_confidence < 0.75 → "both"`) is removed.
+
+**Rationale:** Compliance never runs once voice is `DRIFTED`, so `compliance_confidence` can never have a real value in the same branch where voice already failed — there's no draft that produces two real low numbers to compare. The row described a state the sequential architecture can't reach.
+
+---
+
+## 13. `error.detail` wiring folded into Week 2 Phase 3
+
+**Decision:** Wiring the backend's `error.detail` field into the frontend's error display is done as part of Week 2 Phase 3 (not a separate follow-up task).
+
+**Rationale:** Surfaced as a side effect of the v1 400-error fix — the generic message now shows correctly, but the specific detail still isn't surfaced. Phase 3 is already touching error/status card display for the new third state, so bundling it in is cheaper than reopening that area later.
+
+---
+
+## 14. Contract versioned via in-file header, filename unchanged
+
+**Decision:** `beautyagent_api_contract.md` keeps its existing filename. A "Contract version: 2.0" line is added near the top, with the Week 2 additions living in a new Section 9.
+
+**Rationale:** Keeps one stable, always-current path that `CLAUDE.md` and other docs already reference by exact name — avoids updating every cross-reference and renaming again for future versions.
+
+---
+
+## 15. Direct Anthropic API is the primary model path, not paid OpenRouter tier
+
+**Decision:** Agent 2.0 calls Anthropic directly from the backend (FastAPI → LiteLLM → Anthropic), using `ANTHROPIC_API_KEY` (backend-only, never exposed to React/Vite). OpenRouter is retained only as a fallback path carried over from Week 1, not the default.
+
+**What changed:** The original PRD (Dependency #3) assumed Agent 2.0's Sonnet/Haiku model assignments depended on paid OpenRouter tier access. That dependency is replaced with: a valid Anthropic API key with access to the Sonnet and Haiku models. `ANTHROPIC_MODEL_SONNET` and `ANTHROPIC_MODEL_HAIKU` env vars were also updated to drop the retired `claude-3-5-haiku-latest` model.
+
+**Rationale:** Removes a paid-tier dependency the team doesn't control and simplifies the call path by one hop. Doesn't touch `beautyagent_api_contract.md` — this is an internal provider change, not a change to the `/generate` request/response shape — so it doesn't require the usual contract-coordination step, just a doc update so the PRD stops describing a path no longer being built.

@@ -18,6 +18,8 @@
   --color-terracotta: #C4714A;
   --color-terracotta-text: #9B5530;
   --color-terracotta-bg: #F6EDDF;
+  --color-berry: #7A3B4E;
+  --color-berry-bg: #F1E2E6;
   --color-border: rgba(44, 44, 44, 0.09);
 }
 
@@ -25,4 +27,16 @@ body {
   font-family: var(--font-body);
   background-color: var(--color-ivory);
   color: var(--color-charcoal);
+}
+
+/* Unified moss focus treatment — replaces Tailwind ring system */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: 2px solid rgba(49, 91, 76, 0.5) !important;
+  outline-offset: 1px;
+  box-shadow: none !important;
 }

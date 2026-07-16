@@ -10,6 +10,8 @@ Use them to test card rendering without needing a live backend request.
 - `failed_from_draft.response.json` - generated draft contains risky language and returns a safer rewrite.
 - `failed_from_brief.response.json` - generated draft is clean, but the marketer brief contained risky language.
 - `partial_channel_error.response.json` - one channel completed, one channel failed compliance, one channel hit a technical timeout.
+- `voice_drift.response.json` - brand voice review returns `DRIFTED`, routes to sign-off, and skips compliance.
+- `compliance_low_confidence.response.json` - brand voice passes, but compliance confidence routes the channel to sign-off.
 
 ## Rendering Notes
 

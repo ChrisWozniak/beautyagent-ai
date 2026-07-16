@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import json
 import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+
+from ..config_loader import load_json_config
 
 try:
     from strands import tool
@@ -20,13 +21,12 @@ except ImportError:
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 RULES_PATH = DATA_DIR / "compliance_rules.json"
+COMPLIANCE_CONFIDENCE_THRESHOLD = 0.75
 
 
 @lru_cache(maxsize=1)
 def load_compliance_rules() -> list[dict[str, str]]:
-    with RULES_PATH.open(encoding="utf-8") as rules_file:
-        payload = json.load(rules_file)
-
+    payload = load_json_config(RULES_PATH, "compliance rules")
     return payload["rules"]
 
 
@@ -95,6 +95,7 @@ def check_compliance(text: str) -> dict[str, Any]:
     if not flagged_phrases:
         return {
             "compliance_status": "PASSED",
+            "compliance_confidence": 1.0,
             "flagged_phrases": [],
             "explanation": "",
             "detection_source": None,
@@ -103,6 +104,7 @@ def check_compliance(text: str) -> dict[str, Any]:
 
     return {
         "compliance_status": "FAILED",
+        "compliance_confidence": 1.0,
         "flagged_phrases": flagged_phrases,
         "explanation": " ".join(explanations),
         "detection_source": "deterministic",

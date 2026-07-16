@@ -3,46 +3,77 @@
 from __future__ import annotations
 
 import asyncio
-import json
+import os
 import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Protocol
 
+from ..config_loader import ConfigLoadError, load_json_config
 from ..config import get_settings
 from ..models.request_models import Channel, GenerateRequest
 from ..models.response_models import ChannelError, ChannelResult, GenerateResponse
-from ..tools.check_compliance import check_compliance
+from ..tools.check_brand_voice import VOICE_CONFIDENCE_THRESHOLD, check_brand_voice
+from ..tools.check_compliance import COMPLIANCE_CONFIDENCE_THRESHOLD, check_compliance
 from .llm_client import LLMDraftError, generate_draft_with_llm
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 BRAND_CONFIGS_PATH = DATA_DIR / "brand_configs.json"
 PRODUCT_CONFIGS_PATH = DATA_DIR / "product_configs_richer_DRAFT.json"
+BRAND_VOICE_PROFILE_PATHS = {
+    "tower_28": DATA_DIR / "brand_voice_tower28.md",
+    "half_magic": DATA_DIR / "brand_voice_halfmagic.md",
+}
 CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
     "tiktok": ("tiktok", "tik tok"),
     "instagram": ("instagram", "ig"),
     "email": ("email",),
 }
 
+
+def _agent_trace_enabled() -> bool:
+    return os.getenv("AGENT_TRACE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _trace_agent_step(channel: Channel, step: str, **fields: Any) -> None:
+    if not _agent_trace_enabled():
+        return
+
+    details = " ".join(f"{key}={value}" for key, value in fields.items())
+    suffix = f" {details}" if details else ""
+    print(f"[agent-trace] channel={channel} step={step}{suffix}", flush=True)
+
+
 class DraftGenerator(Protocol):
     def __call__(self, request: GenerateRequest, channel: Channel) -> str:
         """Generate a raw draft for one requested channel."""
 
 
+class BrandVoiceChecker(Protocol):
+    def __call__(
+        self,
+        text: str,
+        brand_id: str,
+        brand_config: dict[str, Any],
+        channel: str,
+    ) -> dict[str, Any]:
+        """Evaluate brand voice for one generated channel draft."""
+
+
 @lru_cache(maxsize=1)
 def load_brand_configs() -> dict[str, dict[str, Any]]:
-    with BRAND_CONFIGS_PATH.open(encoding="utf-8") as config_file:
-        payload = json.load(config_file)
+    payload = load_json_config(BRAND_CONFIGS_PATH, "brand")
+    brands = payload["brands"]
+    for brand_id, profile_path in BRAND_VOICE_PROFILE_PATHS.items():
+        brands[brand_id]["voice"] = profile_path.read_text(encoding="utf-8").rstrip("\n")
 
-    return payload["brands"]
+    return brands
 
 
 @lru_cache(maxsize=1)
 def load_product_configs() -> dict[str, list[dict[str, Any]]]:
-    with PRODUCT_CONFIGS_PATH.open(encoding="utf-8") as config_file:
-        payload = json.load(config_file)
-
+    payload = load_json_config(PRODUCT_CONFIGS_PATH, "product")
     return {
         brand_id: products
         for brand_id, products in payload.items()
@@ -203,7 +234,7 @@ def draft_channel_copy(request: GenerateRequest, channel: Channel) -> str:
         return (
             f"Hook: {request.productName} {fallback_copy['tiktok_hook']}.\n\n"
             f"Script: Meet {request.productName} from {brand_name}. It {safe_claim}, "
-            f"while keeping the vibe {brand['voice']}.\n\n"
+            f"while keeping the vibe true to {brand_name}.\n\n"
             f"CTA: {fallback_copy['tiktok_cta']}"
         )
 
@@ -277,11 +308,79 @@ def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> d
 
     return {
         "compliance_status": "FAILED",
+        "compliance_confidence": min(
+            draft_audit.get("compliance_confidence", 1.0),
+            brief_audit.get("compliance_confidence", 1.0),
+        ),
         "flagged_phrases": flagged_phrases,
         "explanation": explanation,
         "detection_source": "deterministic",
         "final_safe_output": draft_audit["final_safe_output"],
     }
+
+
+def _needs_voice_review(voice_result: dict[str, Any]) -> bool:
+    return (
+        voice_result["voice_status"] == "DRIFTED"
+        or voice_result["voice_confidence"] < VOICE_CONFIDENCE_THRESHOLD
+    )
+
+
+def _voice_review_result(
+    channel: Channel,
+    raw_draft: str,
+    voice_result: dict[str, Any],
+) -> ChannelResult:
+    return ChannelResult(
+        channel=channel,
+        generation_status="completed",
+        raw_draft=raw_draft,
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
+        compliance_status="NEEDS_HUMAN_REVIEW",
+        compliance_confidence=None,
+        flagged_phrases=None,
+        explanation=None,
+        detection_source=None,
+        final_safe_output=None,
+        retry_exhausted=None,
+        escalation_trigger="voice",
+        error=None,
+    )
+
+
+def _needs_compliance_review(compliance_result: dict[str, Any]) -> bool:
+    confidence = compliance_result.get("compliance_confidence")
+    if compliance_result["compliance_status"] == "NEEDS_HUMAN_REVIEW":
+        return True
+
+    return isinstance(confidence, (int, float)) and confidence < COMPLIANCE_CONFIDENCE_THRESHOLD
+
+
+def _compliance_review_result(
+    channel: Channel,
+    raw_draft: str,
+    voice_result: dict[str, Any],
+    compliance_result: dict[str, Any],
+) -> ChannelResult:
+    return ChannelResult(
+        channel=channel,
+        generation_status="completed",
+        raw_draft=raw_draft,
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
+        compliance_status="NEEDS_HUMAN_REVIEW",
+        compliance_confidence=compliance_result.get("compliance_confidence"),
+        flagged_phrases=compliance_result.get("flagged_phrases"),
+        explanation=compliance_result.get("explanation"),
+        detection_source=compliance_result.get("detection_source"),
+        final_safe_output=None,
+        retry_exhausted=None,
+        escalation_trigger="compliance",
+        error=None,
+    )
 
 
 def _channel_mentions(text: str) -> set[Channel]:
@@ -320,19 +419,51 @@ def process_channel_loop(
     request: GenerateRequest,
     channel: Channel,
     draft_generator: DraftGenerator = draft_channel_with_optional_llm,
+    brand_voice_checker: BrandVoiceChecker | None = None,
 ) -> ChannelResult:
-    """Run draft, deterministic audit, revision, and final backstop for a channel."""
+    """Run draft, brand voice gate, deterministic audit, and final backstop."""
+    brand = load_brand_configs()[request.brandId]
+    resolved_voice_checker = brand_voice_checker or check_brand_voice
+    _trace_agent_step(channel, "start", brand_id=request.brandId)
     raw_draft = draft_generator(request, channel)
+    _trace_agent_step(channel, "draft_generated", draft_chars=len(raw_draft))
+    voice_result = resolved_voice_checker(raw_draft, request.brandId, brand, channel)
+    _trace_agent_step(
+        channel,
+        "brand_voice_checked",
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+    )
+
+    if _needs_voice_review(voice_result):
+        _trace_agent_step(channel, "routed_to_human_review", trigger="voice")
+        return _voice_review_result(channel, raw_draft, voice_result)
+
     draft_audit = check_compliance(raw_draft)
     brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
     first_audit = _merge_audits(draft_audit, brief_audit)
+    _trace_agent_step(
+        channel,
+        "compliance_checked",
+        compliance_status=first_audit["compliance_status"],
+        compliance_confidence=first_audit.get("compliance_confidence"),
+    )
+    if _needs_compliance_review(first_audit):
+        _trace_agent_step(channel, "routed_to_human_review", trigger="compliance")
+        return _compliance_review_result(channel, raw_draft, voice_result, first_audit)
+
     final_safe_output = first_audit["final_safe_output"]
     final_backstop = check_compliance(final_safe_output)
+    _trace_agent_step(
+        channel,
+        "final_backstop_checked",
+        compliance_status=final_backstop["compliance_status"],
+    )
 
     flagged_phrases = first_audit["flagged_phrases"]
     explanation = first_audit["explanation"]
     detection_source = first_audit["detection_source"]
-    retry_exhausted = False
+    retry_exhausted = None
 
     if final_backstop["compliance_status"] == "FAILED":
         flagged_phrases = _combine_unique(
@@ -345,18 +476,31 @@ def process_channel_loop(
         )
         detection_source = "deterministic"
         final_safe_output = final_backstop["final_safe_output"]
-        retry_exhausted = check_compliance(final_safe_output)["compliance_status"] == "FAILED"
+        if check_compliance(final_safe_output)["compliance_status"] == "FAILED":
+            retry_exhausted = True
 
+    result_confidence = first_audit.get("compliance_confidence", 1.0)
+    _trace_agent_step(
+        channel,
+        "completed",
+        compliance_status=first_audit["compliance_status"],
+        retry_exhausted=retry_exhausted,
+    )
     return ChannelResult(
         channel=channel,
         generation_status="completed",
         raw_draft=raw_draft,
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
         compliance_status=first_audit["compliance_status"],
+        compliance_confidence=result_confidence,
         flagged_phrases=flagged_phrases,
         explanation=explanation,
         detection_source=detection_source,
         final_safe_output=final_safe_output,
         retry_exhausted=retry_exhausted,
+        escalation_trigger=None,
         error=None,
     )
 
@@ -366,12 +510,17 @@ def channel_error_result(channel: Channel, code: str, message: str) -> ChannelRe
         channel=channel,
         generation_status="error",
         raw_draft=None,
+        voice_status=None,
+        voice_confidence=None,
+        voice_reason=None,
         compliance_status=None,
+        compliance_confidence=None,
         flagged_phrases=None,
         explanation=None,
         detection_source=None,
         final_safe_output=None,
         retry_exhausted=None,
+        escalation_trigger=None,
         error=ChannelError(code=code, message=message),
     )
 
@@ -395,6 +544,8 @@ async def process_channel_safely(request: GenerateRequest, channel: Channel) -> 
         )
     except asyncio.TimeoutError:
         return channel_error_result(channel, "TIMEOUT", "Generation timed out after retries.")
+    except ConfigLoadError:
+        raise
     except Exception as exc:
         code, message = _classify_channel_exception(exc)
         return channel_error_result(channel, code, message)

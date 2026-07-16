@@ -1,41 +1,62 @@
 {
-  "results": [
-    {
-      "channel": "tiktok",
-      "generation_status": "completed",
-      "raw_draft": "Hook: SOS Daily Rescue Facial Spray is your quick beauty reset.\n\nScript: Meet SOS Daily Rescue Facial Spray from Tower 28. It helps calm the look of stressed skin, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Spritz it into your routine whenever you want a fresh start.",
-      "compliance_status": "PASSED",
-      "flagged_phrases": [],
-      "explanation": "",
-      "detection_source": null,
-      "final_safe_output": "Hook: SOS Daily Rescue Facial Spray is your quick beauty reset.\n\nScript: Meet SOS Daily Rescue Facial Spray from Tower 28. It helps calm the look of stressed skin, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Spritz it into your routine whenever you want a fresh start.",
-      "retry_exhausted": false,
-      "error": null
-    },
-    {
-      "channel": "instagram",
-      "generation_status": "completed",
-      "raw_draft": "Meet SOS Daily Rescue Facial Spray from Tower 28: an easy routine staple that helps calm the look of stressed skin.\n\nKeep it close for the moments when your beauty routine needs a calm, fresh reset.",
-      "compliance_status": "PASSED",
-      "flagged_phrases": [],
-      "explanation": "",
-      "detection_source": null,
-      "final_safe_output": "Meet SOS Daily Rescue Facial Spray from Tower 28: an easy routine staple that helps calm the look of stressed skin.\n\nKeep it close for the moments when your beauty routine needs a calm, fresh reset.",
-      "retry_exhausted": false,
-      "error": null
-    },
-    {
-      "channel": "email",
-      "generation_status": "completed",
-      "raw_draft": "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, with a polished finish that fits naturally into your day.",
-      "compliance_status": "PASSED",
-      "flagged_phrases": [],
-      "explanation": "",
-      "detection_source": null,
-      "final_safe_output": "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, with a polished finish that fits naturally into your day.",
-      "retry_exhausted": false,
-      "error": null
-    }
-  ],
-  "error": null
+    "results":  [
+                    {
+                        "channel":  "tiktok",
+                        "generation_status":  "completed",
+                        "raw_draft":  "Hook: SOS Daily Rescue Facial Spray is your quick beauty reset.\n\nScript: Meet SOS Daily Rescue Facial Spray from Tower 28. It helps calm the look of stressed skin, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Spritz it into your routine whenever you want a fresh start.",
+                        "voice_status":  "ON_VOICE",
+                        "voice_confidence":  1.0,
+                        "voice_reason":  "Brand voice evaluation not yet enabled.",
+                        "compliance_status":  "PASSED",
+                        "compliance_confidence":  1.0,
+                        "flagged_phrases":  [
+
+                                            ],
+                        "explanation":  "",
+                        "detection_source":  null,
+                        "final_safe_output":  "Hook: SOS Daily Rescue Facial Spray is your quick beauty reset.\n\nScript: Meet SOS Daily Rescue Facial Spray from Tower 28. It helps calm the look of stressed skin, while keeping the vibe calm, friendly, sensitive-skin aware, and clinically careful.\n\nCTA: Spritz it into your routine whenever you want a fresh start.",
+                        "retry_exhausted":  null,
+                        "escalation_trigger":  null,
+                        "error":  null
+                    },
+                    {
+                        "channel":  "instagram",
+                        "generation_status":  "completed",
+                        "raw_draft":  "Meet SOS Daily Rescue Facial Spray from Tower 28: an easy routine staple that helps calm the look of stressed skin.\n\nKeep it close for the moments when your beauty routine needs a calm, fresh reset.",
+                        "voice_status":  "ON_VOICE",
+                        "voice_confidence":  1.0,
+                        "voice_reason":  "Brand voice evaluation not yet enabled.",
+                        "compliance_status":  "PASSED",
+                        "compliance_confidence":  1.0,
+                        "flagged_phrases":  [
+
+                                            ],
+                        "explanation":  "",
+                        "detection_source":  null,
+                        "final_safe_output":  "Meet SOS Daily Rescue Facial Spray from Tower 28: an easy routine staple that helps calm the look of stressed skin.\n\nKeep it close for the moments when your beauty routine needs a calm, fresh reset.",
+                        "retry_exhausted":  null,
+                        "escalation_trigger":  null,
+                        "error":  null
+                    },
+                    {
+                        "channel":  "email",
+                        "generation_status":  "completed",
+                        "raw_draft":  "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, with a polished finish that fits naturally into your day.",
+                        "voice_status":  "ON_VOICE",
+                        "voice_confidence":  1.0,
+                        "voice_reason":  "Brand voice evaluation not yet enabled.",
+                        "compliance_status":  "PASSED",
+                        "compliance_confidence":  1.0,
+                        "flagged_phrases":  [
+
+                                            ],
+                        "explanation":  "",
+                        "detection_source":  null,
+                        "final_safe_output":  "Subject: A fresh reset from Tower 28\n\nBody: SOS Daily Rescue Facial Spray brings an easy beauty update to your routine. It helps calm the look of stressed skin, with a polished finish that fits naturally into your day.",
+                        "retry_exhausted":  null,
+                        "escalation_trigger":  null,
+                        "error":  null
+                    }
+                ],
+    "error":  null
 }

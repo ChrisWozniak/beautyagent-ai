@@ -5,17 +5,23 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .agent.beauty_agent import generate_mock_response, product_belongs_to_brand
+from .agent.beauty_agent import generate_mock_response
+from .config_loader import ConfigLoadError
 from .models.request_models import GenerateRequest
 from .models.response_models import GenerateResponse, TopLevelError
 
 app = FastAPI(title="BeautyAgent AI Backend")
+
+APP_NAME = "beautyagent-ai-backend"
+EXPECTED_RENDER_BRANCH = "week-2"
 
 DEFAULT_FRONTEND_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://beautyagent-ai.vercel.app",
+    "https://beautyagent-ai-git-week2-jillk83s-projects.vercel.app",
 ]
 
 
@@ -24,11 +30,12 @@ def get_frontend_origins() -> list[str]:
     if not configured_origins:
         return DEFAULT_FRONTEND_ORIGINS
 
-    return [
+    configured = [
         origin.strip()
         for origin in configured_origins.split(",")
         if origin.strip()
     ]
+    return list(dict.fromkeys([*DEFAULT_FRONTEND_ORIGINS, *configured]))
 
 
 app.add_middleware(
@@ -46,6 +53,17 @@ def validation_error_response(detail: str) -> GenerateResponse:
         error=TopLevelError(
             code="VALIDATION_ERROR",
             message="Invalid request.",
+            detail=detail,
+        ),
+    )
+
+
+def internal_error_response(detail: str | None = None) -> GenerateResponse:
+    return GenerateResponse(
+        results=[],
+        error=TopLevelError(
+            code="INTERNAL_ERROR",
+            message="Internal server error.",
             detail=detail,
         ),
     )
@@ -72,12 +90,30 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/version")
+def version() -> dict[str, str]:
+    return {
+        "status": "ok",
+        "app": APP_NAME,
+        "expected_branch": EXPECTED_RENDER_BRANCH,
+        "git_commit": (
+            os.getenv("RENDER_GIT_COMMIT")
+            or os.getenv("GIT_COMMIT")
+            or os.getenv("COMMIT_SHA")
+            or "unknown"
+        ),
+        "render_service_name": os.getenv("RENDER_SERVICE_NAME", "unknown"),
+        "render_external_url": os.getenv("RENDER_EXTERNAL_URL", "unknown"),
+    }
+
+
 @app.post("/generate", response_model=GenerateResponse)
 async def generate(request: GenerateRequest) -> GenerateResponse:
-    if not product_belongs_to_brand(request.brandId, request.productName):
-        response = validation_error_response(
-            f"productName '{request.productName}' is not available for brandId '{request.brandId}'."
-        )
-        return JSONResponse(status_code=400, content=response.model_dump())
-
-    return await generate_mock_response(request)
+    try:
+        return await generate_mock_response(request)
+    except ConfigLoadError as exc:
+        response = internal_error_response(str(exc))
+        return JSONResponse(status_code=500, content=response.model_dump())
+    except Exception:
+        response = internal_error_response()
+        return JSONResponse(status_code=500, content=response.model_dump())

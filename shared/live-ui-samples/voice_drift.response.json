@@ -1,0 +1,22 @@
+{
+    "results":  [
+                    {
+                        "channel":  "instagram",
+                        "generation_status":  "completed",
+                        "raw_draft":  "POV: your skin is having a main character moment. SOS Daily Rescue Facial Spray said let's get into it.",
+                        "voice_status":  "DRIFTED",
+                        "voice_confidence":  0.42,
+                        "voice_reason":  "Uses 'POV' and 'main character energy' meme-speak structure that doesn't match Tower 28's approachable-but-grounded voice profile.",
+                        "compliance_status":  "NEEDS_HUMAN_REVIEW",
+                        "compliance_confidence":  null,
+                        "flagged_phrases":  null,
+                        "explanation":  null,
+                        "detection_source":  null,
+                        "final_safe_output":  null,
+                        "retry_exhausted":  null,
+                        "escalation_trigger":  "voice",
+                        "error":  null
+                    }
+                ],
+    "error":  null
+}

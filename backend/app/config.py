@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 
-load_dotenv()
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+REPO_ROOT = BACKEND_DIR.parent
+
+load_dotenv(REPO_ROOT / ".env")
+load_dotenv(BACKEND_DIR / ".env", override=True)
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -62,6 +67,9 @@ def _env_int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Settings:
+    anthropic_api_key: str | None
+    anthropic_model_sonnet: str
+    anthropic_model_haiku: str
     openrouter_api_key: str | None
     openrouter_model: str
     use_llm_drafting: bool
@@ -72,6 +80,17 @@ class Settings:
 
 def get_settings() -> Settings:
     return Settings(
+        anthropic_api_key=_env_str("ANTHROPIC_API_KEY"),
+        anthropic_model_sonnet=_env_str(
+            "ANTHROPIC_MODEL_SONNET",
+            "anthropic/claude-sonnet-4-5",
+        )
+        or "anthropic/claude-sonnet-4-5",
+        anthropic_model_haiku=_env_str(
+            "ANTHROPIC_MODEL_HAIKU",
+            "anthropic/claude-haiku-4-5-20251001",
+        )
+        or "anthropic/claude-haiku-4-5-20251001",
         openrouter_api_key=_env_str("OPENROUTER_API_KEY"),
         openrouter_model=_env_str("OPENROUTER_MODEL", "poolside/laguna-m.1:free")
         or "poolside/laguna-m.1:free",
