@@ -123,7 +123,7 @@ Expected response shape:
 {
   "status": "ok",
   "app": "beautyagent-ai-backend",
-  "expected_branch": "week-2",
+  "expected_branch": "main",
   "git_commit": "unknown",
   "render_service_name": "unknown",
   "render_external_url": "unknown"

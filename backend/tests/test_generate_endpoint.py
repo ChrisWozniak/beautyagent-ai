@@ -1532,7 +1532,7 @@ class GenerateEndpointTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["app"], "beautyagent-ai-backend")
-        self.assertEqual(payload["expected_branch"], "week-2")
+        self.assertEqual(payload["expected_branch"], "main")
         self.assertIn("git_commit", payload)
         self.assertIn("render_service_name", payload)
         self.assertIn("render_external_url", payload)

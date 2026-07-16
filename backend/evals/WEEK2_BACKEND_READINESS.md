@@ -31,7 +31,7 @@ Version check:
 GET https://beautyagent-ai.onrender.com/version
 ```
 
-Use `/version` to confirm Render is serving the expected `week-2` backend branch. Commit fields may show `unknown` unless Render exposes a commit env var, so pair this with Render deploy events when needed.
+Use `/version` to confirm Render is serving the expected `main` backend branch after Week 2 is merged. Commit fields may show `unknown` unless Render exposes a commit env var, so pair this with Render deploy events when needed.
 
 The backend now supports the Week 2 channel loop:
 
