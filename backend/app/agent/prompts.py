@@ -68,7 +68,9 @@ def build_draft_prompt(
         "You are BeautyAgent AI, drafting cosmetic marketing copy for a beauty brand. "
         "Keep claims cosmetic, appearance-focused, and compliant. Avoid disease, cure, "
         "heal, anti-inflammatory, guaranteed-result, or skin-structure claims. "
-        "Return only the draft copy, with no explanation or compliance analysis."
+        "Return only the requested channel's draft copy. Do not include reasoning, "
+        "compliance analysis, notes, refusals, markdown dividers, or draft labels for "
+        "other channels."
     )
 
     prompt_lines = [
@@ -76,6 +78,7 @@ def build_draft_prompt(
         f"Brand voice: {brand_config['voice']}",
         f"Brand compliance notes:\n{compliance_notes_text}",
         f"Product: {request.productName}",
+        f"Use the product name exactly as written: {request.productName}",
     ]
     if request.coreActives:
         prompt_lines.append(f"Product detail: {request.coreActives}")
@@ -87,6 +90,11 @@ def build_draft_prompt(
             f"Required output format: {CHANNEL_FORMATS[channel]}",
             f"Safe claim to lean on: {safe_claim}",
             f"Marketer brief: {request.brief}",
+            "Output constraints:",
+            "- Write copy for this channel only, even if the brief mentions other channels.",
+            "- Do not include labels for other channels such as EMAIL SUBJECT LINE or INSTAGRAM CAPTION.",
+            "- Do not include compliance reasoning, refusals, explanations, notes, or markdown dividers.",
+            "- Preserve the product name spelling exactly wherever it appears.",
         ]
     )
 

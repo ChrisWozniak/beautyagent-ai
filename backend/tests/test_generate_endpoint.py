@@ -37,7 +37,7 @@ from backend.app.main import app
 from backend.app.models.request_models import GenerateRequest, MAX_BRIEF_LENGTH
 from backend.app.models.response_models import GenerateResponse
 from backend.app.tools.check_brand_voice import check_brand_voice
-from backend.app.tools.check_compliance import check_compliance_tool
+from backend.app.tools.check_compliance import check_compliance_tool, load_compliance_rules
 from backend.scripts.smoke_generate_live import (
     SMOKE_CASES,
     main as live_generate_smoke_main,
@@ -630,35 +630,34 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(response.results[0].compliance_status, "NEEDS_HUMAN_REVIEW")
         self.assertEqual(response.results[0].escalation_trigger, "voice")
 
-    def test_channel_loop_skips_compliance_when_voice_drifted(self) -> None:
+    def test_channel_loop_routes_voice_drift_after_clean_deterministic_precheck(self) -> None:
         request = GenerateRequest(
             brandId="half_magic",
             productName="Magic Drip Glitter Lipgloss",
             coreActives="Vitamin E, Jojoba Oil",
-            brief="Draft one caption.",
+            brief="Draft one safe caption.",
             channels=["instagram"],
         )
 
         def draft_generator(_: GenerateRequest, __: str) -> str:
-            return "Clinically precise anti-aging gloss for a flawless correction."
+            return "Paint it bold and tag us in the gloss chaos."
 
         def drifted_voice_checker(*_args: object) -> dict[str, object]:
             return {
                 "voice_status": "DRIFTED",
                 "voice_confidence": 0.34,
-                "voice_reason": "The clinical phrasing misses Half Magic's playful backstage-friend voice.",
+                "voice_reason": "The copy misses Half Magic's backstage-friend voice.",
             }
 
-        with patch("backend.app.agent.beauty_agent.check_compliance") as compliance:
-            result = process_channel_loop(
-                request,
-                "instagram",
-                draft_generator,
-                drifted_voice_checker,
-            )
+        result = process_channel_loop(
+            request,
+            "instagram",
+            draft_generator,
+            drifted_voice_checker,
+        )
 
         self.assertEqual(result.generation_status, "completed")
-        self.assertEqual(result.raw_draft, "Clinically precise anti-aging gloss for a flawless correction.")
+        self.assertEqual(result.raw_draft, "Paint it bold and tag us in the gloss chaos.")
         self.assertEqual(result.voice_status, "DRIFTED")
         self.assertEqual(result.voice_confidence, 0.34)
         self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
@@ -669,7 +668,45 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIsNone(result.final_safe_output)
         self.assertIsNone(result.retry_exhausted)
         self.assertEqual(result.escalation_trigger, "voice")
-        compliance.assert_not_called()
+
+    def test_channel_loop_surfaces_brief_compliance_even_when_voice_drifted(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Go Plump Yourself Extreme Plumping Lip Liner",
+            coreActives="",
+            brief="Say it's clinically proven to increase lip volume.",
+            channels=["tiktok"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return (
+                "Hook: A fuller-looking lip effect, minus the overthinking.\n"
+                "Script: Swipe, shine, go.\n"
+                "CTA: Shop now."
+            )
+
+        def drifted_voice_checker(*_args: object) -> dict[str, object]:
+            return {
+                "voice_status": "DRIFTED",
+                "voice_confidence": 0.78,
+                "voice_reason": "The copy is close but too generic for Half Magic.",
+            }
+
+        result = process_channel_loop(
+            request,
+            "tiktok",
+            draft_generator,
+            drifted_voice_checker,
+        )
+
+        self.assertEqual(result.generation_status, "completed")
+        self.assertEqual(result.voice_status, "DRIFTED")
+        self.assertEqual(result.compliance_status, "FAILED")
+        self.assertEqual(result.compliance_confidence, 1.0)
+        self.assertEqual(result.flagged_phrases, ["clinically proven"])
+        self.assertIn("Marketer brief also included risky language", result.explanation)
+        self.assertEqual(result.detection_source, "deterministic")
+        self.assertEqual(result.escalation_trigger, "compliance")
 
     def test_channel_loop_skips_compliance_when_voice_confidence_is_low(self) -> None:
         request = GenerateRequest(
@@ -690,7 +727,19 @@ class GenerateEndpointTests(unittest.TestCase):
                 "voice_reason": "The copy is close but too generic to confirm Tower 28 channel fit.",
             }
 
-        with patch("backend.app.agent.beauty_agent.check_compliance") as compliance:
+        passed_audit = {
+            "compliance_status": "PASSED",
+            "compliance_confidence": 1.0,
+            "flagged_phrases": [],
+            "explanation": "",
+            "detection_source": None,
+            "final_safe_output": "Mist, glow, done.",
+        }
+
+        with patch(
+            "backend.app.agent.beauty_agent.check_compliance",
+            return_value=passed_audit,
+        ) as compliance:
             result = process_channel_loop(
                 request,
                 "tiktok",
@@ -703,7 +752,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
         self.assertEqual(result.escalation_trigger, "voice")
         self.assertIsNone(result.final_safe_output)
-        compliance.assert_not_called()
+        self.assertEqual(compliance.call_count, 2)
 
     def test_channel_loop_runs_compliance_when_voice_passes_threshold(self) -> None:
         request = GenerateRequest(
@@ -780,7 +829,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("expert-not-clinical", tower_voice)
         self.assertIn("TikTok", tower_voice)
         self.assertIn("eczema-prone skin", tower_voice)
-        self.assertIn("backstage-friend voice", half_magic_voice)
+        self.assertIn("friend who works backstage at Fashion Week", half_magic_voice)
         self.assertIn("experimentation & artistry", half_magic_voice)
         self.assertIn("Donni Davy", half_magic_voice)
         self.assertIn("TikTok", half_magic_voice)
@@ -823,10 +872,17 @@ class GenerateEndpointTests(unittest.TestCase):
         half_magic_file_voice = half_magic_path.read_text(encoding="utf-8").rstrip("\n")
         brands = load_brand_configs()
 
-        self.assertEqual(tower_file_voice, expected_tower_voice)
-        self.assertEqual(half_magic_file_voice, expected_half_magic_voice)
-        self.assertEqual(brands["tower_28"]["voice"], expected_tower_voice)
-        self.assertEqual(brands["half_magic"]["voice"], expected_half_magic_voice)
+        self.assertEqual(brands["tower_28"]["voice"], tower_file_voice)
+        self.assertEqual(brands["half_magic"]["voice"], half_magic_file_voice)
+        self.assertIn("Core phrases", tower_file_voice)
+        self.assertIn("Products in scope", tower_file_voice)
+        self.assertIn("Swipe Serum Concealer", tower_file_voice)
+        self.assertIn("ON_VOICE", half_magic_file_voice)
+        self.assertIn("DRIFTED phrases", half_magic_file_voice)
+        self.assertIn("GO PLUMP YOURSELF", half_magic_file_voice)
+
+        self.assertTrue(tower_file_voice.startswith("[TOWER 28"))
+        self.assertTrue(half_magic_file_voice.startswith("[HALF MAGIC"))
 
     def test_check_brand_voice_parses_on_voice_result(self) -> None:
         brand_config = load_brand_configs()["tower_28"]
@@ -1004,6 +1060,14 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("Avoid disease-treatment language.", user_prompt)
         self.assertIn("Do not imply the product changes skin structure", user_prompt)
         self.assertIn("Product detail: Hypochlorous Acid", user_prompt)
+        self.assertIn(
+            "Use the product name exactly as written: SOS Daily Rescue Facial Spray",
+            user_prompt,
+        )
+        self.assertIn("Return only the requested channel's draft copy", messages[0]["content"])
+        self.assertIn("Do not include compliance reasoning", user_prompt)
+        self.assertIn("Do not include labels for other channels", user_prompt)
+        self.assertIn("Preserve the product name spelling exactly", user_prompt)
 
     def test_build_draft_prompt_includes_exact_runtime_voice_profile(self) -> None:
         request = GenerateRequest(
@@ -1025,7 +1089,7 @@ class GenerateEndpointTests(unittest.TestCase):
         user_prompt = messages[1]["content"]
         self.assertIn(f"Brand voice: {brand_config['voice']}", user_prompt)
         self.assertIn("Editorial makeup brand founded by Donni Davy", user_prompt)
-        self.assertIn("backstage-friend voice", user_prompt)
+        self.assertIn("friend who works backstage at Fashion Week", user_prompt)
 
     def test_build_draft_prompt_uses_week2_channel_specs(self) -> None:
         request = GenerateRequest(
@@ -1064,6 +1128,37 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("hook, demo/script, and a soft low-pressure CTA", tiktok_prompt)
         self.assertIn("<150 chars per section", tiktok_prompt)
         self.assertIn("No hashtags in the script body", tiktok_prompt)
+
+    def test_build_draft_prompt_prevents_channel_bleed_for_multi_channel_brief(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Magic Drip Glitter Lipgloss",
+            coreActives="Vitamin E, Jojoba Oil",
+            brief="Write an email and Instagram caption with a bold CTA.",
+            channels=["email", "instagram"],
+        )
+
+        instagram_prompt = build_draft_prompt(
+            request,
+            "instagram",
+            load_brand_configs()["half_magic"],
+            "delivers high-shine glitter payoff",
+        )[1]["content"]
+
+        self.assertIn("Channel: instagram", instagram_prompt)
+        self.assertIn("Write copy for this channel only", instagram_prompt)
+        self.assertIn("EMAIL SUBJECT LINE", instagram_prompt)
+        self.assertIn("INSTAGRAM CAPTION", instagram_prompt)
+        self.assertIn("Do not include compliance reasoning", instagram_prompt)
+        self.assertIn("Do not include compliance reasoning, refusals, explanations, notes, or markdown dividers", instagram_prompt)
+
+    def test_compliance_rules_do_not_flag_plump_product_name_words(self) -> None:
+        phrases = {rule["phrase"] for rule in load_compliance_rules()}
+
+        self.assertNotIn("plump", phrases)
+        self.assertNotIn("plumper", phrases)
+        self.assertNotIn("plumping", phrases)
+        self.assertIn("proven to boost lip fullness", phrases)
 
     def test_check_brand_voice_prompt_uses_exact_runtime_voice_profile(self) -> None:
         brand_config = load_brand_configs()["tower_28"]

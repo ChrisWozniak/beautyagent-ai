@@ -350,6 +350,31 @@ def _voice_review_result(
     )
 
 
+def _voice_blocked_compliance_failure_result(
+    channel: Channel,
+    raw_draft: str,
+    voice_result: dict[str, Any],
+    compliance_result: dict[str, Any],
+) -> ChannelResult:
+    return ChannelResult(
+        channel=channel,
+        generation_status="completed",
+        raw_draft=raw_draft,
+        voice_status=voice_result["voice_status"],
+        voice_confidence=voice_result["voice_confidence"],
+        voice_reason=voice_result["voice_reason"],
+        compliance_status=compliance_result["compliance_status"],
+        compliance_confidence=compliance_result.get("compliance_confidence"),
+        flagged_phrases=compliance_result.get("flagged_phrases"),
+        explanation=compliance_result.get("explanation"),
+        detection_source=compliance_result.get("detection_source"),
+        final_safe_output=compliance_result.get("final_safe_output"),
+        retry_exhausted=None,
+        escalation_trigger="compliance",
+        error=None,
+    )
+
+
 def _needs_compliance_review(compliance_result: dict[str, Any]) -> bool:
     confidence = compliance_result.get("compliance_confidence")
     if compliance_result["compliance_status"] == "NEEDS_HUMAN_REVIEW":
@@ -427,6 +452,15 @@ def process_channel_loop(
     _trace_agent_step(channel, "start", brand_id=request.brandId)
     raw_draft = draft_generator(request, channel)
     _trace_agent_step(channel, "draft_generated", draft_chars=len(raw_draft))
+    draft_audit = check_compliance(raw_draft)
+    brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
+    first_audit = _merge_audits(draft_audit, brief_audit)
+    _trace_agent_step(
+        channel,
+        "deterministic_precheck",
+        compliance_status=first_audit["compliance_status"],
+        compliance_confidence=first_audit.get("compliance_confidence"),
+    )
     voice_result = resolved_voice_checker(raw_draft, request.brandId, brand, channel)
     _trace_agent_step(
         channel,
@@ -436,18 +470,18 @@ def process_channel_loop(
     )
 
     if _needs_voice_review(voice_result):
+        if first_audit["compliance_status"] == "FAILED":
+            _trace_agent_step(channel, "routed_to_human_review", trigger="compliance")
+            return _voice_blocked_compliance_failure_result(
+                channel,
+                raw_draft,
+                voice_result,
+                first_audit,
+            )
+
         _trace_agent_step(channel, "routed_to_human_review", trigger="voice")
         return _voice_review_result(channel, raw_draft, voice_result)
 
-    draft_audit = check_compliance(raw_draft)
-    brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
-    first_audit = _merge_audits(draft_audit, brief_audit)
-    _trace_agent_step(
-        channel,
-        "compliance_checked",
-        compliance_status=first_audit["compliance_status"],
-        compliance_confidence=first_audit.get("compliance_confidence"),
-    )
     if _needs_compliance_review(first_audit):
         _trace_agent_step(channel, "routed_to_human_review", trigger="compliance")
         return _compliance_review_result(channel, raw_draft, voice_result, first_audit)
