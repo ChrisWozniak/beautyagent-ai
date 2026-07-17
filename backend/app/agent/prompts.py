@@ -72,7 +72,8 @@ def build_draft_prompt(
         "heal, anti-inflammatory, guaranteed-result, or skin-structure claims. "
         "Return only the requested channel's draft copy. Do not include reasoning, "
         "compliance analysis, notes, refusals, markdown dividers, or draft labels for "
-        "other channels."
+        "other channels. Output copy only. If a claim cannot be included, silently "
+        "omit it; do not explain why."
     )
 
     prompt_lines = [
@@ -96,6 +97,8 @@ def build_draft_prompt(
             "- Write copy for this channel only, even if the brief mentions other channels.",
             "- Do not include labels for other channels such as EMAIL SUBJECT LINE or INSTAGRAM CAPTION.",
             "- Do not include compliance reasoning, refusals, explanations, notes, or markdown dividers.",
+            "- Output copy only. Do not append notes, explanations, or reasoning to the draft.",
+            "- If a claim cannot be included, silently omit it - do not explain why.",
             "- Preserve the product name spelling exactly wherever it appears.",
         ]
     )

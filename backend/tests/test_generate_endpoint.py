@@ -435,6 +435,81 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.compliance_status, "PASSED")
         llm_draft.assert_called_once()
 
+    def test_channel_loop_strips_llm_reasoning_from_draft_outputs(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Face Gems",
+            coreActives="",
+            brief="Draft a TikTok script. Do not claim it treats irritation.",
+            channels=["tiktok"],
+        )
+        leaked_draft = (
+            "Hook: POV: instant sparkle\n"
+            "Script: Stick on Face Gems and make the look editorial.\n"
+            "CTA: Shop Face Gems if you're ready to play.\n"
+            "--- **Note: I cannot include claims that the gems clear up skin irritation.**"
+        )
+        seen_by_voice: dict[str, str] = {}
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return leaked_draft
+
+        def voice_checker(text: str, *_args: object) -> dict[str, object]:
+            seen_by_voice["text"] = text
+            return self.on_voice_result
+
+        result = process_channel_loop(
+            request,
+            "tiktok",
+            draft_generator,
+            voice_checker,
+        )
+
+        self.assertEqual(result.compliance_status, "PASSED")
+        self.assertEqual(result.raw_draft, result.final_safe_output)
+        self.assertNotIn("Note:", result.raw_draft)
+        self.assertNotIn("cannot include", result.raw_draft)
+        self.assertNotIn("clear up skin irritation", result.raw_draft)
+        self.assertNotIn("---", result.raw_draft)
+        self.assertEqual(seen_by_voice["text"], result.raw_draft)
+
+    def test_channel_loop_strips_opening_llm_refusal_before_tiktok_structure(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Chromaddiction Matte Eye Paint",
+            coreActives="",
+            brief="Draft a TikTok script. Avoid skincare treatment claims.",
+            channels=["tiktok"],
+        )
+        leaked_draft = (
+            "No, we can't say that - CHROMADDICTION MATTE EYE PAINT is makeup, not skincare. "
+            "But we CAN make it expressive and safe.\n\n"
+            "Hook: POV: your lids just picked the main character color\n"
+            "Script: Swipe on CHROMADDICTION MATTE EYE PAINT for bold color payoff.\n"
+            "CTA: Try the shade that matches your mood."
+        )
+        seen_by_voice: dict[str, str] = {}
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return leaked_draft
+
+        def voice_checker(text: str, *_args: object) -> dict[str, object]:
+            seen_by_voice["text"] = text
+            return self.on_voice_result
+
+        result = process_channel_loop(
+            request,
+            "tiktok",
+            draft_generator,
+            voice_checker,
+        )
+
+        self.assertTrue(result.raw_draft.startswith("Hook:"))
+        self.assertEqual(result.raw_draft, result.final_safe_output)
+        self.assertNotIn("No, we can't say that", result.raw_draft)
+        self.assertNotIn("not skincare", result.raw_draft)
+        self.assertEqual(seen_by_voice["text"], result.raw_draft)
+
     def test_channel_loop_falls_back_to_mock_when_llm_fails(self) -> None:
         request = GenerateRequest(
             brandId="tower_28",
@@ -1151,6 +1226,8 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("INSTAGRAM CAPTION", instagram_prompt)
         self.assertIn("Do not include compliance reasoning", instagram_prompt)
         self.assertIn("Do not include compliance reasoning, refusals, explanations, notes, or markdown dividers", instagram_prompt)
+        self.assertIn("Output copy only. Do not append notes, explanations, or reasoning", instagram_prompt)
+        self.assertIn("silently omit it - do not explain why", instagram_prompt)
 
     def test_compliance_rules_do_not_flag_plump_product_name_words(self) -> None:
         phrases = {rule["phrase"] for rule in load_compliance_rules()}

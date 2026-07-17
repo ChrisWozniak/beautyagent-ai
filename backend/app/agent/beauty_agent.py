@@ -30,6 +30,29 @@ CHANNEL_ALIASES: dict[Channel, tuple[str, ...]] = {
     "instagram": ("instagram", "ig"),
     "email": ("email",),
 }
+GENERATION_NOTE_PATTERNS = (
+    r"\n\s*-{3,}\s*(?:\n|$).*",
+    r"\s+-{3,}\s*\*{0,2}note\s*:",
+    r"\s+\*{0,2}note\s*:",
+    r"\s+\*{0,2}compliance note\s*:",
+    r"\s+\*{0,2}explanation\s*:",
+    r"\s+\*{0,2}reasoning\s*:",
+)
+CHANNEL_START_PATTERNS: dict[Channel, tuple[re.Pattern[str], ...]] = {
+    "tiktok": (
+        re.compile(r"(?im)^\s*hook\s*:"),
+        re.compile(r"(?im)^\s*script\s*:"),
+        re.compile(r"(?im)^\s*cta\s*:"),
+    ),
+    "instagram": (
+        re.compile(r"(?im)^\s*(?:caption|instagram caption)\s*:"),
+        re.compile(r"(?im)^\s*(?:hook|cta)\s*:"),
+    ),
+    "email": (
+        re.compile(r"(?im)^\s*subject\s*:"),
+        re.compile(r"(?im)^\s*body\s*:"),
+    ),
+}
 
 
 def _agent_trace_enabled() -> bool:
@@ -43,6 +66,40 @@ def _trace_agent_step(channel: Channel, step: str, **fields: Any) -> None:
     details = " ".join(f"{key}={value}" for key, value in fields.items())
     suffix = f" {details}" if details else ""
     print(f"[agent-trace] channel={channel} step={step}{suffix}", flush=True)
+
+
+def _strip_leading_reasoning(text: str, channel: Channel) -> str:
+    matches = [
+        match
+        for pattern in CHANNEL_START_PATTERNS[channel]
+        if (match := pattern.search(text)) is not None
+    ]
+    if not matches:
+        return text
+
+    first_start = min(match.start() for match in matches)
+    leading_text = text[:first_start].strip()
+    if not leading_text:
+        return text
+
+    if re.search(r"\b(?:no|cannot|can't|can not|we can|instead|but)\b", leading_text, re.IGNORECASE):
+        return text[first_start:].lstrip()
+
+    return text
+
+
+def _strip_generation_notes(text: str, channel: Channel) -> str:
+    """Remove LLM reasoning leaked after the generated draft copy."""
+    cleaned = _strip_leading_reasoning(text.strip(), channel)
+    for pattern in GENERATION_NOTE_PATTERNS:
+        cleaned = re.split(
+            pattern,
+            cleaned,
+            maxsplit=1,
+            flags=re.IGNORECASE | re.DOTALL,
+        )[0].strip()
+
+    return cleaned
 
 
 class DraftGenerator(Protocol):
@@ -451,6 +508,7 @@ def process_channel_loop(
     resolved_voice_checker = brand_voice_checker or check_brand_voice
     _trace_agent_step(channel, "start", brand_id=request.brandId)
     raw_draft = draft_generator(request, channel)
+    raw_draft = _strip_generation_notes(raw_draft, channel)
     _trace_agent_step(channel, "draft_generated", draft_chars=len(raw_draft))
     draft_audit = check_compliance(raw_draft)
     brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
