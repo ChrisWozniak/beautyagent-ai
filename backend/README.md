@@ -6,19 +6,22 @@ This side of the project owns agent orchestration, compliance tooling, static ba
 
 ## Agent Role
 
-The backend agent receives a structured marketing brief, generates copy per requested channel, runs the Week 2 Brand Voice Agent, audits compliance-sensitive language, and returns a strict `GenerateResponse` for the frontend.
+The backend runs a two-agent sequential pipeline. For each requested channel, the Brand Voice Agent evaluates the generated draft against the brand's enriched voice profile and returns a verdict (`ON_VOICE` or `DRIFTED`), a confidence score, and a plain-language reason. If voice confidence clears 0.75, the Compliance Agent runs next and audits for unsafe or unsupported cosmetic claims. The orchestrator merges both verdicts into one of three channel statuses: `PASSED`, `FAILED`, or `NEEDS_HUMAN_REVIEW`. All three channels run concurrently and fail independently.
 
 ## Problem It Solves
 
 The backend helps beauty marketing teams create faster first-draft content while reducing two key risks: copy that drifts away from approved brand voice and copy that makes unsafe or unsupported cosmetic claims.
 
+v1 returned a binary `PASSED`/`FAILED` compliance verdict with no visibility into brand voice. Copy could ship as "Compliant" while reading as generic, over-cautious, or tonally flat — with no signal to the marketer that anything was off. Agent 2.0 adds an explicit voice evaluation layer before compliance runs, so both failure modes surface as distinct, actionable signals.
+
 ## Tools Used
 
 - FastAPI route: `/generate`
 - Drafting: deterministic mock drafting by default, optional Claude/LiteLLM drafting when backend keys are configured
-- Brand voice: Sonnet-backed `check_brand_voice`
-- Compliance: deterministic `check_compliance`, brief audit, merged audit, and final safety backstop
-- Config/data: brand configs, product configs, compliance rules, and runtime brand voice profile markdown files
+- Brand voice: Sonnet-backed `check_brand_voice` — new in Agent 2.0; evaluates every draft against the brand's enriched voice profile before compliance runs; returns `voice_status`, `voice_confidence`, and `voice_reason`
+- Compliance: deterministic `check_compliance`, brief audit, merged audit, and final safety backstop — `compliance_confidence` now surfaced to the orchestrator instead of being discarded internally
+- Orchestrator routing: merges `voice_confidence` and `compliance_confidence` against the 0.75 threshold; sets `compliance_status` and `escalation_trigger` (`"voice"` | `"compliance"` | `null`)
+- Config/data: brand configs (with enriched voice profile strings), product configs, compliance rules, and runtime brand voice profile markdown files
 - Validation: Pydantic request/response models with strict frontend-facing fields
 - Verification: unit tests, red-team evals, brand voice calibration evals, live smoke tests, and demo smoke script
 - Usage tracking: local token/cost ledger for live LLM calls
@@ -77,7 +80,7 @@ CHANNEL_TIMEOUT_SECONDS=20
 ```
 
 Do not put `ANTHROPIC_API_KEY` or any provider key in React/Vite frontend files. The frontend should call FastAPI `/generate`; the backend calls Claude through LiteLLM.
-`ANTHROPIC_MODEL_SONNET` is used for generation and the Week 2 Brand Voice Agent. `ANTHROPIC_MODEL_HAIKU` is reserved for the Week 2 compliance audit path.
+`ANTHROPIC_MODEL_SONNET` is used for generation and the Brand Voice Agent (`check_brand_voice`). `ANTHROPIC_MODEL_HAIKU` is reserved for the compliance LLM audit path.
 
 OpenRouter remains supported as a fallback provider for existing setups:
 
@@ -91,7 +94,7 @@ CHANNEL_TIMEOUT_SECONDS=20
 ```
 
 If LLM drafting is disabled, unavailable, or misconfigured, the backend falls back to deterministic mock drafting and still returns the same `/generate` response shape.
-Fallback drafts still run through the same compliance loop as LLM drafts: draft audit, marketer brief audit, merged audit, and final deterministic safety backstop.
+Fallback drafts still run through the same full pipeline as LLM drafts: Brand Voice Agent → compliance audit (brief audit, merged audit, final deterministic safety backstop).
 `LLM_TIMEOUT_SECONDS` limits the direct provider call. `LLM_MAX_TOKENS` caps the draft response size. `CHANNEL_TIMEOUT_SECONDS` limits the full per-channel backend pipeline and returns that channel with `generation_status: "error"` and `error.code: "TIMEOUT"` if exceeded.
 
 Drafts are formatted for the current result cards: TikTok uses `Hook` / `Script` / `CTA`, Email uses `Subject` / `Body`, and Instagram reads as caption copy. These are formatting conventions inside the single `raw_draft` and `final_safe_output` string fields, not separate API fields.
@@ -131,7 +134,7 @@ Backend-only red-team eval runner:
 python backend/scripts/run_red_team_eval.py --mock-brand-voice --compact
 ```
 
-The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED` outcomes. Use `--mock-brand-voice` for the Week 2 red-team compliance set so the run measures deterministic compliance behavior without spending Sonnet tokens on the Brand Voice Agent. It supports both a single `expected_status` for all requested channels and an `expected_by_channel` map for mixed multi-channel cases.
+The eval runner posts sample safe/risky cases through the FastAPI app and reports expected `PASSED`/`FAILED`/`NEEDS_HUMAN_REVIEW` outcomes. Use `--mock-brand-voice` for the Week 2 red-team compliance set so the run measures deterministic compliance behavior without spending Sonnet tokens on the Brand Voice Agent. It supports both a single `expected_status` for all requested channels and an `expected_by_channel` map for mixed multi-channel cases.
 
 For timeout-friendly chunks or targeted reruns:
 
@@ -160,12 +163,32 @@ Backend-only brand voice calibration runner:
 python backend/scripts/run_brand_voice_eval.py --compact
 ```
 
-The brand voice runner evaluates the six-case near-miss set in `backend/evals/brand_voice_calibration_cases.json` against `check_brand_voice`. It supports the same targeted run options:
+The brand voice runner evaluates the six-case near-miss calibration set in `backend/evals/brand_voice_calibration_cases.json` against `check_brand_voice`. This set is kept separate from the 20-case primary red-team eval to keep the headline accuracy metric defensible. Confidence threshold is hardcoded at 0.75 for Agent 2.0; calibrate against this set before demo.
+
+It supports the same targeted run options:
 
 ```powershell
 python backend/scripts/run_brand_voice_eval.py --start 1 --end 3 --compact
 python backend/scripts/run_brand_voice_eval.py --case-id tower28_good_clean_fun_instagram_on_voice
 ```
+
+## Agent 2.0 Response Fields
+
+Five new fields added to every per-channel result object (all present when `generation_status` is `"completed"`; `null` when `generation_status` is `"error"`):
+
+| Field | Type | Notes |
+|---|---|---|
+| `voice_status` | string | `"ON_VOICE"` \| `"DRIFTED"` |
+| `voice_confidence` | float 0.0–1.0 | Below 0.75 routes to `NEEDS_HUMAN_REVIEW` |
+| `voice_reason` | string or null | Always populated when Brand Voice Agent runs; specific, never generic |
+| `compliance_confidence` | float 0.0–1.0 | Null if compliance never ran (voice `DRIFTED` gated it out) |
+| `escalation_trigger` | string or null | `"voice"` \| `"compliance"` \| `null`; never `"both"` |
+
+`compliance_status` now allows three values: `PASSED` | `FAILED` | `NEEDS_HUMAN_REVIEW`.
+
+When `compliance_status` is `NEEDS_HUMAN_REVIEW` and compliance never ran (voice `DRIFTED`), `flagged_phrases`, `explanation`, `detection_source`, `final_safe_output`, `retry_exhausted`, and `compliance_confidence` are all `null`. `final_safe_output` stays `null` for any `NEEDS_HUMAN_REVIEW` result regardless of whether compliance ran.
+
+See `BEAUTYAGENT_API_CONTRACT.md` Section 9 for the full routing table and example payloads (Examples 6 and 7).
 
 ## LLM Usage Tracking
 
@@ -226,5 +249,5 @@ Week 2 backend readiness and frontend handoff notes live in `backend/evals/WEEK2
 
 - Brands: Tower 28 and Half Magic
 - Channels: TikTok, Instagram, Email
-- Compliance status: PASSED, FAILED, or NEEDS_HUMAN_REVIEW for Week 2
+- Compliance status: `PASSED`, `FAILED`, or `NEEDS_HUMAN_REVIEW`
 - Static JSON config only
