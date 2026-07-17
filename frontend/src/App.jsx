@@ -192,6 +192,34 @@ const DEMO_CASES = [
       },
     },
   },
+  {
+    label: "DRIFTED+FAILED · TikTok · Half Magic",
+    brand: "half_magic",
+    productName: "Magic Drip Glitter Lipgloss",
+    channels: ["tiktok"],
+    response: {
+      results: [
+        {
+          channel: "tiktok",
+          generation_status: "completed",
+          raw_draft: "Clinically proven to boost lip fullness ✨ MAGIC DRIP's plush cushion formula gives you a plumped-up glow that lasts all day 💧",
+          voice_status: "DRIFTED",
+          voice_confidence: 0.61,
+          voice_reason: "Copy opens with a prohibited clinical claim structure rather than Half Magic's hook-first, experimentation-led TikTok format. Product name casing is correct but the framing reads clinical, not playful.",
+          compliance_status: "FAILED",
+          compliance_confidence: 0.97,
+          flagged_phrases: ["clinically proven"],
+          explanation: "\"Clinically proven\" is a literal claim of substantiating trial data — MAGIC DRIP has no clinical backing for a lip-fullness claim. Exact banned phrase, not a paraphrase.",
+          detection_source: "deterministic",
+          final_safe_output: "Your lips called — they want their glow back ✨ MAGIC DRIP's plush, non-sticky formula wraps your lips in rich, cocooning shine. All the sparkle, none of the crunch. 💧",
+          retry_exhausted: false,
+          escalation_trigger: "compliance",
+          error: null,
+        },
+      ],
+      error: null,
+    },
+  },
 ];
 
 // ─── Error copy ───────────────────────────────────────────────────────────────
@@ -234,16 +262,20 @@ function ComplianceBadge({ level }) {
 
 // ─── Copy button ──────────────────────────────────────────────────────────────
 
-function CopyBtn({ text, id, copiedId, onCopy, variant = "primary" }) {
+function CopyBtn({ text, id, copiedId, onCopy, variant = "primary", disabled = false }) {
   const copied = copiedId === id;
   return (
     <button
       onClick={() => onCopy(text, id)}
+      disabled={disabled}
+      style={disabled ? { opacity: 0.5, cursor: "not-allowed", pointerEvents: "none", border: "1px solid #D1CBC3", color: "#8A8480" } : undefined}
       className={clsx(
         "inline-flex items-center gap-1.5 text-[12px] font-semibold px-3.5 py-2 rounded-[8px] transition-all duration-150 select-none",
-        variant === "primary"
-          ? "bg-[#315B4C] text-[#FCFBF9] hover:bg-[#2A4E40]"
-          : "border border-border text-foreground hover:bg-secondary"
+        disabled
+          ? "bg-muted text-muted-foreground cursor-not-allowed"
+          : variant === "primary"
+            ? "bg-[#315B4C] text-[#FCFBF9] hover:bg-[#2A4E40]"
+            : "border border-border text-foreground hover:bg-secondary"
       )}
     >
       {copied ? (
@@ -369,6 +401,7 @@ function mapApiResults(data) {
         flagged_phrases: r.flagged_phrases,
         explanation: r.explanation,
         voice_reason: r.voice_reason,
+        voice_status: r.voice_status,
         edit: {
           originalDraft: r.raw_draft,
           note: r.explanation,
@@ -860,7 +893,10 @@ function ResultCard({ result, copiedId, onCopy }) {
               <p className="text-[11px] text-muted-foreground">{result.checkedNote}</p>
             ) : (
               <p className="text-[12px] font-medium text-[var(--color-charcoal-muted)] mt-1 mb-3">
-                <span style={{color: 'var(--color-moss)'}}>Voice ✓</span>
+                {result.voice_status === "DRIFTED"
+                  ? <span style={{color: 'var(--color-terracotta-text)'}}>Voice ✗</span>
+                  : <span style={{color: 'var(--color-moss)'}}>Voice ✓</span>
+                }
                 {' · '}
                 {result.compliance === "compliant"
                   ? <span style={{color: 'var(--color-moss)'}}>Compliance ✓</span>
@@ -994,6 +1030,7 @@ function ResultCard({ result, copiedId, onCopy }) {
                   id={`${result.channelId}-copy`}
                   copiedId={copiedId}
                   onCopy={onCopy}
+                  disabled={!result.edit?.correctedCopy || result.voice_status === "DRIFTED"}
                 />
               </div>
             </div>

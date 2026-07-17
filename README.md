@@ -4,7 +4,7 @@ BeautyAgent AI project workspace.
 
 ## Agent Role
 
-BeautyAgent AI is a beauty marketing content agent. It generates channel-specific draft copy for supported brands, checks whether the draft matches the brand voice, audits the copy and marketer brief for compliance risk, and returns a structured result the frontend can render.
+BeautyAgent AI is a beauty marketing content agent. It generates channel-specific draft copy for supported brands, runs a Brand Voice Agent to check whether the draft matches the brand voice before compliance runs, audits the copy and marketer brief for compliance risk, and returns a structured result the frontend can render. Each channel result returns one of three statuses: PASSED, FAILED, or NEEDS_HUMAN_REVIEW.
 
 ## Problem It Solves
 
@@ -122,3 +122,10 @@ Current backend behavior notes:
 - Brief-level compliance violations can return `FAILED` even when the visible generated draft is clean. In that case `flagged_phrases` and `explanation` point back to risky marketer brief language.
 
 Deployment prep lives in `backend/DEPLOYMENT.md`; the repo includes `render.yaml` for a Render web service Blueprint.
+
+## Scope
+
+- Brands: Tower 28 and Half Magic
+- Channels: TikTok, Instagram, Email
+- Compliance status: PASSED, FAILED, or NEEDS_HUMAN_REVIEW
+- Static JSON config only

@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "channel": "tiktok",
+      "generation_status": "completed",
+      "raw_draft": "Clinically proven to boost lip fullness ✨ MAGIC DRIP's plush cushion formula gives you a plumped-up glow that lasts all day 💧",
+      "voice_status": "DRIFTED",
+      "voice_confidence": 0.61,
+      "voice_reason": "Copy opens with a prohibited clinical claim structure rather than Half Magic's hook-first, experimentation-led TikTok format. Product name casing is correct but the framing reads clinical, not playful.",
+      "compliance_status": "FAILED",
+      "compliance_confidence": 0.97,
+      "flagged_phrases": ["clinically proven"],
+      "explanation": "\"Clinically proven\" is a literal claim of substantiating trial data — MAGIC DRIP has no clinical backing for a lip-fullness claim. Exact banned phrase, not a paraphrase.",
+      "detection_source": "deterministic",
+      "final_safe_output": "Your lips called — they want their glow back ✨ MAGIC DRIP's plush, non-sticky formula wraps your lips in rich, cocooning shine. All the sparkle, none of the crunch. 💧",
+      "retry_exhausted": false,
+      "escalation_trigger": "compliance",
+      "error": null
+    }
+  ],
+  "error": null
+}
