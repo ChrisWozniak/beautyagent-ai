@@ -473,6 +473,43 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertNotIn("---", result.raw_draft)
         self.assertEqual(seen_by_voice["text"], result.raw_draft)
 
+    def test_channel_loop_strips_opening_llm_refusal_before_tiktok_structure(self) -> None:
+        request = GenerateRequest(
+            brandId="half_magic",
+            productName="Chromaddiction Matte Eye Paint",
+            coreActives="",
+            brief="Draft a TikTok script. Avoid skincare treatment claims.",
+            channels=["tiktok"],
+        )
+        leaked_draft = (
+            "No, we can't say that - CHROMADDICTION MATTE EYE PAINT is makeup, not skincare. "
+            "But we CAN make it expressive and safe.\n\n"
+            "Hook: POV: your lids just picked the main character color\n"
+            "Script: Swipe on CHROMADDICTION MATTE EYE PAINT for bold color payoff.\n"
+            "CTA: Try the shade that matches your mood."
+        )
+        seen_by_voice: dict[str, str] = {}
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return leaked_draft
+
+        def voice_checker(text: str, *_args: object) -> dict[str, object]:
+            seen_by_voice["text"] = text
+            return self.on_voice_result
+
+        result = process_channel_loop(
+            request,
+            "tiktok",
+            draft_generator,
+            voice_checker,
+        )
+
+        self.assertTrue(result.raw_draft.startswith("Hook:"))
+        self.assertEqual(result.raw_draft, result.final_safe_output)
+        self.assertNotIn("No, we can't say that", result.raw_draft)
+        self.assertNotIn("not skincare", result.raw_draft)
+        self.assertEqual(seen_by_voice["text"], result.raw_draft)
+
     def test_channel_loop_falls_back_to_mock_when_llm_fails(self) -> None:
         request = GenerateRequest(
             brandId="tower_28",
