@@ -141,3 +141,29 @@ Locked decisions made before Day 1 build started (and one confirmed during Day 2
 **What changed:** The original PRD (Dependency #3) assumed Agent 2.0's Sonnet/Haiku model assignments depended on paid OpenRouter tier access. That dependency is replaced with: a valid Anthropic API key with access to the Sonnet and Haiku models. `ANTHROPIC_MODEL_SONNET` and `ANTHROPIC_MODEL_HAIKU` env vars were also updated to drop the retired `claude-3-5-haiku-latest` model.
 
 **Rationale:** Removes a paid-tier dependency the team doesn't control and simplifies the call path by one hop. Doesn't touch `beautyagent_api_contract.md` — this is an internal provider change, not a change to the `/generate` request/response shape — so it doesn't require the usual contract-coordination step, just a doc update so the PRD stops describing a path no longer being built.
+
+---
+
+## Calibration Set Evaluation Gap — [2026-07-17]
+
+**Finding:** The 6-case brand voice calibration set in `backend/evals/brand_voice_calibration_cases.json` cannot be validated through the UI. When calibration copy samples are submitted as briefs, the generation step rewrites them into on-voice output before the voice agent evaluates — meaning the agent always evaluates its own clean draft, not the calibration sample.
+
+**Example:** Cal-2 (Tower 28 clinical treatment copy, expected DRIFTED) returned ON_VOICE at 0.92 because the model rewrote the clinical brief into clean Tower 28 copy first.
+
+**Resolution needed:** A `/evaluate-voice` endpoint that accepts raw copy + brandId + channel and returns a voice verdict without generation. Estimated effort: <1 hour backend work. Backlog item — not blocking demo.
+
+**Workaround:** For DRIFTED calibration cases, rework briefs to force drifted draft output rather than using clinical/treatment language the model will silently fix.
+
+---
+
+## /evaluate-voice Endpoint Added — [2026-07-17]
+
+**Decision:** Added a standalone `/evaluate-voice` endpoint to `main.py` for direct brand voice evaluation without triggering draft generation.
+
+**Why:** The 6-case brand voice calibration set in `backend/evals/brand_voice_calibration_cases.json` could not be validated through the UI — the generation step rewrites off-brand briefs into on-voice copy before the voice agent evaluates, making DRIFTED cases untestable via normal submission flow.
+
+**What it does:** Accepts `brandId`, `channel`, and `text` (raw copy), calls `check_brand_voice()` directly, and returns `voice_status`, `voice_confidence`, and `voice_reason` with no generation step involved.
+
+**Scope:** ~20 lines in `main.py` only. No new files, no schema changes, no contract impact.
+
+**Known gap:** `run_brand_voice_eval.py` still calls `check_brand_voice` directly rather than hitting the endpoint. A small HTTP adapter (~15 lines) would close this — deferred to backlog.

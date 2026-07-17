@@ -1,14 +1,17 @@
 import os
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
 
-from .agent.beauty_agent import generate_mock_response
+from .agent.beauty_agent import generate_mock_response, load_brand_configs
 from .config_loader import ConfigLoadError
-from .models.request_models import GenerateRequest
+from .models.request_models import BrandId, Channel, GenerateRequest
 from .models.response_models import GenerateResponse, TopLevelError
+from .tools.check_brand_voice import check_brand_voice
 
 app = FastAPI(title="BeautyAgent AI Backend")
 
@@ -105,6 +108,25 @@ def version() -> dict[str, str]:
         "render_service_name": os.getenv("RENDER_SERVICE_NAME", "unknown"),
         "render_external_url": os.getenv("RENDER_EXTERNAL_URL", "unknown"),
     }
+
+
+class EvaluateVoiceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    brandId: BrandId
+    channel: Channel
+    text: str = Field(..., min_length=1)
+
+
+@app.post("/evaluate-voice")
+async def evaluate_voice(request: EvaluateVoiceRequest) -> dict[str, Any]:
+    brand_configs = load_brand_configs()
+    brand_config = brand_configs[request.brandId]
+    return check_brand_voice(
+        text=request.text,
+        brand_id=request.brandId,
+        brand_config=brand_config,
+        channel=request.channel,
+    )
 
 
 @app.post("/generate", response_model=GenerateResponse)
