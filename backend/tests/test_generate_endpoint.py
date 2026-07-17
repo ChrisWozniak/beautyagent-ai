@@ -781,7 +781,40 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.flagged_phrases, ["clinically proven"])
         self.assertIn("Marketer brief also included risky language", result.explanation)
         self.assertEqual(result.detection_source, "deterministic")
-        self.assertEqual(result.escalation_trigger, "compliance")
+        self.assertIsNone(result.escalation_trigger)
+
+    def test_channel_loop_runs_compliance_when_drifted_confidence_meets_threshold(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="Draft one gentle Instagram caption.",
+            channels=["instagram"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "A quick refresh for sensitive skin days. Shop now."
+
+        def drifted_voice_checker(*_args: object) -> dict[str, object]:
+            return {
+                "voice_status": "DRIFTED",
+                "voice_confidence": 0.78,
+                "voice_reason": "The copy is close but needs a more specific Tower 28 cadence.",
+            }
+
+        result = process_channel_loop(
+            request,
+            "instagram",
+            draft_generator,
+            drifted_voice_checker,
+        )
+
+        self.assertEqual(result.voice_status, "DRIFTED")
+        self.assertEqual(result.voice_confidence, 0.78)
+        self.assertEqual(result.compliance_status, "PASSED")
+        self.assertEqual(result.compliance_confidence, 1.0)
+        self.assertEqual(result.final_safe_output, result.raw_draft)
+        self.assertIsNone(result.escalation_trigger)
 
     def test_channel_loop_skips_compliance_when_voice_confidence_is_low(self) -> None:
         request = GenerateRequest(
@@ -955,6 +988,9 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("ON_VOICE", half_magic_file_voice)
         self.assertIn("DRIFTED phrases", half_magic_file_voice)
         self.assertIn("GO PLUMP YOURSELF", half_magic_file_voice)
+        self.assertIn("Never use URL-based CTAs", half_magic_file_voice)
+        self.assertIn("HalfMagicBeauty.com", half_magic_file_voice)
+        self.assertIn("ALL CAPS action phrases only", half_magic_file_voice)
 
         self.assertTrue(tower_file_voice.startswith("[TOWER 28"))
         self.assertTrue(half_magic_file_voice.startswith("[HALF MAGIC"))
@@ -1193,6 +1229,8 @@ class GenerateEndpointTests(unittest.TestCase):
         )[1]["content"]
         self.assertIn("Body should be 3-5 sentences max", email_prompt)
         self.assertIn("Subject: [subject line, 30-50 chars]", email_prompt)
+        self.assertIn("ALL CAPS action phrase", email_prompt)
+        self.assertIn("SHOP THE COLLECTION", email_prompt)
 
         tiktok_prompt = build_draft_prompt(
             request,
@@ -1203,6 +1241,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("hook, demo/script, and a soft low-pressure CTA", tiktok_prompt)
         self.assertIn("<150 chars per section", tiktok_prompt)
         self.assertIn("No hashtags in the script body", tiktok_prompt)
+        self.assertIn("Do not include URLs or domain names in TikTok CTAs", tiktok_prompt)
 
     def test_build_draft_prompt_prevents_channel_bleed_for_multi_channel_brief(self) -> None:
         request = GenerateRequest(
