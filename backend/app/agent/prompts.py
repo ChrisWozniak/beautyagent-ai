@@ -16,9 +16,11 @@ CHANNEL_INSTRUCTIONS: dict[Channel, str] = {
         "No hashtags in the script body."
     ),
     "instagram": (
-        "Write an Instagram caption. Hook first, then 1-2 short paragraphs, then CTA. "
-        "Tower 28: 75-250 words, 1-3 emoji max, CTA 'find your shade' or 'shop now', zero hashtags. "
-        "Half Magic: 100-250 words, hook-first, moderate emoji, CTA 'tag us' or 'shop now', zero hashtags. "
+        "Write an Instagram caption. "
+        "Tower 28: hook first, then 1-2 short paragraphs, then CTA. 75-250 words, 1-3 emoji max, CTA 'find your shade' or 'shop now', zero hashtags. "
+        "Half Magic: hook-first, moderate emoji, CTA 'tag us' or 'shop now', zero hashtags. "
+        "Half Magic word count by post type — product drop (default): 5-30 words; tutorial/how-to: 30-60 words with emoji list; founder/milestone: 80-150 words. "
+        "Default to 5-30 words unless the brief clearly signals a tutorial or milestone post. "
         "No hashtag blocks. No more than 3 emoji total."
     ),
     "email": (
