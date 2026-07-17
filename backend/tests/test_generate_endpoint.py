@@ -829,7 +829,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIn("expert-not-clinical", tower_voice)
         self.assertIn("TikTok", tower_voice)
         self.assertIn("eczema-prone skin", tower_voice)
-        self.assertIn("backstage-friend voice", half_magic_voice)
+        self.assertIn("friend who works backstage at Fashion Week", half_magic_voice)
         self.assertIn("experimentation & artistry", half_magic_voice)
         self.assertIn("Donni Davy", half_magic_voice)
         self.assertIn("TikTok", half_magic_voice)
@@ -872,10 +872,17 @@ class GenerateEndpointTests(unittest.TestCase):
         half_magic_file_voice = half_magic_path.read_text(encoding="utf-8").rstrip("\n")
         brands = load_brand_configs()
 
-        self.assertEqual(tower_file_voice, expected_tower_voice)
-        self.assertEqual(half_magic_file_voice, expected_half_magic_voice)
-        self.assertEqual(brands["tower_28"]["voice"], expected_tower_voice)
-        self.assertEqual(brands["half_magic"]["voice"], expected_half_magic_voice)
+        self.assertEqual(brands["tower_28"]["voice"], tower_file_voice)
+        self.assertEqual(brands["half_magic"]["voice"], half_magic_file_voice)
+        self.assertIn("Core phrases", tower_file_voice)
+        self.assertIn("Products in scope", tower_file_voice)
+        self.assertIn("Swipe Serum Concealer", tower_file_voice)
+        self.assertIn("ON_VOICE", half_magic_file_voice)
+        self.assertIn("DRIFTED phrases", half_magic_file_voice)
+        self.assertIn("GO PLUMP YOURSELF", half_magic_file_voice)
+
+        self.assertTrue(tower_file_voice.startswith("[TOWER 28"))
+        self.assertTrue(half_magic_file_voice.startswith("[HALF MAGIC"))
 
     def test_check_brand_voice_parses_on_voice_result(self) -> None:
         brand_config = load_brand_configs()["tower_28"]
@@ -1082,7 +1089,7 @@ class GenerateEndpointTests(unittest.TestCase):
         user_prompt = messages[1]["content"]
         self.assertIn(f"Brand voice: {brand_config['voice']}", user_prompt)
         self.assertIn("Editorial makeup brand founded by Donni Davy", user_prompt)
-        self.assertIn("backstage-friend voice", user_prompt)
+        self.assertIn("friend who works backstage at Fashion Week", user_prompt)
 
     def test_build_draft_prompt_uses_week2_channel_specs(self) -> None:
         request = GenerateRequest(
