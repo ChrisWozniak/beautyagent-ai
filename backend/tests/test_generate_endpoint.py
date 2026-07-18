@@ -744,7 +744,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertIsNone(result.retry_exhausted)
         self.assertEqual(result.escalation_trigger, "voice")
 
-    def test_channel_loop_surfaces_brief_compliance_even_when_voice_drifted(self) -> None:
+    def test_channel_loop_skips_compliance_when_voice_drifted_even_if_brief_is_risky(self) -> None:
         request = GenerateRequest(
             brandId="half_magic",
             productName="Go Plump Yourself Extreme Plumping Lip Liner",
@@ -776,14 +776,16 @@ class GenerateEndpointTests(unittest.TestCase):
 
         self.assertEqual(result.generation_status, "completed")
         self.assertEqual(result.voice_status, "DRIFTED")
-        self.assertEqual(result.compliance_status, "FAILED")
-        self.assertEqual(result.compliance_confidence, 1.0)
-        self.assertEqual(result.flagged_phrases, ["clinically proven"])
-        self.assertIn("Marketer brief also included risky language", result.explanation)
-        self.assertEqual(result.detection_source, "deterministic")
-        self.assertIsNone(result.escalation_trigger)
+        self.assertEqual(result.voice_confidence, 0.78)
+        self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertIsNone(result.compliance_confidence)
+        self.assertIsNone(result.flagged_phrases)
+        self.assertIsNone(result.explanation)
+        self.assertIsNone(result.detection_source)
+        self.assertIsNone(result.final_safe_output)
+        self.assertEqual(result.escalation_trigger, "voice")
 
-    def test_channel_loop_runs_compliance_when_drifted_confidence_meets_threshold(self) -> None:
+    def test_channel_loop_routes_drifted_confidence_above_threshold_to_voice_review(self) -> None:
         request = GenerateRequest(
             brandId="tower_28",
             productName="SOS Daily Rescue Facial Spray",
@@ -811,10 +813,46 @@ class GenerateEndpointTests(unittest.TestCase):
 
         self.assertEqual(result.voice_status, "DRIFTED")
         self.assertEqual(result.voice_confidence, 0.78)
-        self.assertEqual(result.compliance_status, "PASSED")
-        self.assertEqual(result.compliance_confidence, 1.0)
-        self.assertEqual(result.final_safe_output, result.raw_draft)
-        self.assertIsNone(result.escalation_trigger)
+        self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertIsNone(result.compliance_confidence)
+        self.assertIsNone(result.flagged_phrases)
+        self.assertIsNone(result.explanation)
+        self.assertIsNone(result.detection_source)
+        self.assertIsNone(result.final_safe_output)
+        self.assertEqual(result.escalation_trigger, "voice")
+
+    def test_channel_loop_routes_jill_demo_repro_drifted_tiktok_to_voice_review(self) -> None:
+        request = GenerateRequest(
+            brandId="tower_28",
+            productName="SOS Daily Rescue Facial Spray",
+            coreActives="Hypochlorous Acid",
+            brief="bestie this spray said SLAY to my angry skin no cap. Write this like a chaotic hot girl TikTok.",
+            channels=["tiktok"],
+        )
+
+        def draft_generator(_: GenerateRequest, __: str) -> str:
+            return "Hook: bestie this spray said SLAY to angry skin.\nScript: Spritz and go.\nCTA: Shop now."
+
+        def drifted_voice_checker(*_args: object) -> dict[str, object]:
+            return {
+                "voice_status": "DRIFTED",
+                "voice_confidence": 0.78,
+                "voice_reason": "The chaotic slang misses Tower 28's approachable, expert-not-clinical voice.",
+            }
+
+        result = process_channel_loop(
+            request,
+            "tiktok",
+            draft_generator,
+            drifted_voice_checker,
+        )
+
+        self.assertEqual(result.voice_status, "DRIFTED")
+        self.assertEqual(result.voice_confidence, 0.78)
+        self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
+        self.assertEqual(result.escalation_trigger, "voice")
+        self.assertIsNone(result.compliance_confidence)
+        self.assertIsNone(result.final_safe_output)
 
     def test_channel_loop_skips_compliance_when_voice_confidence_is_low(self) -> None:
         request = GenerateRequest(
@@ -860,7 +898,7 @@ class GenerateEndpointTests(unittest.TestCase):
         self.assertEqual(result.compliance_status, "NEEDS_HUMAN_REVIEW")
         self.assertEqual(result.escalation_trigger, "voice")
         self.assertIsNone(result.final_safe_output)
-        self.assertEqual(compliance.call_count, 2)
+        self.assertEqual(compliance.call_count, 0)
 
     def test_channel_loop_runs_compliance_when_voice_passes_threshold(self) -> None:
         request = GenerateRequest(
