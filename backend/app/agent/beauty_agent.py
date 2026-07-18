@@ -377,10 +377,7 @@ def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> d
 
 
 def _needs_voice_review(voice_result: dict[str, Any]) -> bool:
-    return (
-        voice_result["voice_status"] == "DRIFTED"
-        or voice_result["voice_confidence"] < VOICE_CONFIDENCE_THRESHOLD
-    )
+    return voice_result["voice_confidence"] < VOICE_CONFIDENCE_THRESHOLD
 
 
 def _voice_review_result(

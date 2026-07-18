@@ -12,7 +12,9 @@ CHANNEL_INSTRUCTIONS: dict[Channel, str] = {
         "Write a short TikTok script with a hook, demo/script, and a soft low-pressure CTA. "
         "Friend/creator voice - casual, conversational, real. "
         "Tower 28: approachable and skin-first, <150 chars per section. "
-        "Half Magic: fast, tutorial/trend style, backstage-friend energy, <100-char caption. "
+        "Half Magic: fast, tutorial/trend style, backstage-friend energy, <100-char caption; "
+        "CTA examples: TRY THIS, TAG US, WHICH LOOK?, SAVE THIS TUTORIAL, SHOP NOW. "
+        "Do not include URLs or domain names in TikTok CTAs. "
         "No hashtags in the script body."
     ),
     "instagram": (
@@ -27,6 +29,8 @@ CHANNEL_INSTRUCTIONS: dict[Channel, str] = {
         "Write a short email. Start with 'Subject:' on its own line, then 'Body:' with concise copy. "
         "Tower 28: benefit-driven subject line, 30-50 chars, 0-1 emoji, warm and reassuring tone. "
         "Half Magic: playful/curious subject line, 25-45 chars, casual and expressive tone. "
+        "Half Magic CTA should be an ALL CAPS action phrase like SHOP THE COLLECTION, PLAY NOW, "
+        "DISCOVER, CREATE YOUR LOOK, or LET'S GET GLAM - not a mixed-case product callout. "
         "Body should be 3-5 sentences max. One clear CTA. No bullet points."
     ),
 }
