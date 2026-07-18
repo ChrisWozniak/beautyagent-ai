@@ -377,7 +377,10 @@ def _merge_audits(draft_audit: dict[str, Any], brief_audit: dict[str, Any]) -> d
 
 
 def _needs_voice_review(voice_result: dict[str, Any]) -> bool:
-    return voice_result["voice_confidence"] < VOICE_CONFIDENCE_THRESHOLD
+    return (
+        voice_result["voice_status"] == "DRIFTED"
+        or voice_result["voice_confidence"] < VOICE_CONFIDENCE_THRESHOLD
+    )
 
 
 def _voice_review_result(
@@ -507,15 +510,6 @@ def process_channel_loop(
     raw_draft = draft_generator(request, channel)
     raw_draft = _strip_generation_notes(raw_draft, channel)
     _trace_agent_step(channel, "draft_generated", draft_chars=len(raw_draft))
-    draft_audit = check_compliance(raw_draft)
-    brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
-    first_audit = _merge_audits(draft_audit, brief_audit)
-    _trace_agent_step(
-        channel,
-        "deterministic_precheck",
-        compliance_status=first_audit["compliance_status"],
-        compliance_confidence=first_audit.get("compliance_confidence"),
-    )
     voice_result = resolved_voice_checker(raw_draft, request.brandId, brand, channel)
     _trace_agent_step(
         channel,
@@ -525,17 +519,18 @@ def process_channel_loop(
     )
 
     if _needs_voice_review(voice_result):
-        if first_audit["compliance_status"] == "FAILED":
-            _trace_agent_step(channel, "routed_to_human_review", trigger="compliance")
-            return _voice_blocked_compliance_failure_result(
-                channel,
-                raw_draft,
-                voice_result,
-                first_audit,
-            )
-
         _trace_agent_step(channel, "routed_to_human_review", trigger="voice")
         return _voice_review_result(channel, raw_draft, voice_result)
+
+    draft_audit = check_compliance(raw_draft)
+    brief_audit = check_compliance(_brief_for_channel_audit(request.brief, channel))
+    first_audit = _merge_audits(draft_audit, brief_audit)
+    _trace_agent_step(
+        channel,
+        "deterministic_precheck",
+        compliance_status=first_audit["compliance_status"],
+        compliance_confidence=first_audit.get("compliance_confidence"),
+    )
 
     if _needs_compliance_review(first_audit):
         _trace_agent_step(channel, "routed_to_human_review", trigger="compliance")
